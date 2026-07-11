@@ -17,7 +17,7 @@ import { UpdateModal } from "./modals/UpdateModal";
  * disponible sur GitHub Releases et la propose le cas échéant. */
 export function MenuBridge() {
   const navigate = useNavigate();
-  const [aboutOpen, setAboutOpen] = useState(false);
+  const [aboutView, setAboutView] = useState<"version" | "credits" | null>(null);
   const [update, setUpdate] = useState<UpdateInfo | null>(null);
   const [checkResult, setCheckResult] = useState<"none" | "error" | null>(null);
   const checking = useRef(false);
@@ -52,8 +52,10 @@ export function MenuBridge() {
             navigate("/help");
             break;
           case "about":
+            setAboutView("version");
+            break;
           case "credits":
-            setAboutOpen(true);
+            setAboutView("credits");
             break;
           case "check-updates":
             void manualCheck();
@@ -89,8 +91,12 @@ export function MenuBridge() {
 
   return (
     <>
-      {aboutOpen && (
-        <AboutModal onClose={() => setAboutOpen(false)} onCheckUpdates={() => void manualCheck()} />
+      {aboutView && (
+        <AboutModal
+          view={aboutView}
+          onClose={() => setAboutView(null)}
+          onCheckUpdates={() => void manualCheck()}
+        />
       )}
       {update && <UpdateModal info={update} onClose={() => setUpdate(null)} />}
       {checkResult && (

@@ -3,13 +3,14 @@ import { Icon } from "../Icon";
 import { openExternal, systemInfo, type SystemInfo } from "../../lib/native";
 
 interface Props {
+  /** "version" : infos techniques + mises à jour. "credits" : auteur et licence. */
+  view: "version" | "credits";
   onClose: () => void;
   onCheckUpdates: () => void;
 }
 
-/** "À propos" : version de l'application, plateforme et crédits.
- * Ouvert depuis le menu natif Aide → Version de l'application / Crédits. */
-export function AboutModal({ onClose, onCheckUpdates }: Props) {
+/** Modales du menu natif Aide → « Version de l'application » et « Crédits ». */
+export function AboutModal({ view, onClose, onCheckUpdates }: Props) {
   const [info, setInfo] = useState<SystemInfo | null>(null);
   useEffect(() => {
     void systemInfo().then(setInfo);
@@ -25,31 +26,45 @@ export function AboutModal({ onClose, onCheckUpdates }: Props) {
           <div>
             <h4 style={{ margin: 0 }}>WikiCollab</h4>
             <p className="sub" style={{ margin: 0 }}>
-              {info ? `Version ${info.app_version}` : "Version web"}
-              {info && ` — ${info.os} (${info.arch})`}
+              {view === "version"
+                ? info
+                  ? `Version ${info.app_version}`
+                  : "Version web"
+                : "Wiki collaboratif d'équipe"}
             </p>
           </div>
         </div>
 
-        <div className="about-section">
-          <h5>Crédits</h5>
-          <p>
-            Conçu et développé par <strong>EZ Audiovisuel</strong>.
-          </p>
-          <p className="sub">
-            Construit avec Tauri, React, Django Channels et PostgreSQL.
-            Distribué sous licence MIT.
-          </p>
-          <button
-            className="link"
-            onClick={() => void openExternal("https://github.com/Herve-EZ/Wiki")}
-          >
-            <Icon name="link" size={12} /> Code source sur GitHub
-          </button>
-        </div>
+        {view === "version" ? (
+          <div className="about-section">
+            <h5>Détails</h5>
+            <p className="sub">
+              {info
+                ? `Système : ${info.os} (${info.arch})`
+                : "Exécutée dans le navigateur — la version installée n'est pas concernée."}
+            </p>
+          </div>
+        ) : (
+          <div className="about-section">
+            <h5>Crédits</h5>
+            <p>
+              Conçu et développé par <strong>EZ Audiovisuel</strong>.
+            </p>
+            <p className="sub">
+              Construit avec Tauri, React, Django Channels et PostgreSQL.
+              Distribué sous licence MIT.
+            </p>
+            <button
+              className="link"
+              onClick={() => void openExternal("https://github.com/Herve-EZ/Wiki")}
+            >
+              <Icon name="link" size={12} /> Code source sur GitHub
+            </button>
+          </div>
+        )}
 
         <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
-          {info && (
+          {view === "version" && info && (
             <button
               className="btn btn-ghost"
               onClick={() => {
