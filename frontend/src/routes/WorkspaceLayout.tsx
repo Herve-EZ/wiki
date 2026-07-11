@@ -1,12 +1,9 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Outlet, useLocation, useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../lib/api";
-import { flushOutbox } from "../lib/sync";
 import { useAuth } from "../auth/AuthContext";
-import { useNetworkStatus } from "../hooks/useNetworkStatus";
-import { useOutboxCount } from "../hooks/useOutboxCount";
-import { useConflictCount } from "../hooks/useConflictCount";
+import { useSync } from "../hooks/useSync";
 import { Sidebar } from "../components/Sidebar";
 import { SearchPalette } from "../components/SearchPalette";
 import { OfflineBanner } from "../components/OfflineBanner";
@@ -19,13 +16,18 @@ export function WorkspaceLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuth();
-  const online = useNetworkStatus();
-  const { count: pending, refresh: refreshOutbox } = useOutboxCount();
-  const { count: conflicts, refresh: refreshConflicts } = useConflictCount();
+  const { online, pending, conflicts, syncing, sync, refresh: refreshSync } = useSync();
 
   const [updatedPageIds, setUpdatedPageIds] = useState<Set<string>>(new Set());
   const [searchOpen, setSearchOpen] = useState(false);
   const [conflictsOpen, setConflictsOpen] = useState(false);
+
+  // Auto-sync + reload when the connection comes back after being offline.
+  const wasOnline = useRef(online);
+  useEffect(() => {
+    if (online && !wasOnline.current) void sync();
+    wasOnline.current = online;
+  }, [online, sync]);
 
   const currentPageId = location.pathname.split("/")[3];
 
@@ -91,12 +93,7 @@ export function WorkspaceLayout() {
         online={online}
         pending={pending}
         conflicts={conflicts}
-        onRetry={() =>
-          void flushOutbox().then(() => {
-            refreshOutbox();
-            refreshConflicts();
-          })
-        }
+        onRetry={() => void sync()}
         onResolve={() => setConflictsOpen(true)}
       />
       <div className="app-main">
@@ -110,6 +107,11 @@ export function WorkspaceLayout() {
           currentPageId={currentPageId}
           updatedPageIds={updatedPageIds}
           user={user}
+          online={online}
+          pending={pending}
+          conflicts={conflicts}
+          syncing={syncing}
+          onSync={() => void sync()}
           onLogout={() => void logout()}
         />
         <div style={{ display: "flex", flexDirection: "column", flex: 1, minWidth: 0 }}>
@@ -131,10 +133,7 @@ export function WorkspaceLayout() {
       {conflictsOpen && (
         <ConflictsModal
           onClose={() => setConflictsOpen(false)}
-          onChanged={() => {
-            refreshOutbox();
-            refreshConflicts();
-          }}
+          onChanged={refreshSync}
         />
       )}
     </div>

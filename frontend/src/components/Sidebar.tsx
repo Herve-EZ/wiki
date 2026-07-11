@@ -5,6 +5,7 @@ import { ThemeToggle } from "./ThemeToggle";
 import { Avatar } from "./Avatar";
 import { NewPageModal } from "./modals/NewPageModal";
 import { NewWorkspaceModal } from "./modals/NewWorkspaceModal";
+import { SyncButton } from "./SyncButton";
 import {
   WorkspaceSettingsModal,
   type SettingsTab,
@@ -21,6 +22,11 @@ interface Props {
   currentPageId?: string;
   updatedPageIds: Set<string>;
   user: User | null;
+  online: boolean;
+  pending: number;
+  conflicts: number;
+  syncing: boolean;
+  onSync: () => void;
   onLogout: () => void;
 }
 
@@ -33,6 +39,11 @@ export function Sidebar({
   currentPageId,
   updatedPageIds,
   user,
+  online,
+  pending,
+  conflicts,
+  syncing,
+  onSync,
   onLogout,
 }: Props) {
   const navigate = useNavigate();
@@ -143,6 +154,14 @@ export function Sidebar({
           {updatedPageIds.has(p.id) && <span className="badge-maj">MàJ</span>}
         </Link>
       ))}
+
+      <SyncButton
+        online={online}
+        pending={pending}
+        conflicts={conflicts}
+        syncing={syncing}
+        onSync={onSync}
+      />
 
       <div className="sb-user">
         {user && <Avatar seed={user.email} label={user.display_name || user.email} size={24} className="av-me" />}

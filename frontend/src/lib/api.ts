@@ -4,7 +4,7 @@
  * reach the server" (NetworkError) so the offline layer can react correctly.
  */
 import { clearTokens, loadTokens, saveTokens } from "./auth";
-import { reportBackendReachable } from "./network";
+import { isForcedOffline, reportBackendReachable } from "./network";
 import type {
   DiffResult,
   LoginResult,
@@ -62,6 +62,9 @@ async function refreshAccess(): Promise<string | null> {
 }
 
 async function request<T>(path: string, init: RequestInit = {}, retry = true): Promise<T> {
+  // "Work offline" mode: never touch the network — let the offline layer
+  // (mirror reads, outbox queueing) take over via NetworkError.
+  if (isForcedOffline()) throw new NetworkError();
   const tokens = await loadTokens();
   const headers = new Headers(init.headers);
   headers.set("Content-Type", "application/json");
@@ -90,6 +93,7 @@ async function request<T>(path: string, init: RequestInit = {}, retry = true): P
 
 /** Pre-auth POST that never attaches a token or triggers a refresh. */
 async function publicPost<T>(path: string, body: unknown): Promise<T> {
+  if (isForcedOffline()) throw new NetworkError();
   let res: Response;
   try {
     res = await fetch(`${API_URL}${path}`, {

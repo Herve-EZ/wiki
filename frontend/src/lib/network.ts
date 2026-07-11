@@ -6,8 +6,19 @@
  */
 type Listener = (online: boolean) => void;
 
+const FORCED_KEY = "wikicollab.forcedOffline";
 const listeners = new Set<Listener>();
 let backendReachable = true;
+
+/** User-controlled "work offline" switch (desktop). When on, the app behaves as
+ * if the network were down: reads come from the local mirror, edits queue. */
+let forcedOffline = (() => {
+  try {
+    return localStorage.getItem(FORCED_KEY) === "1";
+  } catch {
+    return false;
+  }
+})();
 
 function emit(): void {
   const state = isOnline();
@@ -15,8 +26,25 @@ function emit(): void {
 }
 
 export function isOnline(): boolean {
+  if (forcedOffline) return false;
   const navOnline = typeof navigator === "undefined" ? true : navigator.onLine;
   return navOnline && backendReachable;
+}
+
+export function isForcedOffline(): boolean {
+  return forcedOffline;
+}
+
+/** Toggle the manual "work offline" mode. Persisted across launches. */
+export function setForcedOffline(value: boolean): void {
+  if (forcedOffline === value) return;
+  forcedOffline = value;
+  try {
+    localStorage.setItem(FORCED_KEY, value ? "1" : "0");
+  } catch {
+    /* ignore storage errors */
+  }
+  emit();
 }
 
 /** Called by the API/sync layer to record the outcome of a real request. */
