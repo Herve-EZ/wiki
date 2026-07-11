@@ -1,0 +1,106 @@
+
+<style>
+  .wrap { padding: 1.5rem 0; font-family: var(--font-sans); }
+  .scene { background: var(--color-background-secondary); border-radius: var(--border-radius-lg); padding: 1.5rem; margin-bottom: 1.25rem; }
+  .scene-title { font-size: 13px; font-weight: 500; color: var(--color-text-secondary); margin: 0 0 12px; display: flex; align-items: center; gap: 6px; }
+  .mockup { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); overflow: hidden; }
+  .topbar { background: var(--color-background-secondary); border-bottom: 0.5px solid var(--color-border-tertiary); padding: 10px 16px; display: flex; align-items: center; gap: 10px; }
+  .topbar-title { font-size: 14px; font-weight: 500; color: var(--color-text-primary); flex: 1; }
+  .avatar { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 500; }
+  .body { display: flex; }
+  .sidebar { width: 180px; border-right: 0.5px solid var(--color-border-tertiary); padding: 12px; flex-shrink: 0; }
+  .sidebar-item { font-size: 12px; color: var(--color-text-secondary); padding: 5px 8px; border-radius: 6px; margin-bottom: 2px; cursor: default; display: flex; align-items: center; gap: 6px; }
+  .sidebar-item.active { background: var(--color-background-secondary); color: var(--color-text-primary); }
+  .sidebar-label { font-size: 11px; color: var(--color-text-tertiary); padding: 8px 8px 4px; margin-top: 4px; }
+  .editor { flex: 1; padding: 16px 20px; }
+  .editor-h { font-size: 16px; font-weight: 500; color: var(--color-text-primary); margin: 0 0 8px; }
+  .editor-p { font-size: 12px; color: var(--color-text-secondary); line-height: 1.7; margin: 0 0 6px; }
+  .editor-cursor { display: inline-block; width: 2px; height: 14px; background: #534AB7; vertical-align: middle; border-radius: 1px; animation: blink 1s step-end infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+  .presence-bar { display: flex; align-items: center; gap: 6px; padding: 8px 16px; border-top: 0.5px solid var(--color-border-tertiary); }
+  .presence-label { font-size: 11px; color: var(--color-text-tertiary); }
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: #1D9E75; }
+  .lock-badge { font-size: 10px; padding: 2px 6px; border-radius: 4px; background: #EEEDFE; color: #3C3489; margin-left: auto; }
+
+  .feature-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .feat { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); padding: 12px; }
+  .feat-icon { font-size: 18px; color: var(--color-text-secondary); margin-bottom: 6px; }
+  .feat-title { font-size: 13px; font-weight: 500; color: var(--color-text-primary); margin: 0 0 4px; }
+  .feat-desc { font-size: 12px; color: var(--color-text-secondary); line-height: 1.6; margin: 0; }
+</style>
+
+<div class="wrap">
+  <h2 class="sr-only">Concept du wiki collaboratif</h2>
+
+  <div class="scene">
+    <p class="scene-title"><i class="ti ti-device-desktop" style="font-size:14px" aria-hidden="true"></i>Ce que l'utilisateur voit</p>
+    <div class="mockup">
+      <div class="topbar">
+        <i class="ti ti-notes" style="font-size:16px;color:var(--color-text-secondary)" aria-hidden="true"></i>
+        <span class="topbar-title">Guide de déploiement Docker</span>
+        <div class="avatar" style="background:#EEEDFE;color:#3C3489">AL</div>
+        <div class="avatar" style="background:#E1F5EE;color:#0F6E56">JM</div>
+        <div class="avatar" style="background:#FAEEDA;color:#854F0B">SC</div>
+      </div>
+      <div class="body">
+        <div class="sidebar">
+          <div class="sidebar-label">Mon espace</div>
+          <div class="sidebar-item"><i class="ti ti-home" style="font-size:12px" aria-hidden="true"></i>Accueil</div>
+          <div class="sidebar-item"><i class="ti ti-clock" style="font-size:12px" aria-hidden="true"></i>Récents</div>
+          <div class="sidebar-label">Documentation</div>
+          <div class="sidebar-item active"><i class="ti ti-file" style="font-size:12px" aria-hidden="true"></i>Guide Docker</div>
+          <div class="sidebar-item"><i class="ti ti-file" style="font-size:12px" aria-hidden="true"></i>API Reference</div>
+          <div class="sidebar-item"><i class="ti ti-file" style="font-size:12px" aria-hidden="true"></i>Onboarding</div>
+          <div class="sidebar-label">Projet Alpha</div>
+          <div class="sidebar-item"><i class="ti ti-file" style="font-size:12px" aria-hidden="true"></i>Architecture</div>
+          <div class="sidebar-item"><i class="ti ti-file" style="font-size:12px" aria-hidden="true"></i>Rétros</div>
+        </div>
+        <div class="editor">
+          <div class="editor-h">Guide de déploiement Docker</div>
+          <div class="editor-p">Ce guide explique comment déployer l'application sur un serveur Ubuntu avec Docker Compose.</div>
+          <div class="editor-p" style="background:#EEEDFE;border-radius:4px;padding:4px 8px;border-left:2px solid #534AB7;">
+            <span style="font-size:10px;color:#3C3489;font-weight:500">SC édite cette section</span><br>
+            Étape 1 — Installer Docker Engine sur le serveur<span class="editor-cursor"></span>
+          </div>
+          <div class="editor-p" style="margin-top:6px">Étape 2 — Configurer les variables d'environnement...</div>
+          <div style="display:flex;align-items:center;gap:6px;margin-top:8px">
+            <span style="font-size:11px;color:var(--color-text-tertiary)">Lié à :</span>
+            <span style="font-size:11px;padding:2px 8px;border-radius:20px;background:var(--color-background-secondary);color:var(--color-text-secondary)">Architecture</span>
+            <span style="font-size:11px;padding:2px 8px;border-radius:20px;background:var(--color-background-secondary);color:var(--color-text-secondary)">API Reference</span>
+          </div>
+        </div>
+      </div>
+      <div class="presence-bar">
+        <div class="dot"></div>
+        <span class="presence-label">3 personnes sur cette page</span>
+        <span class="lock-badge"><i class="ti ti-lock" style="font-size:10px" aria-hidden="true"></i> Section verrouillée par SC</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="scene">
+    <p class="scene-title"><i class="ti ti-sparkles" style="font-size:14px" aria-hidden="true"></i>Ce qui rend ce projet intéressant</p>
+    <div class="feature-grid">
+      <div class="feat">
+        <div class="feat-icon"><i class="ti ti-users" aria-hidden="true"></i></div>
+        <p class="feat-title">Présence en temps réel</p>
+        <p class="feat-desc">Tu vois qui lit la même page que toi, en direct, comme des curseurs Google Docs mais pour un wiki.</p>
+      </div>
+      <div class="feat">
+        <div class="feat-icon"><i class="ti ti-lock" aria-hidden="true"></i></div>
+        <p class="feat-title">Verrous de section</p>
+        <p class="feat-desc">Quand tu édites un paragraphe, les autres voient qu'il est pris. Pas de conflits, pas d'écrasement.</p>
+      </div>
+      <div class="feat">
+        <div class="feat-icon"><i class="ti ti-history" aria-hidden="true"></i></div>
+        <p class="feat-title">Historique de versions</p>
+        <p class="feat-desc">Chaque sauvegarde crée un snapshot. Tu peux comparer deux versions ou revenir en arrière.</p>
+      </div>
+      <div class="feat">
+        <div class="feat-icon"><i class="ti ti-arrows-shuffle" aria-hidden="true"></i></div>
+        <p class="feat-title">Pages liées automatiques</p>
+        <p class="feat-desc">Le système détecte les pages qui se mentionnent et crée des liens suggérés dans la sidebar.</p>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: wikicollab
+          POSTGRES_USER: wikicollab
+          POSTGRES_PASSWORD: wikicollab
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U wikicollab"
+          --health-interval 5s --health-timeout 3s --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s --health-timeout 3s --health-retries 5
+    env:
+      POSTGRES_HOST: localhost
+      REDIS_URL: redis://localhost:6379/0
+      # Real stack in CI (conftest defaults to sqlite/inmemory otherwise)
+      DJANGO_DB: postgres
+      DJANGO_CACHE: redis
+      DJANGO_CHANNEL_LAYER: redis
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install system libs (SAML)
+        run: sudo apt-get update && sudo apt-get install -y libxml2-dev libxmlsec1-dev xmlsec1 pkg-config
+      - name: Install dependencies
+        run: pip install -e ".[dev,saml]"
+      - name: Lint (ruff)
+        run: ruff check .
+      - name: Tests (real stack)
+        run: pytest -q --ds=config.settings

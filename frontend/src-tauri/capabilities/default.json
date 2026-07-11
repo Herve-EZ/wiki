@@ -1,0 +1,45 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "WikiCollab desktop capabilities: local SQLite mirror, scoped shell (git/pandoc only), user-folder file access, native dialogs and notifications.",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "os:default",
+    "store:default",
+    "notification:default",
+    "dialog:default",
+
+    "sql:default",
+    "sql:allow-load",
+    "sql:allow-execute",
+    "sql:allow-select",
+    "sql:allow-close",
+
+    {
+      "identifier": "fs:allow-write-text-file",
+      "allow": [
+        { "path": "$DOWNLOAD/**" },
+        { "path": "$DOCUMENT/**" },
+        { "path": "$DESKTOP/**" }
+      ]
+    },
+    {
+      "identifier": "fs:allow-read-text-file",
+      "allow": [
+        { "path": "$DOWNLOAD/**" },
+        { "path": "$DOCUMENT/**" },
+        { "path": "$DESKTOP/**" }
+      ]
+    },
+
+    "shell:allow-open",
+    {
+      "identifier": "shell:allow-execute",
+      "allow": [
+        { "name": "git", "cmd": "git", "args": true },
+        { "name": "pandoc", "cmd": "pandoc", "args": true }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,111 @@
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { Icon } from "./Icon";
+import { ThemeToggle } from "./ThemeToggle";
+import { Avatar } from "./Avatar";
+import type { PageListItem, User, Workspace } from "../lib/types";
+
+interface Props {
+  workspaces: Workspace[];
+  current: Workspace | undefined;
+  pages: PageListItem[];
+  currentPageId?: string;
+  updatedPageIds: Set<string>;
+  user: User | null;
+  onLogout: () => void;
+}
+
+export function Sidebar({
+  workspaces,
+  current,
+  pages,
+  currentPageId,
+  updatedPageIds,
+  user,
+  onLogout,
+}: Props) {
+  const navigate = useNavigate();
+  const [switcherOpen, setSwitcherOpen] = useState(false);
+
+  return (
+    <nav className="sb">
+      <div style={{ position: "relative" }}>
+        <button className="ws-switch" onClick={() => setSwitcherOpen((o) => !o)}>
+          <span className="ws-logo">{(current?.name ?? "?").charAt(0).toUpperCase()}</span>
+          <span className="sb-item-label" style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis" }}>
+            {current?.name ?? "Espaces"}
+          </span>
+          <Icon name="chevronDown" size={14} />
+        </button>
+        {switcherOpen && (
+          <div
+            style={{
+              position: "absolute",
+              top: "100%",
+              left: 0,
+              right: 0,
+              zIndex: 20,
+              background: "var(--surface)",
+              border: "1px solid var(--border)",
+              borderRadius: "var(--r-md)",
+              boxShadow: "var(--shadow)",
+              padding: 4,
+            }}
+          >
+            {workspaces.map((w) => (
+              <button
+                key={w.id}
+                className={`sb-item${w.slug === current?.slug ? " active" : ""}`}
+                onClick={() => {
+                  setSwitcherOpen(false);
+                  navigate(`/w/${w.slug}`);
+                }}
+              >
+                <span className="ws-logo" style={{ width: 16, height: 16, fontSize: 8 }}>
+                  {w.name.charAt(0).toUpperCase()}
+                </span>
+                <span className="label">{w.name}</span>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {current && (
+        <Link to={`/w/${current.slug}`} className="sb-item">
+          <Icon name="home" size={13} />
+          <span className="label">Accueil</span>
+        </Link>
+      )}
+
+      <div className="sb-label">{current?.name ?? "Pages"}</div>
+      {pages.length === 0 && (
+        <div style={{ fontSize: 12, color: "var(--ink-3)", padding: "4px 8px" }}>
+          Aucune page pour l'instant.
+        </div>
+      )}
+      {pages.map((p) => (
+        <Link
+          key={p.id}
+          to={`/w/${current?.slug}/${p.id}`}
+          className={`sb-item${p.id === currentPageId ? " active" : ""}`}
+        >
+          <Icon name="file" size={13} />
+          <span className="label">{p.title}</span>
+          {updatedPageIds.has(p.id) && <span className="badge-maj">MàJ</span>}
+        </Link>
+      ))}
+
+      <div className="sb-user">
+        {user && <Avatar seed={user.email} label={user.display_name || user.email} size={24} className="av-me" />}
+        <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          {user?.display_name || user?.email || "—"}
+        </span>
+        <ThemeToggle />
+        <button className="icon-btn" onClick={onLogout} title="Se déconnecter" aria-label="Se déconnecter">
+          <Icon name="logout" size={16} />
+        </button>
+      </div>
+    </nav>
+  );
+}

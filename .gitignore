@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Django
+*.sqlite3
+/backend/static/
+/backend/staticfiles/
+/backend/media/
+
+# Env
+.env
+
+# Node / Astro
+node_modules/
+dist/
+.astro/
+
+# OS / editors
+.DS_Store
+.idea/
+.vscode/
