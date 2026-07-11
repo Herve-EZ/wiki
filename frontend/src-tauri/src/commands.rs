@@ -32,12 +32,13 @@ pub struct ToolOutput {
 }
 
 #[tauri::command]
-pub fn system_info() -> SystemInfo {
+pub fn system_info(app: tauri::AppHandle) -> SystemInfo {
     SystemInfo {
         os: std::env::consts::OS.to_string(),
         arch: std::env::consts::ARCH.to_string(),
         family: std::env::consts::FAMILY.to_string(),
-        app_version: env!("CARGO_PKG_VERSION").to_string(),
+        // tauri.conf.json version — the one the updater compares against.
+        app_version: app.package_info().version.to_string(),
     }
 }
 

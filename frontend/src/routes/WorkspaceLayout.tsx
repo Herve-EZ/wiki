@@ -8,6 +8,7 @@ import { Sidebar } from "../components/Sidebar";
 import { SearchPalette } from "../components/SearchPalette";
 import { OfflineBanner } from "../components/OfflineBanner";
 import { ConflictsModal } from "../components/ConflictsModal";
+import { NewPageModal } from "../components/modals/NewPageModal";
 import type { Role } from "../lib/types";
 import type { WorkspaceCtx } from "./workspaceContext";
 
@@ -21,6 +22,7 @@ export function WorkspaceLayout() {
   const [updatedPageIds, setUpdatedPageIds] = useState<Set<string>>(new Set());
   const [searchOpen, setSearchOpen] = useState(false);
   const [conflictsOpen, setConflictsOpen] = useState(false);
+  const [menuNewPage, setMenuNewPage] = useState(false);
 
   // Auto-sync + reload when the connection comes back after being offline.
   const wasOnline = useRef(online);
@@ -72,6 +74,18 @@ export function WorkspaceLayout() {
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  // Native menu (desktop): Fichier → Rechercher / Nouvelle page.
+  useEffect(() => {
+    const onSearch = () => setSearchOpen(true);
+    const onNewPage = () => setMenuNewPage(true);
+    window.addEventListener("menu:search", onSearch);
+    window.addEventListener("menu:new-page", onNewPage);
+    return () => {
+      window.removeEventListener("menu:search", onSearch);
+      window.removeEventListener("menu:new-page", onNewPage);
+    };
   }, []);
 
   const ctx: WorkspaceCtx = {
@@ -134,6 +148,19 @@ export function WorkspaceLayout() {
         <ConflictsModal
           onClose={() => setConflictsOpen(false)}
           onChanged={refreshSync}
+        />
+      )}
+
+      {menuNewPage && current && canWrite && (
+        <NewPageModal
+          workspaceId={current.id}
+          workspaceSlug={current.slug}
+          onClose={() => setMenuNewPage(false)}
+          onCreated={(id) => {
+            setMenuNewPage(false);
+            void pagesQ.refetch();
+            navigate(`/w/${current.slug}/${id}`);
+          }}
         />
       )}
     </div>

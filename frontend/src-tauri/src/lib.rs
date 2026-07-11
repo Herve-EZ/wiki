@@ -1,4 +1,6 @@
 mod commands;
+#[cfg(desktop)]
+mod menu;
 
 use tauri_plugin_sql::{Migration, MigrationKind};
 
@@ -65,6 +67,14 @@ pub fn run() {
                         .level(log::LevelFilter::Info)
                         .build(),
                 )?;
+            }
+            // Desktop only: native menu bar + self-update from GitHub Releases.
+            #[cfg(desktop)]
+            {
+                app.handle()
+                    .plugin(tauri_plugin_updater::Builder::new().build())?;
+                app.handle().plugin(tauri_plugin_process::init())?;
+                menu::setup(app)?;
             }
             Ok(())
         })

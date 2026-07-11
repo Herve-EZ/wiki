@@ -1,0 +1,78 @@
+# Desktop release pipeline.
+#
+# Déclenché par un tag `vX.Y.Z` (ou manuellement) : compile l'app Tauri pour
+# Windows et Linux, signe les artefacts de mise à jour, puis crée une release
+# GitHub *brouillon* avec les installeurs + `latest.json` en assets.
+# Publier la release rend la mise à jour visible par l'updater intégré
+# (endpoint `releases/latest/download/latest.json`).
+#
+# Secrets requis :
+#   TAURI_SIGNING_PRIVATE_KEY           contenu de ~/.tauri/wikicollab.key
+#   TAURI_SIGNING_PRIVATE_KEY_PASSWORD  mot de passe de la clé (vide si aucun)
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: windows-latest
+            args: ""
+          - platform: ubuntu-22.04
+            args: ""
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Linux dependencies (webkit2gtk…)
+        if: startsWith(matrix.platform, 'ubuntu')
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev build-essential curl wget file \
+            libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: frontend/src-tauri
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: pnpm install --frozen-lockfile
+
+      - name: Build and upload release assets
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        with:
+          projectPath: frontend
+          tagName: v__VERSION__
+          releaseName: "WikiCollab v__VERSION__"
+          releaseBody: "Voir les assets ci-dessous pour télécharger et installer cette version."
+          releaseDraft: true
+          prerelease: false
+          includeUpdaterJson: true
+          args: ${{ matrix.args }}

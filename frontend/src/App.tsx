@@ -10,6 +10,7 @@ import { SettingsRoute } from "./routes/SettingsRoute";
 import { InviteRoute } from "./routes/InviteRoute";
 import { HelpRoute } from "./routes/HelpRoute";
 import { WelcomeRoute } from "./routes/WelcomeRoute";
+import { MenuBridge } from "./components/MenuBridge";
 
 function Loading() {
   return (
@@ -37,6 +38,7 @@ function RootRedirect() {
 export default function App() {
   return (
     <BrowserRouter>
+      <MenuBridge />
       <Routes>
         <Route path="/login" element={<LoginRoute />} />
         <Route path="/invite/:token" element={<InviteRoute />} />

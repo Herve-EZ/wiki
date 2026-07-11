@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ApiError, api } from "../lib/api";
 import { exportPdf } from "../lib/export/pdf";
@@ -39,6 +39,13 @@ export function PageActions({
   const [exportOpen, setExportOpen] = useState(false);
 
   const baseName = page.slug || "page";
+
+  // Native menu (desktop): Fichier → Exporter la page… opens the export menu.
+  useEffect(() => {
+    const onExport = () => setExportOpen(true);
+    window.addEventListener("menu:export-page", onExport);
+    return () => window.removeEventListener("menu:export-page", onExport);
+  }, []);
 
   function doPdf() {
     setExportOpen(false);
