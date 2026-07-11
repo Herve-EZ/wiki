@@ -8,6 +8,7 @@ urlpatterns = [
     path("token", views.LoginView.as_view(), name="token"),
     path("token/refresh", TokenRefreshView.as_view(), name="token_refresh"),
     path("me", views.MeView.as_view(), name="me"),
+    path("password/change", views.PasswordChangeView.as_view(), name="password_change"),
     # MFA
     path("mfa/verify", views.MFAVerifyView.as_view(), name="mfa_verify"),
     path("mfa/totp/setup", views.MFASetupView.as_view(), name="mfa_setup"),

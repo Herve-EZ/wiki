@@ -32,6 +32,14 @@ def can_write(user, workspace) -> bool:
     return get_role(user, workspace) in WRITE_ROLES
 
 
+def is_owner(user, workspace) -> bool:
+    """Owner-only capabilities: deleting/publishing pages, managing members,
+    workspace settings and workflow configuration."""
+    if workspace.require_mfa and not (user.is_authenticated and user.mfa_enabled):
+        return False
+    return get_role(user, workspace) == WorkspaceMember.Role.OWNER
+
+
 class WorkspaceAccess(BasePermission):
     """Role-based access on a Workspace or any object with a `.workspace` FK.
 

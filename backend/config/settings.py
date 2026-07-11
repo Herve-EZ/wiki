@@ -70,6 +70,7 @@ INSTALLED_APPS = [
     "accounts",
     "workspaces",
     "pages",
+    "workflows",
     "realtime",
 ]
 
@@ -224,6 +225,29 @@ SPECTACULAR_SETTINGS = {
 MFA_CHALLENGE_TOKEN_LIFETIME = timedelta(minutes=5)
 # Dedicated key for TOTP secret encryption at rest (falls back to SECRET_KEY).
 MFA_ENCRYPTION_KEY = env("MFA_ENCRYPTION_KEY", "")
+
+# --- Email --------------------------------------------------------------------
+# Invitations are delivered by email. In DEBUG the console backend prints the
+# message (and the invite link) to stdout; production uses SMTP via env.
+if DEBUG:
+    EMAIL_BACKEND = env(
+        "EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend"
+    )
+else:
+    EMAIL_BACKEND = env(
+        "EMAIL_BACKEND", "django.core.mail.backends.smtp.EmailBackend"
+    )
+EMAIL_HOST = env("EMAIL_HOST", "localhost")
+EMAIL_PORT = int(env("EMAIL_PORT", "25"))
+EMAIL_HOST_USER = env("EMAIL_HOST_USER", "")
+EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", "")
+EMAIL_USE_TLS = env_bool("EMAIL_USE_TLS", False)
+DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", "no-reply@wikicollab.local")
+
+# Base URL of the frontend, used to build invitation links.
+FRONTEND_URL = env("FRONTEND_URL", "http://localhost:5173")
+# How long a workspace invitation stays valid.
+INVITATION_TTL_DAYS = int(env("INVITATION_TTL_DAYS", "14"))
 
 # --- CORS (Vite SPA + Tauri webview run on their own origins) -----------------
 # Auth is JWT-in-header (no cookies), so allow-listing origins is enough; no

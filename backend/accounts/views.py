@@ -11,6 +11,8 @@ from .serializers import (
     LoginSerializer,
     MFAActivateSerializer,
     MFAVerifySerializer,
+    PasswordChangeSerializer,
+    ProfileUpdateSerializer,
     RegisterSerializer,
     UserSerializer,
 )
@@ -137,3 +139,22 @@ class MeView(APIView):
 
     def get(self, request):
         return Response(UserSerializer(request.user).data)
+
+    def patch(self, request):
+        s = ProfileUpdateSerializer(request.user, data=request.data, partial=True)
+        s.is_valid(raise_exception=True)
+        s.save()
+        return Response(UserSerializer(request.user).data)
+
+
+class PasswordChangeView(APIView):
+    """Change the caller's password (requires the current password)."""
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        s = PasswordChangeSerializer(data=request.data, context={"request": request})
+        s.is_valid(raise_exception=True)
+        request.user.set_password(s.validated_data["new_password"])
+        request.user.save(update_fields=["password"])
+        return Response(status=status.HTTP_204_NO_CONTENT)

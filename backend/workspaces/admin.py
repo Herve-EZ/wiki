@@ -1,7 +1,7 @@
 from django.contrib import admin
 from simple_history.admin import SimpleHistoryAdmin
 
-from .models import Workspace, WorkspaceMember
+from .models import Workspace, WorkspaceInvitation, WorkspaceMember
 
 
 class MemberInline(admin.TabularInline):
@@ -17,3 +17,10 @@ class WorkspaceAdmin(SimpleHistoryAdmin):
 
 
 admin.site.register(WorkspaceMember)
+
+
+@admin.register(WorkspaceInvitation)
+class WorkspaceInvitationAdmin(admin.ModelAdmin):
+    list_display = ["email", "workspace", "role", "status", "expires_at"]
+    list_filter = ["status", "role"]
+    search_fields = ["email"]

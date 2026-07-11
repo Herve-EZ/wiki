@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from workspaces.models import Workspace
-from workspaces.permissions import WorkspaceAccess, can_write
+from workspaces.permissions import WorkspaceAccess, can_write, is_owner
 
 from . import services
 from .models import Page, PageVersion
@@ -44,10 +44,28 @@ class PageViewSet(viewsets.ModelViewSet):
         services.detect_links(page)
 
     def perform_update(self, serializer):
+        page = serializer.instance
         # save_page snapshots + rebuilds links + notifies backlinked pages
         fields = dict(serializer.validated_data)
         fields.pop("workspace", None)  # a page never moves workspace via PATCH
-        services.save_page(serializer.instance, self.request.user, **fields)
+        # Publishing/archiving is owner-only; editors may only work in draft.
+        new_status = fields.get("status")
+        if (
+            new_status is not None
+            and new_status != page.status
+            and new_status != Page.Status.DRAFT
+            and not is_owner(self.request.user, page.workspace)
+        ):
+            raise PermissionDenied(
+                "Only the workspace owner can publish or archive a page."
+            )
+        services.save_page(page, self.request.user, **fields)
+
+    def perform_destroy(self, instance):
+        # Deleting a page is owner-only; editors can create and edit, not delete.
+        if not is_owner(self.request.user, instance.workspace):
+            raise PermissionDenied("Only the workspace owner can delete a page.")
+        instance.delete()
 
     @action(detail=True, methods=["get"])
     def versions(self, request, pk=None):
