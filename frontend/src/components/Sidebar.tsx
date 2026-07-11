@@ -5,7 +5,10 @@ import { ThemeToggle } from "./ThemeToggle";
 import { Avatar } from "./Avatar";
 import { NewPageModal } from "./modals/NewPageModal";
 import { NewWorkspaceModal } from "./modals/NewWorkspaceModal";
-import { WorkspaceSettingsModal } from "./modals/WorkspaceSettingsModal";
+import {
+  WorkspaceSettingsModal,
+  type SettingsTab,
+} from "./modals/WorkspaceSettingsModal";
 import type { PageListItem, Role, User, Workspace } from "../lib/types";
 
 interface Props {
@@ -36,7 +39,7 @@ export function Sidebar({
   const [switcherOpen, setSwitcherOpen] = useState(false);
   const [newPageOpen, setNewPageOpen] = useState(false);
   const [newWsOpen, setNewWsOpen] = useState(false);
-  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [settingsTab, setSettingsTab] = useState<SettingsTab | null>(null);
 
   return (
     <nav className="sb">
@@ -99,7 +102,13 @@ export function Sidebar({
         </Link>
       )}
       {current && isOwner && (
-        <button className="sb-item" onClick={() => setSettingsOpen(true)}>
+        <button className="sb-item" onClick={() => setSettingsTab("members")}>
+          <Icon name="users" size={13} />
+          <span className="label">Inviter des membres</span>
+        </button>
+      )}
+      {current && isOwner && (
+        <button className="sb-item" onClick={() => setSettingsTab("general")}>
           <Icon name="settings" size={13} />
           <span className="label">Réglages de l'espace</span>
         </button>
@@ -141,6 +150,9 @@ export function Sidebar({
           {user?.display_name || user?.email || "—"}
         </span>
         <ThemeToggle />
+        <button className="icon-btn" onClick={() => navigate("/help")} title="Aide" aria-label="Aide">
+          <Icon name="help" size={16} />
+        </button>
         <button className="icon-btn" onClick={() => navigate("/settings")} title="Paramètres" aria-label="Paramètres">
           <Icon name="settings" size={16} />
         </button>
@@ -169,12 +181,13 @@ export function Sidebar({
           }}
         />
       )}
-      {settingsOpen && current && (
+      {settingsTab && current && (
         <WorkspaceSettingsModal
           workspace={current}
-          onClose={() => setSettingsOpen(false)}
+          initialTab={settingsTab}
+          onClose={() => setSettingsTab(null)}
           onDeleted={() => {
-            setSettingsOpen(false);
+            setSettingsTab(null);
             navigate("/");
           }}
         />

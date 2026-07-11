@@ -8,7 +8,12 @@ import "./index.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <PersistQueryClientProvider client={queryClient} persistOptions={{ persister }}>
+    {/* `buster` invalidates the persisted cache when the API shape changes
+        (e.g. workspaces gained `my_role`) — bump it on breaking payloads. */}
+    <PersistQueryClientProvider
+      client={queryClient}
+      persistOptions={{ persister, buster: "v2-my-role" }}
+    >
       <AuthProvider>
         <App />
       </AuthProvider>

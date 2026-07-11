@@ -83,6 +83,54 @@ def test_viewer_cannot_edit_page(page, workspace):
     assert r.status_code == 403
 
 
+@pytest.fixture
+def editor_client(workspace) -> APIClient:
+    editor = User.objects.create_user(email="editor@x.com", password="testpass123")
+    WorkspaceMember.objects.create(
+        workspace=workspace, user=editor, role=WorkspaceMember.Role.EDITOR
+    )
+    c = APIClient()
+    c.force_authenticate(editor)
+    return c
+
+
+def test_editor_cannot_delete_page(editor_client, page):
+    r = editor_client.delete(f"/api/pages/{page.pk}/")
+    assert r.status_code == 403
+    assert Page.objects.filter(pk=page.pk).exists()
+
+
+def test_owner_can_delete_page(client, page):
+    r = client.delete(f"/api/pages/{page.pk}/")
+    assert r.status_code == 204
+    assert not Page.objects.filter(pk=page.pk).exists()
+
+
+def test_editor_cannot_publish_page(editor_client, page):
+    r = editor_client.patch(
+        f"/api/pages/{page.pk}/", {"status": "published"}, format="json"
+    )
+    assert r.status_code == 403
+    page.refresh_from_db()
+    assert page.status == Page.Status.DRAFT
+
+
+def test_editor_can_edit_draft_content(editor_client, page):
+    r = editor_client.patch(
+        f"/api/pages/{page.pk}/", {"content_md": "edited"}, format="json"
+    )
+    assert r.status_code == 200
+
+
+def test_owner_can_publish_page(client, page):
+    r = client.patch(
+        f"/api/pages/{page.pk}/", {"status": "published"}, format="json"
+    )
+    assert r.status_code == 200
+    page.refresh_from_db()
+    assert page.status == Page.Status.PUBLISHED
+
+
 def test_diff_between_versions(client, page, author):
     services.save_page(page, author, content_md="Step 1\nStep 2")
     r = client.get(f"/api/pages/{page.pk}/diff/?from=1&to=2")

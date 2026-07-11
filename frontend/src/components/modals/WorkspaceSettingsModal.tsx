@@ -6,17 +6,18 @@ import { Icon } from "../Icon";
 import { MembersPanel } from "./MembersPanel";
 import { WorkflowsPanel } from "./WorkflowsPanel";
 
-type Tab = "general" | "members" | "workflows";
+export type SettingsTab = "general" | "members" | "workflows";
 
 interface Props {
   workspace: Workspace;
   onClose: () => void;
   onDeleted: () => void;
+  initialTab?: SettingsTab;
 }
 
-export function WorkspaceSettingsModal({ workspace, onClose, onDeleted }: Props) {
+export function WorkspaceSettingsModal({ workspace, onClose, onDeleted, initialTab }: Props) {
   const qc = useQueryClient();
-  const [tab, setTab] = useState<Tab>("general");
+  const [tab, setTab] = useState<SettingsTab>(initialTab ?? "general");
   const [name, setName] = useState(workspace.name);
   const [permission, setPermission] = useState<WorkspacePermission>(workspace.permission);
   const [requireMfa, setRequireMfa] = useState(workspace.require_mfa);
