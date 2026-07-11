@@ -69,6 +69,32 @@ export async function exportMarkdown(
   return path;
 }
 
+/** Save arbitrary bytes (e.g. a .docx) to a user-chosen file. On web, triggers
+ * a browser download. Returns the saved path/name, or null if cancelled. */
+export async function saveBinaryFile(
+  defaultName: string,
+  data: Uint8Array,
+  filters: { name: string; extensions: string[] }[],
+): Promise<string | null> {
+  if (!isTauri()) {
+    const blob = new Blob([data as BlobPart], { type: "application/octet-stream" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = defaultName;
+    a.click();
+    URL.revokeObjectURL(a.href);
+    return defaultName;
+  }
+  const [{ save }, { writeFile }] = await Promise.all([
+    import("@tauri-apps/plugin-dialog"),
+    import("@tauri-apps/plugin-fs"),
+  ]);
+  const path = await save({ defaultPath: defaultName, filters });
+  if (!path) return null;
+  await writeFile(path, data);
+  return path;
+}
+
 export async function notify(title: string, body: string): Promise<void> {
   if (!isTauri()) return;
   const mod = await import("@tauri-apps/plugin-notification");

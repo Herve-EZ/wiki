@@ -30,6 +30,8 @@ const PATHS: Record<string, string> = {
   shield: "M12 3l8 3v6c0 4.6-3.2 7.6-8 9-4.8-1.4-8-4.4-8-9V6z M9 12l2 2 4-4",
   mail: "M4 5h16a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z M3 7l9 6 9-6",
   wifi: "M2 8.8a15 15 0 0 1 20 0 M5 12.5a10 10 0 0 1 14 0 M8.5 16a5 5 0 0 1 7 0 M12 20h.01",
+  download: "M12 3v12 M7 10l5 5 5-5 M5 21h14",
+  upload: "M12 21V9 M7 14l5-5 5 5 M5 3h14",
 };
 
 interface Props {

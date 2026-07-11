@@ -1574,6 +1574,120 @@ svg.ic.spin {
   margin-bottom: 12px;
   flex-wrap: wrap;
 }
+.page-actions-right {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Dropdown menu (export) */
+.export-menu {
+  position: relative;
+}
+.menu-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+}
+.menu-pop {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 50;
+  min-width: 180px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow);
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: transparent;
+  color: var(--ink);
+  font-size: 12.5px;
+  padding: 8px 10px;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+}
+.menu-item:hover {
+  background: var(--accent-wash);
+  color: var(--accent-on-wash);
+}
+
+/* Wiki links (internal page links) */
+.md-body a[href^="wiki:"] {
+  color: var(--accent-on-wash);
+  background: var(--accent-wash);
+  border-radius: 4px;
+  padding: 0 4px;
+  text-decoration: none;
+  font-weight: 500;
+  cursor: pointer;
+}
+.md-body a[href^="wiki:"]:hover {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+/* Unresolved link → dashed, muted, "click to create" */
+.md-body a[href^="wiki:!"] {
+  color: var(--warn);
+  background: transparent;
+  border-bottom: 1px dashed var(--warn);
+  border-radius: 0;
+  padding: 0;
+  font-weight: 500;
+}
+.md-body a[href^="wiki:!"]:hover {
+  background: var(--warn-wash);
+  color: var(--warn);
+}
+
+/* Link picker popover (editor) */
+.link-picker {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  right: 0;
+  z-index: 50;
+  width: 280px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow);
+  padding: 8px;
+}
+.link-picker-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 6px;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+/* Import chip (new page modal) */
+.import-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  margin-bottom: 12px;
+  border: 1px solid var(--accent);
+  background: var(--accent-wash);
+  color: var(--accent-on-wash);
+  border-radius: var(--r-md);
+  font-size: 12.5px;
+  font-weight: 600;
+}
 .status-select {
   width: auto;
   padding: 4px 8px;

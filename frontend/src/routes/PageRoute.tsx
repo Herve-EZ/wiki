@@ -16,7 +16,9 @@ import { SectionBlock } from "../components/editor/SectionBlock";
 import { HistoryModal } from "../components/history/HistoryModal";
 import { PageActions } from "../components/PageActions";
 import { MissingPageDialog } from "../components/MissingPageDialog";
+import { NewPageModal } from "../components/modals/NewPageModal";
 import { Icon } from "../components/Icon";
+import { buildPageIndex, parseWikiHref } from "../lib/wikilinks";
 import { useWorkspaceCtx } from "./workspaceContext";
 import type { Page } from "../lib/types";
 
@@ -38,12 +40,35 @@ export function PageRoute() {
   const [draft, setDraft] = useState("");
   const [historyOpen, setHistoryOpen] = useState(false);
   const [toasts, setToasts] = useState<Toast[]>([]);
+  const [createLinkTitle, setCreateLinkTitle] = useState<string | null>(null);
+
+  const pageIndex = useMemo(() => buildPageIndex(ctx.pages), [ctx.pages]);
 
   const pushToast = useCallback((text: string) => {
     const id = Date.now() + Math.floor(performance.now());
     setToasts((t) => [...t, { id, text }]);
     setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 5000);
   }, []);
+
+  // Click delegation for `[[wiki links]]`: open the target page, or offer to
+  // create it when it doesn't exist yet.
+  const onContentClick = useCallback(
+    (e: React.MouseEvent) => {
+      const anchor = (e.target as HTMLElement).closest("a[href^='wiki:']");
+      if (!anchor) return;
+      e.preventDefault();
+      const target = parseWikiHref(anchor.getAttribute("href") ?? "");
+      if (!target) return;
+      if (target.kind === "page") {
+        navigate(`/w/${ctx.current?.slug}/${target.id}`);
+      } else if (ctx.canWrite) {
+        setCreateLinkTitle(target.title);
+      } else {
+        pushToast(`« ${target.title} » n'existe pas encore.`);
+      }
+    },
+    [navigate, ctx.current?.slug, ctx.canWrite, pushToast],
+  );
 
   const pageQ = useQuery({
     queryKey: ["page", pageId],
@@ -191,7 +216,7 @@ export function PageRoute() {
           ))}
         </div>
 
-        <div className="ed">
+        <div className="ed" onClick={onContentClick}>
           <PageActions
             page={page}
             canWrite={ctx.canWrite}
@@ -220,6 +245,9 @@ export function PageRoute() {
                 editing={editingId === s.id}
                 draft={draft}
                 canEdit={canEdit && editingId === null}
+                pages={ctx.pages}
+                pageIndex={pageIndex}
+                currentPageId={pageId}
                 onStartEdit={() => startEdit(s.id, s.text)}
                 onChangeDraft={setDraft}
                 onSaveEdit={() => saveEdit(s.id)}
@@ -251,6 +279,19 @@ export function PageRoute() {
 
       {historyOpen && (
         <HistoryModal pageId={pageId} canRestore={online} onClose={() => setHistoryOpen(false)} />
+      )}
+
+      {createLinkTitle !== null && ctx.current && (
+        <NewPageModal
+          workspaceId={ctx.current.id}
+          workspaceSlug={ctx.current.slug}
+          initialTitle={createLinkTitle}
+          onClose={() => setCreateLinkTitle(null)}
+          onCreated={(newId) => {
+            setCreateLinkTitle(null);
+            navigate(`/w/${ctx.current?.slug}/${newId}`);
+          }}
+        />
       )}
     </div>
   );

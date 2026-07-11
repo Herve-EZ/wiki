@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ApiError, api } from "../lib/api";
+import { exportPdf } from "../lib/export/pdf";
+import { markdownToDocx } from "../lib/export/docx";
+import { exportMarkdown, saveBinaryFile } from "../lib/native";
 import type { Page, PageStatus } from "../lib/types";
 import { Icon } from "./Icon";
 
@@ -33,6 +36,31 @@ export function PageActions({
 }: Props) {
   const qc = useQueryClient();
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
+
+  const baseName = page.slug || "page";
+
+  function doPdf() {
+    setExportOpen(false);
+    exportPdf(page.title, page.content_md);
+  }
+  async function doDocx() {
+    setExportOpen(false);
+    try {
+      const data = markdownToDocx(page.content_md);
+      await saveBinaryFile(`${baseName}.docx`, data, [{ name: "Word", extensions: ["docx"] }]);
+    } catch {
+      pushToast("Échec de l'export Word.");
+    }
+  }
+  async function doMd() {
+    setExportOpen(false);
+    try {
+      await exportMarkdown(`${baseName}.md`, page.content_md);
+    } catch {
+      pushToast("Échec de l'export Markdown.");
+    }
+  }
 
   const wfQ = useQuery({
     queryKey: ["page-workflow", page.id],
@@ -87,9 +115,31 @@ export function PageActions({
         </span>
       )}
 
-      {isOwner && (
-        <span style={{ marginLeft: "auto" }}>
-          {!confirmDelete ? (
+      <span className="page-actions-right">
+        <div className="export-menu">
+          <button className="btn btn-ghost" onClick={() => setExportOpen((o) => !o)}>
+            <Icon name="download" size={13} /> Exporter
+          </button>
+          {exportOpen && (
+            <>
+              <div className="menu-backdrop" onClick={() => setExportOpen(false)} />
+              <div className="menu-pop">
+                <button className="menu-item" onClick={doPdf}>
+                  <Icon name="file" size={13} /> PDF (impression)
+                </button>
+                <button className="menu-item" onClick={() => void doDocx()}>
+                  <Icon name="file" size={13} /> Word (.docx)
+                </button>
+                <button className="menu-item" onClick={() => void doMd()}>
+                  <Icon name="download" size={13} /> Markdown (.md)
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+
+        {isOwner &&
+          (!confirmDelete ? (
             <button className="btn btn-danger" onClick={() => setConfirmDelete(true)}>
               <Icon name="x" size={13} /> Supprimer
             </button>
@@ -102,9 +152,8 @@ export function PageActions({
                 Confirmer
               </button>
             </span>
-          )}
-        </span>
-      )}
+          ))}
+      </span>
     </div>
   );
 }
