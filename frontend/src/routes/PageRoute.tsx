@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { api } from "../lib/api";
+import { ApiError, api } from "../lib/api";
 import { loadPage, savePage } from "../lib/pageStore";
+import { evictPage } from "../lib/db";
 import { isOnline } from "../lib/network";
+import { isTauri } from "../lib/platform";
 import { joinSections, splitSections } from "../lib/sections";
 import { useAuth } from "../auth/AuthContext";
 import { useNetworkStatus } from "../hooks/useNetworkStatus";
@@ -12,6 +14,8 @@ import { TopBar } from "../components/TopBar";
 import { PresenceBar } from "../components/PresenceBar";
 import { SectionBlock } from "../components/editor/SectionBlock";
 import { HistoryModal } from "../components/history/HistoryModal";
+import { PageActions } from "../components/PageActions";
+import { MissingPageDialog } from "../components/MissingPageDialog";
 import { Icon } from "../components/Icon";
 import { useWorkspaceCtx } from "./workspaceContext";
 import type { Page } from "../lib/types";
@@ -74,18 +78,42 @@ export function PageRoute() {
 
   const saveM = useMutation({
     mutationFn: (next: Page) =>
-      savePage(next, { title: next.title, content_md: next.content_md }, isOnline()),
+      savePage(
+        next,
+        { title: next.title, content_md: next.content_md, status: next.status },
+        isOnline(),
+      ),
     onSuccess: (res) => {
       qc.setQueryData(["page", pageId], res.page);
       if (res.queued) pushToast("Enregistré en local — synchronisation au retour du réseau");
       void qc.invalidateQueries({ queryKey: ["versions", pageId] });
     },
-    onError: () => pushToast("Échec de l'enregistrement"),
+    onError: (err) =>
+      pushToast(
+        err instanceof ApiError && err.status === 403
+          ? "Action non autorisée par votre rôle."
+          : "Échec de l'enregistrement",
+      ),
+  });
+
+  const deleteM = useMutation({
+    mutationFn: () => api.deletePage(pageId),
+    onSuccess: async () => {
+      if (isTauri()) await evictPage(pageId);
+      void qc.invalidateQueries({ queryKey: ["pages", ctx.current?.slug] });
+      navigate(ctx.current ? `/w/${ctx.current.slug}` : "/");
+    },
+    onError: (err) =>
+      pushToast(
+        err instanceof ApiError && err.status === 403
+          ? "Seul le propriétaire peut supprimer cette page."
+          : "Suppression impossible.",
+      ),
   });
 
   const sections = useMemo(() => splitSections(content), [content]);
   const myId = user?.id ?? "";
-  const canEdit = !!page; // permission is enforced server-side; UI stays optimistic
+  const canEdit = ctx.canWrite && !!page; // server enforces; UI gates by role
 
   function startEdit(sectionId: string, text: string) {
     if (online) sock.acquire(sectionId);
@@ -121,6 +149,16 @@ export function PageRoute() {
     );
   }
   if (pageQ.isError || !page) {
+    const err = pageQ.error;
+    if (online && err instanceof ApiError && err.status === 404) {
+      return (
+        <MissingPageDialog
+          pageId={pageId}
+          workspaceId={ctx.current?.id}
+          workspaceSlug={ctx.current?.slug}
+        />
+      );
+    }
     return (
       <div className="center-fill" style={{ flexDirection: "column", gap: 10 }}>
         <Icon name="wifiOff" size={22} />
@@ -154,9 +192,15 @@ export function PageRoute() {
         </div>
 
         <div className="ed">
-          <span className="ed-status">
-            <Icon name="check" size={11} /> {page.status === "published" ? "Publié" : page.status}
-          </span>
+          <PageActions
+            page={page}
+            canWrite={ctx.canWrite}
+            isOwner={ctx.isOwner}
+            online={online}
+            onChangeStatus={(status) => saveM.mutate({ ...page, status })}
+            onDelete={() => deleteM.mutate()}
+            pushToast={pushToast}
+          />
           <input
             className="ed-title"
             defaultValue={page.title}

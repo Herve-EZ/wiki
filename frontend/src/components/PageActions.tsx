@@ -1,0 +1,110 @@
+import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { ApiError, api } from "../lib/api";
+import type { Page, PageStatus } from "../lib/types";
+import { Icon } from "./Icon";
+
+const STATUS_LABEL: Record<PageStatus, string> = {
+  draft: "Brouillon",
+  published: "Publié",
+  archived: "Archivé",
+};
+
+interface Props {
+  page: Page;
+  canWrite: boolean;
+  isOwner: boolean;
+  online: boolean;
+  onChangeStatus: (status: PageStatus) => void;
+  onDelete: () => void;
+  pushToast: (t: string) => void;
+}
+
+/** Header controls for a page: publication status, workflow stage and deletion.
+ * Publishing/archiving and deleting are owner-only (also enforced server-side). */
+export function PageActions({
+  page,
+  canWrite,
+  isOwner,
+  online,
+  onChangeStatus,
+  onDelete,
+  pushToast,
+}: Props) {
+  const qc = useQueryClient();
+  const [confirmDelete, setConfirmDelete] = useState(false);
+
+  const wfQ = useQuery({
+    queryKey: ["page-workflow", page.id],
+    queryFn: () => api.getPageWorkflow(page.id),
+    enabled: online,
+  });
+  const workflow = wfQ.data;
+
+  const advanceM = useMutation({
+    mutationFn: () => api.advancePageWorkflow(page.id),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["page-workflow", page.id] });
+      void qc.invalidateQueries({ queryKey: ["page", page.id] });
+    },
+    onError: (err) =>
+      pushToast(err instanceof ApiError ? err.detail : "Impossible de faire avancer."),
+  });
+
+  return (
+    <div className="page-actions">
+      {canWrite ? (
+        <select
+          className="input status-select"
+          value={page.status}
+          onChange={(e) => onChangeStatus(e.target.value as PageStatus)}
+          title="Statut de la page"
+        >
+          <option value="draft">Brouillon</option>
+          <option value="published" disabled={!isOwner}>Publié</option>
+          <option value="archived" disabled={!isOwner}>Archivé</option>
+        </select>
+      ) : (
+        <span className="ed-status">
+          <Icon name="check" size={11} /> {STATUS_LABEL[page.status]}
+        </span>
+      )}
+
+      {workflow && (
+        <span className="wf-badge" title={`Workflow : ${workflow.workflow_name}`}>
+          <Icon name="refresh" size={11} />
+          {workflow.current_stage_name ?? "—"}
+          {canWrite && (
+            <button
+              className="link"
+              style={{ marginLeft: 6 }}
+              disabled={advanceM.isPending}
+              onClick={() => advanceM.mutate()}
+            >
+              Faire avancer
+            </button>
+          )}
+        </span>
+      )}
+
+      {isOwner && (
+        <span style={{ marginLeft: "auto" }}>
+          {!confirmDelete ? (
+            <button className="btn btn-danger" onClick={() => setConfirmDelete(true)}>
+              <Icon name="x" size={13} /> Supprimer
+            </button>
+          ) : (
+            <span style={{ display: "inline-flex", gap: 6 }}>
+              <button className="btn btn-ghost" onClick={() => setConfirmDelete(false)}>
+                Annuler
+              </button>
+              <button className="btn btn-danger" onClick={onDelete}>
+                Confirmer
+              </button>
+            </span>
+          )}
+        </span>
+      )}
+    </div>
+  );
+}

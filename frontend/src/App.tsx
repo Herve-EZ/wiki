@@ -6,6 +6,8 @@ import { Icon } from "./components/Icon";
 import { LoginRoute } from "./routes/LoginRoute";
 import { WorkspaceLayout } from "./routes/WorkspaceLayout";
 import { PageRoute } from "./routes/PageRoute";
+import { SettingsRoute } from "./routes/SettingsRoute";
+import { InviteRoute } from "./routes/InviteRoute";
 
 function Loading() {
   return (
@@ -49,8 +51,10 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<LoginRoute />} />
+        <Route path="/invite/:token" element={<InviteRoute />} />
         <Route element={<RequireAuth />}>
           <Route path="/" element={<RootRedirect />} />
+          <Route path="/settings" element={<SettingsRoute />} />
           <Route path="/w/:workspace" element={<WorkspaceLayout />}>
             <Route index element={<WorkspaceIndex />} />
             <Route path=":pageId" element={<PageRoute />} />

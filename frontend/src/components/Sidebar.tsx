@@ -3,11 +3,17 @@ import { Link, useNavigate } from "react-router-dom";
 import { Icon } from "./Icon";
 import { ThemeToggle } from "./ThemeToggle";
 import { Avatar } from "./Avatar";
-import type { PageListItem, User, Workspace } from "../lib/types";
+import { NewPageModal } from "./modals/NewPageModal";
+import { NewWorkspaceModal } from "./modals/NewWorkspaceModal";
+import { WorkspaceSettingsModal } from "./modals/WorkspaceSettingsModal";
+import type { PageListItem, Role, User, Workspace } from "../lib/types";
 
 interface Props {
   workspaces: Workspace[];
   current: Workspace | undefined;
+  role: Role | null;
+  canWrite: boolean;
+  isOwner: boolean;
   pages: PageListItem[];
   currentPageId?: string;
   updatedPageIds: Set<string>;
@@ -18,6 +24,8 @@ interface Props {
 export function Sidebar({
   workspaces,
   current,
+  canWrite,
+  isOwner,
   pages,
   currentPageId,
   updatedPageIds,
@@ -26,6 +34,9 @@ export function Sidebar({
 }: Props) {
   const navigate = useNavigate();
   const [switcherOpen, setSwitcherOpen] = useState(false);
+  const [newPageOpen, setNewPageOpen] = useState(false);
+  const [newWsOpen, setNewWsOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   return (
     <nav className="sb">
@@ -67,6 +78,16 @@ export function Sidebar({
                 <span className="label">{w.name}</span>
               </button>
             ))}
+            <button
+              className="sb-item"
+              onClick={() => {
+                setSwitcherOpen(false);
+                setNewWsOpen(true);
+              }}
+            >
+              <Icon name="plus" size={13} />
+              <span className="label">Nouvel espace</span>
+            </button>
           </div>
         )}
       </div>
@@ -77,8 +98,26 @@ export function Sidebar({
           <span className="label">Accueil</span>
         </Link>
       )}
+      {current && isOwner && (
+        <button className="sb-item" onClick={() => setSettingsOpen(true)}>
+          <Icon name="settings" size={13} />
+          <span className="label">Réglages de l'espace</span>
+        </button>
+      )}
 
-      <div className="sb-label">{current?.name ?? "Pages"}</div>
+      <div className="sb-label" style={{ display: "flex", alignItems: "center" }}>
+        <span style={{ flex: 1 }}>{current?.name ?? "Pages"}</span>
+        {current && canWrite && (
+          <button
+            className="icon-btn"
+            style={{ width: 22, height: 22 }}
+            title="Nouvelle page"
+            onClick={() => setNewPageOpen(true)}
+          >
+            <Icon name="plus" size={14} />
+          </button>
+        )}
+      </div>
       {pages.length === 0 && (
         <div style={{ fontSize: 12, color: "var(--ink-3)", padding: "4px 8px" }}>
           Aucune page pour l'instant.
@@ -102,10 +141,44 @@ export function Sidebar({
           {user?.display_name || user?.email || "—"}
         </span>
         <ThemeToggle />
+        <button className="icon-btn" onClick={() => navigate("/settings")} title="Paramètres" aria-label="Paramètres">
+          <Icon name="settings" size={16} />
+        </button>
         <button className="icon-btn" onClick={onLogout} title="Se déconnecter" aria-label="Se déconnecter">
           <Icon name="logout" size={16} />
         </button>
       </div>
+
+      {newPageOpen && current && (
+        <NewPageModal
+          workspaceId={current.id}
+          workspaceSlug={current.slug}
+          onClose={() => setNewPageOpen(false)}
+          onCreated={(pageId) => {
+            setNewPageOpen(false);
+            navigate(`/w/${current.slug}/${pageId}`);
+          }}
+        />
+      )}
+      {newWsOpen && (
+        <NewWorkspaceModal
+          onClose={() => setNewWsOpen(false)}
+          onCreated={(slug) => {
+            setNewWsOpen(false);
+            navigate(`/w/${slug}`);
+          }}
+        />
+      )}
+      {settingsOpen && current && (
+        <WorkspaceSettingsModal
+          workspace={current}
+          onClose={() => setSettingsOpen(false)}
+          onDeleted={() => {
+            setSettingsOpen(false);
+            navigate("/");
+          }}
+        />
+      )}
     </nav>
   );
 }

@@ -6,9 +6,12 @@ import { flushOutbox } from "../lib/sync";
 import { useAuth } from "../auth/AuthContext";
 import { useNetworkStatus } from "../hooks/useNetworkStatus";
 import { useOutboxCount } from "../hooks/useOutboxCount";
+import { useConflictCount } from "../hooks/useConflictCount";
 import { Sidebar } from "../components/Sidebar";
 import { SearchPalette } from "../components/SearchPalette";
 import { OfflineBanner } from "../components/OfflineBanner";
+import { ConflictsModal } from "../components/ConflictsModal";
+import type { Role } from "../lib/types";
 import type { WorkspaceCtx } from "./workspaceContext";
 
 export function WorkspaceLayout() {
@@ -18,9 +21,11 @@ export function WorkspaceLayout() {
   const { user, logout } = useAuth();
   const online = useNetworkStatus();
   const { count: pending, refresh: refreshOutbox } = useOutboxCount();
+  const { count: conflicts, refresh: refreshConflicts } = useConflictCount();
 
   const [updatedPageIds, setUpdatedPageIds] = useState<Set<string>>(new Set());
   const [searchOpen, setSearchOpen] = useState(false);
+  const [conflictsOpen, setConflictsOpen] = useState(false);
 
   const currentPageId = location.pathname.split("/")[3];
 
@@ -35,6 +40,10 @@ export function WorkspaceLayout() {
     () => (workspacesQ.data ?? []).find((w) => w.slug === slug),
     [workspacesQ.data, slug],
   );
+
+  const role: Role | null = current?.my_role ?? null;
+  const canWrite = role === "owner" || role === "editor";
+  const isOwner = role === "owner";
 
   const markUpdated = useCallback((id: string) => {
     setUpdatedPageIds((prev) => new Set(prev).add(id));
@@ -66,6 +75,9 @@ export function WorkspaceLayout() {
   const ctx: WorkspaceCtx = {
     workspaces: workspacesQ.data ?? [],
     current,
+    role,
+    canWrite,
+    isOwner,
     pages: pagesQ.data ?? [],
     updatedPageIds,
     markUpdated,
@@ -78,13 +90,22 @@ export function WorkspaceLayout() {
       <OfflineBanner
         online={online}
         pending={pending}
-        conflicts={0}
-        onRetry={() => void flushOutbox().then(refreshOutbox)}
+        conflicts={conflicts}
+        onRetry={() =>
+          void flushOutbox().then(() => {
+            refreshOutbox();
+            refreshConflicts();
+          })
+        }
+        onResolve={() => setConflictsOpen(true)}
       />
       <div className="app-main">
         <Sidebar
           workspaces={workspacesQ.data ?? []}
           current={current}
+          role={role}
+          canWrite={canWrite}
+          isOwner={isOwner}
           pages={pagesQ.data ?? []}
           currentPageId={currentPageId}
           updatedPageIds={updatedPageIds}
@@ -104,6 +125,16 @@ export function WorkspaceLayout() {
             navigate(`/w/${current.slug}/${id}`);
           }}
           onClose={() => setSearchOpen(false)}
+        />
+      )}
+
+      {conflictsOpen && (
+        <ConflictsModal
+          onClose={() => setConflictsOpen(false)}
+          onChanged={() => {
+            refreshOutbox();
+            refreshConflicts();
+          }}
         />
       )}
     </div>

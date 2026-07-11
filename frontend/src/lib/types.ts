@@ -17,6 +17,69 @@ export interface Workspace {
   permission: WorkspacePermission;
   require_mfa: boolean;
   created_at: string;
+  /** The caller's role in this workspace (null if not a member — e.g. public). */
+  my_role: Role | null;
+}
+
+export interface Member {
+  id: string;
+  user: string;
+  email: string;
+  display_name: string;
+  role: Role;
+}
+
+/** Owner-facing view of a workspace invitation. */
+export interface WorkspaceInvitation {
+  id: string;
+  email: string;
+  role: Role;
+  status: "pending" | "accepted" | "declined" | "revoked";
+  invited_by_email: string | null;
+  created_at: string;
+  expires_at: string;
+}
+
+/** Invitee-facing view (pending list + invite-link landing). */
+export interface MyInvitation {
+  id: string;
+  token: string;
+  email: string;
+  role: Role;
+  status: "pending" | "accepted" | "declined" | "revoked";
+  workspace_name: string;
+  workspace_slug: string;
+  invited_by_email: string | null;
+  invited_by_name: string | null;
+  created_at: string;
+  expires_at: string;
+  is_expired?: boolean;
+}
+
+export interface WorkflowStage {
+  id?: string;
+  name: string;
+  order: number;
+  is_final: boolean;
+}
+
+export interface Workflow {
+  id: string;
+  workspace: string;
+  name: string;
+  description: string;
+  is_active: boolean;
+  stages: WorkflowStage[];
+  created_at?: string;
+}
+
+export interface PageWorkflow {
+  id: string;
+  workflow: string;
+  workflow_name: string;
+  current_stage: string | null;
+  current_stage_name: string | null;
+  stages: WorkflowStage[];
 }
 
 export interface Page {

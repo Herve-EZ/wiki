@@ -8,12 +8,20 @@ import { reportBackendReachable } from "./network";
 import type {
   DiffResult,
   LoginResult,
+  Member,
+  MyInvitation,
   Page,
   PageListItem,
   PageVersion,
   PageVersionDetail,
+  PageWorkflow,
+  Role,
   User,
+  Workflow,
+  WorkflowStage,
   Workspace,
+  WorkspaceInvitation,
+  WorkspacePermission,
 } from "./types";
 
 const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
@@ -139,12 +147,128 @@ export const api = {
     });
     await saveTokens({ access: data.access, refresh: data.refresh });
   },
+  register: (body: { email: string; password: string; display_name?: string }) =>
+    publicPost<User>("/api/auth/register", body),
   me: () => request<User>("/api/auth/me"),
+
+  // ---- account / settings ----
+  updateProfile: (patch: { display_name?: string; avatar_url?: string }) =>
+    request<User>("/api/auth/me", { method: "PATCH", body: JSON.stringify(patch) }),
+  changePassword: (current_password: string, new_password: string) =>
+    request<void>("/api/auth/password/change", {
+      method: "POST",
+      body: JSON.stringify({ current_password, new_password }),
+    }),
+  mfaSetup: () =>
+    request<{ secret: string; qr_code: string }>("/api/auth/mfa/totp/setup", {
+      method: "POST",
+      body: "{}",
+    }),
+  mfaActivate: (code: string) =>
+    request<{ activated: boolean; recovery_codes: string[] }>(
+      "/api/auth/mfa/totp/activate",
+      { method: "POST", body: JSON.stringify({ code }) },
+    ),
+  mfaDisable: (password: string) =>
+    request<void>("/api/auth/mfa/totp", {
+      method: "DELETE",
+      body: JSON.stringify({ password }),
+    }),
+  regenerateRecoveryCodes: () =>
+    request<{ recovery_codes: string[] }>("/api/auth/mfa/recovery-codes", {
+      method: "POST",
+      body: "{}",
+    }),
 
   // ---- workspaces ----
   listWorkspaces: () => requestList<Workspace>("/api/workspaces/"),
   listWorkspacePages: (slug: string) =>
     requestList<PageListItem>(`/api/workspaces/${slug}/pages/`),
+  createWorkspace: (body: {
+    name: string;
+    slug: string;
+    permission: WorkspacePermission;
+    require_mfa: boolean;
+  }) =>
+    request<Workspace>("/api/workspaces/", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+  updateWorkspace: (slug: string, patch: Partial<Workspace>) =>
+    request<Workspace>(`/api/workspaces/${slug}/`, {
+      method: "PATCH",
+      body: JSON.stringify(patch),
+    }),
+  deleteWorkspace: (slug: string) =>
+    request<void>(`/api/workspaces/${slug}/`, { method: "DELETE" }),
+
+  // ---- members ----
+  listMembers: (slug: string) =>
+    requestList<Member>(`/api/workspaces/${slug}/members/`),
+  updateMember: (slug: string, memberId: string, role: Role) =>
+    request<Member>(`/api/workspaces/${slug}/members/${memberId}/`, {
+      method: "PATCH",
+      body: JSON.stringify({ role }),
+    }),
+  removeMember: (slug: string, memberId: string) =>
+    request<void>(`/api/workspaces/${slug}/members/${memberId}/`, {
+      method: "DELETE",
+    }),
+
+  // ---- invitations ----
+  listWorkspaceInvitations: (slug: string) =>
+    requestList<WorkspaceInvitation>(`/api/workspaces/${slug}/invitations/`),
+  createInvitation: (slug: string, body: { email: string; role: Role }) =>
+    request<WorkspaceInvitation>(`/api/workspaces/${slug}/invitations/`, {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+  revokeInvitation: (slug: string, invitationId: string) =>
+    request<void>(`/api/workspaces/${slug}/invitations/${invitationId}/`, {
+      method: "DELETE",
+    }),
+  listMyInvitations: () => requestList<MyInvitation>("/api/invitations/"),
+  getInvitation: (token: string) =>
+    request<MyInvitation>(`/api/invitations/${token}/`),
+  acceptInvitation: (token: string) =>
+    request<Workspace>(`/api/invitations/${token}/accept`, { method: "POST", body: "{}" }),
+  declineInvitation: (token: string) =>
+    request<void>(`/api/invitations/${token}/decline`, { method: "POST", body: "{}" }),
+
+  // ---- workflows ----
+  listWorkflows: (slug: string) =>
+    requestList<Workflow>(`/api/workflows/?workspace=${encodeURIComponent(slug)}`),
+  createWorkflow: (body: {
+    workspace: string;
+    name: string;
+    description?: string;
+    stages: WorkflowStage[];
+  }) =>
+    request<Workflow>("/api/workflows/", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+  updateWorkflow: (id: string, patch: Partial<Workflow>) =>
+    request<Workflow>(`/api/workflows/${id}/`, {
+      method: "PATCH",
+      body: JSON.stringify(patch),
+    }),
+  deleteWorkflow: (id: string) =>
+    request<void>(`/api/workflows/${id}/`, { method: "DELETE" }),
+  getPageWorkflow: (pageId: string) =>
+    request<PageWorkflow | null>(`/api/pages/${pageId}/workflow/`),
+  assignPageWorkflow: (pageId: string, workflowId: string) =>
+    request<PageWorkflow>(`/api/pages/${pageId}/workflow/`, {
+      method: "POST",
+      body: JSON.stringify({ workflow: workflowId }),
+    }),
+  unassignPageWorkflow: (pageId: string) =>
+    request<void>(`/api/pages/${pageId}/workflow/`, { method: "DELETE" }),
+  advancePageWorkflow: (pageId: string) =>
+    request<PageWorkflow>(`/api/pages/${pageId}/workflow/advance`, {
+      method: "POST",
+      body: "{}",
+    }),
 
   // ---- pages ----
   getPage: (id: string) => request<Page>(`/api/pages/${id}/`),
@@ -152,6 +276,8 @@ export const api = {
     request<Page>("/api/pages/", { method: "POST", body: JSON.stringify(body) }),
   updatePage: (id: string, patch: Partial<Page>) =>
     request<Page>(`/api/pages/${id}/`, { method: "PATCH", body: JSON.stringify(patch) }),
+  deletePage: (id: string) =>
+    request<void>(`/api/pages/${id}/`, { method: "DELETE" }),
   versions: (id: string) => requestList<PageVersion>(`/api/pages/${id}/versions/`),
   versionDetail: (id: string, n: number) =>
     request<PageVersionDetail>(`/api/pages/${id}/versions/${n}/`),

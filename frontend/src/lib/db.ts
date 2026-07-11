@@ -120,3 +120,44 @@ export async function clearDirty(id: string): Promise<void> {
   const db = await getDb();
   await db.execute(`UPDATE page_cache SET dirty = 0 WHERE id = ?`, [id]);
 }
+
+/** Remove a page from the mirror entirely, dropping any queued edits for it.
+ * Used when the page no longer exists on the server and the user chooses to
+ * forget it locally. */
+export async function evictPage(id: string): Promise<void> {
+  const db = await getDb();
+  await db.execute(`DELETE FROM outbox WHERE page_id = ?`, [id]);
+  await db.execute(`DELETE FROM page_cache WHERE id = ?`, [id]);
+}
+
+/** An outbox entry that failed to push (conflict or missing page), joined with
+ * the cached page so the resolution UI can show a title and offer "recreate". */
+export interface ConflictEntry {
+  seq: number;
+  page_id: string;
+  last_error: string;
+  title: string | null;
+  workspace: string | null;
+  content_md: string | null;
+  status: string | null;
+}
+
+export async function listConflicts(): Promise<ConflictEntry[]> {
+  const db = await getDb();
+  return db.select<ConflictEntry[]>(
+    `SELECT o.seq, o.page_id, o.last_error,
+            c.title, c.workspace, c.content_md, c.status
+       FROM outbox o
+       LEFT JOIN page_cache c ON c.id = o.page_id
+      WHERE o.last_error IS NOT NULL
+      ORDER BY o.seq ASC`,
+  );
+}
+
+export async function conflictCount(): Promise<number> {
+  const db = await getDb();
+  const rows = await db.select<{ n: number }[]>(
+    `SELECT COUNT(*) AS n FROM outbox WHERE last_error IS NOT NULL`,
+  );
+  return rows[0]?.n ?? 0;
+}
