@@ -11,7 +11,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .models import Workspace, WorkspaceInvitation, WorkspaceMember
-from .permissions import get_role, is_owner, WorkspaceAccess
+from .permissions import WorkspaceAccess, is_owner
 from .serializers import (
     InvitationCreateSerializer,
     MemberRoleSerializer,
