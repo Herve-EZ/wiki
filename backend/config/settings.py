@@ -256,14 +256,20 @@ INVITATION_TTL_DAYS = int(env("INVITATION_TTL_DAYS", "14"))
 CORS_ALLOWED_ORIGINS = env_list(
     "CORS_ALLOWED_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173"
 )
+# The packaged Tauri desktop app serves its webview from tauri://localhost
+# (macOS/Linux) or http(s)://tauri.localhost (Windows/WebView2) in EVERY
+# environment — so these origins must be allowed in production too, not only
+# under DEBUG, otherwise the desktop app's CORS preflight passes but the real
+# request is blocked ("Serveur injoignable").
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^tauri://localhost$",
+    r"^https?://tauri\.localhost$",
+]
 if DEBUG:
-    # Dev convenience: Vite may pick any free port (5173, 5174, …) and the Tauri
-    # desktop webview serves from tauri://localhost / http(s)://tauri.localhost.
-    CORS_ALLOWED_ORIGIN_REGEXES = [
+    # Dev convenience: Vite may pick any free port (5173, 5174, …).
+    CORS_ALLOWED_ORIGIN_REGEXES += [
         r"^http://localhost:\d+$",
         r"^http://127\.0\.0\.1:\d+$",
-        r"^tauri://localhost$",
-        r"^https?://tauri\.localhost$",
     ]
 
 # --- Production hardening -----------------------------------------------------
