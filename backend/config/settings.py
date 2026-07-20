@@ -163,7 +163,10 @@ else:
 
 # --- Auth -------------------------------------------------------------------
 AUTH_USER_MODEL = "accounts.User"
-SITE_ID = 1
+# django.contrib.sites id. allauth resolves the SocialApp for THIS site, so it
+# must match the Site your SocialApp rows are attached to. Override per
+# deployment (e.g. DJANGO_SITE_ID=2 when the real domain lives on Site id 2).
+SITE_ID = int(env("DJANGO_SITE_ID", "1"))
 
 AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
