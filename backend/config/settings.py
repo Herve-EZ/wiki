@@ -184,6 +184,10 @@ AUTH_PASSWORD_VALIDATORS = [
 ACCOUNT_LOGIN_METHODS = {"email"}
 ACCOUNT_SIGNUP_FIELDS = ["email*", "password1*", "password2*"]
 ACCOUNT_EMAIL_VERIFICATION = "optional"
+# Our custom User has no `username` field (login by email). Tell allauth so it
+# doesn't try to read/validate a username during (social) signup — otherwise
+# social login crashes with FieldDoesNotExist: User has no field named 'username'.
+ACCOUNT_USER_MODEL_USERNAME_FIELD = None
 SOCIALACCOUNT_ADAPTER = "accounts.sso.JWTSocialAdapter"
 
 
