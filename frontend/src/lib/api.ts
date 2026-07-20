@@ -178,6 +178,16 @@ export const api = {
     await saveTokens({ access: data.access, refresh: data.refresh });
     return { kind: "tokens" };
   },
+  /** Exchange the one-time SSO code (from the wikicollab:// deep link) for the
+   * JWT pair, or surface an MFA challenge — same shape as password login. */
+  async ssoExchange(code: string): Promise<LoginResult> {
+    const data = await publicPost<LoginResponse>("/api/auth/sso/exchange", { code });
+    if ("mfa_required" in data) {
+      return { kind: "mfa", challengeToken: data.challenge_token };
+    }
+    await saveTokens({ access: data.access, refresh: data.refresh });
+    return { kind: "tokens" };
+  },
   async verifyMfa(challengeToken: string, code: string): Promise<void> {
     const data = await publicPost<TokenPair>("/api/auth/mfa/verify", {
       challenge_token: challengeToken,

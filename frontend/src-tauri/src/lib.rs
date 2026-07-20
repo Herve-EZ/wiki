@@ -48,7 +48,24 @@ fn migrations() -> Vec<Migration> {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tauri::Builder::default()
+    let mut builder = tauri::Builder::default();
+
+    // Single-instance MUST be registered first: when the OS launches the app to
+    // open a wikicollab:// deep link while it's already running, the link is
+    // forwarded to the live instance (which the frontend picks up via
+    // onOpenUrl) instead of starting a second copy.
+    #[cfg(desktop)]
+    {
+        use tauri::Manager;
+        builder = builder.plugin(tauri_plugin_single_instance::init(|app, _argv, _cwd| {
+            if let Some(w) = app.get_webview_window("main") {
+                let _ = w.set_focus();
+            }
+        }));
+    }
+
+    builder
+        .plugin(tauri_plugin_deep_link::init())
         .plugin(
             tauri_plugin_sql::Builder::default()
                 .add_migrations("sqlite:wikicollab.db", migrations())
@@ -75,6 +92,14 @@ pub fn run() {
                     .plugin(tauri_plugin_updater::Builder::new().build())?;
                 app.handle().plugin(tauri_plugin_process::init())?;
                 menu::setup(app)?;
+            }
+            // Register the wikicollab:// scheme at runtime. The installer wires
+            // it on Windows and Info.plist on macOS; this covers dev runs and
+            // Linux where runtime registration is required.
+            #[cfg(any(windows, target_os = "linux"))]
+            {
+                use tauri_plugin_deep_link::DeepLinkExt;
+                let _ = app.deep_link().register_all();
             }
             Ok(())
         })

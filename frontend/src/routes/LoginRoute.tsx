@@ -10,6 +10,8 @@ import { Icon } from "../components/Icon";
 interface LoginNavState {
   next?: string;
   email?: string;
+  /** Set when an SSO login needs a second factor (deep-link → MFA). */
+  challengeToken?: string;
 }
 
 export function LoginRoute() {
@@ -30,7 +32,7 @@ export function LoginRoute() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
-  const [challenge, setChallenge] = useState<string | null>(null);
+  const [challenge, setChallenge] = useState<string | null>(navState.challengeToken ?? null);
   const [code, setCode] = useState<string[]>(["", "", "", "", "", ""]);
   const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
 

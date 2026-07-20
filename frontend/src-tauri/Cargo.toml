@@ -29,8 +29,14 @@ tauri-plugin-dialog = "2"
 tauri-plugin-fs = "2"
 tauri-plugin-os = "2"
 tauri-plugin-notification = "2"
+# SSO hand-off: browser finishes the OAuth flow, then a wikicollab:// deep link
+# returns the one-time code to the app.
+tauri-plugin-deep-link = "2"
 
 # Desktop-only: auto-update from GitHub Releases + relaunch after install.
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-updater = "2"
 tauri-plugin-process = "2"
+# Deliver the deep link to the already-running instance instead of spawning a
+# new one (required on Windows/Linux for custom-scheme links).
+tauri-plugin-single-instance = { version = "2", features = ["deep-link"] }

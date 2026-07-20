@@ -41,6 +41,11 @@
     }
   },
   "plugins": {
+    "deep-link": {
+      "desktop": {
+        "schemes": ["wikicollab"]
+      }
+    },
     "updater": {
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IERCMjI2MEM4M0I4RkM0RUEKUldUcXhJODd5R0FpMjFRTTJxSTg2YjRKZXZaZVh0eThTZjh4TjJ3Y2lwRTFlMC8wTDgyQXhxcjAK",
       "endpoints": [

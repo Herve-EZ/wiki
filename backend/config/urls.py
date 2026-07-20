@@ -3,10 +3,13 @@ from django.contrib import admin
 from django.urls import include, path
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
+from accounts.sso_views import SSOCompleteView
 from pages.views import SearchView
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    # Landing page allauth redirects to after social login (LOGIN_REDIRECT_URL).
+    path("sso/complete", SSOCompleteView.as_view(), name="sso_complete"),
     path("api/auth/", include("accounts.urls")),
     path("api/", include("siteconfig.urls")),
     path("api/", include("workspaces.urls")),

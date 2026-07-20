@@ -12,6 +12,7 @@ import { InviteRoute } from "./routes/InviteRoute";
 import { HelpRoute } from "./routes/HelpRoute";
 import { WelcomeRoute } from "./routes/WelcomeRoute";
 import { MenuBridge } from "./components/MenuBridge";
+import { SsoDeepLink } from "./components/SsoDeepLink";
 
 function Loading() {
   return (
@@ -40,6 +41,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <MenuBridge />
+      <SsoDeepLink />
       <Routes>
         <Route path="/login" element={<LoginRoute />} />
         <Route path="/invite/:token" element={<InviteRoute />} />

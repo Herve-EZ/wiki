@@ -188,6 +188,9 @@ ACCOUNT_EMAIL_VERIFICATION = "optional"
 # doesn't try to read/validate a username during (social) signup — otherwise
 # social login crashes with FieldDoesNotExist: User has no field named 'username'.
 ACCOUNT_USER_MODEL_USERNAME_FIELD = None
+# After a social login, allauth redirects here; SSOCompleteView hands the app a
+# one-time code via the wikicollab:// deep link (see accounts.sso_views).
+LOGIN_REDIRECT_URL = "/sso/complete"
 SOCIALACCOUNT_ADAPTER = "accounts.sso.JWTSocialAdapter"
 
 
