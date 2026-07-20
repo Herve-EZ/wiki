@@ -9,6 +9,10 @@
 # Secrets requis :
 #   TAURI_SIGNING_PRIVATE_KEY           contenu de ~/.tauri/wikicollab.key
 #   TAURI_SIGNING_PRIVATE_KEY_PASSWORD  mot de passe de la clé (vide si aucun)
+#   VITE_API_URL                        URL du backend Django (ex. https://wiki.exemple.com)
+#   VITE_WS_URL                         URL WebSocket du backend  (ex. wss://wiki.exemple.com)
+# VITE_API_URL / VITE_WS_URL sont embarquées dans le bundle AU BUILD (Vite) ;
+# sans elles l'app retombe sur http://localhost:8000 / ws://localhost:8000.
 name: Release
 
 on:
@@ -67,6 +71,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          # Embarquées dans le bundle par Vite au moment du build.
+          VITE_API_URL: ${{ secrets.VITE_API_URL }}
+          VITE_WS_URL: ${{ secrets.VITE_WS_URL }}
         with:
           projectPath: frontend
           tagName: v__VERSION__
