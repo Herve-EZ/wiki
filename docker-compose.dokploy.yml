@@ -1,0 +1,69 @@
+# Déploiement Dokploy (type "Compose").
+#
+# Point clé : le service `web` est rattaché au réseau EXTERNE `dokploy-network`
+# (créé et géré par Dokploy). Sans ça, le conteneur ne résout pas le hostname de
+# la base PostgreSQL gérée par Dokploy et tu obtiens :
+#   django.db.utils.OperationalError: failed to resolve host 'si-ez-db-...'
+#
+# À renseigner côté Dokploy (Environment de l'app) :
+#   POSTGRES_HOST      = nom interne de la base Dokploy (ex. si-ez-db-nceip0)
+#   POSTGRES_DB / POSTGRES_USER / POSTGRES_PASSWORD
+#   DJANGO_SECRET_KEY  = clé forte (pas la valeur de dev)
+#   DJANGO_ALLOWED_HOSTS = ton domaine (ex. wiki.exemple.com)
+#   CORS_ALLOWED_ORIGINS = origine(s) du frontend (ex. https://wiki.exemple.com)
+#   MFA_ENCRYPTION_KEY  = clé Fernet dédiée (recommandé)
+#   FRONTEND_URL        = URL publique du frontend (liens d'invitation)
+services:
+  web:
+    build: ./backend
+    restart: unless-stopped
+    # migrate + collectstatic (admin/DRF servis par WhiteNoise en prod) puis ASGI.
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py collectstatic --noinput &&
+             daphne -b 0.0.0.0 -p 8000 config.asgi:application"
+    environment:
+      # --- Base PostgreSQL gérée par Dokploy (sur dokploy-network) ---
+      POSTGRES_HOST: ${POSTGRES_HOST}
+      POSTGRES_PORT: ${POSTGRES_PORT:-5432}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      # --- Redis interne à cette stack (service ci-dessous) ---
+      REDIS_URL: redis://redis:6379/0
+      # --- Django ---
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY}
+      DJANGO_DEBUG: "false"
+      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
+      MFA_ENCRYPTION_KEY: ${MFA_ENCRYPTION_KEY:-}
+      FRONTEND_URL: ${FRONTEND_URL:-}
+    # Pas de `ports:` — Dokploy/Traefik route le trafic vers ce service via
+    # dokploy-network (configure le domaine + port 8000 dans l'UI Dokploy).
+    expose:
+      - "8000"
+    networks:
+      - dokploy-network  # pour joindre la base Dokploy + l'ingress Traefik
+      - internal         # pour joindre redis
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - internal
+
+networks:
+  # Réseau partagé de Dokploy — doit exister (Dokploy le crée). `external: true`
+  # dit à Compose de s'y rattacher au lieu d'en créer un nouveau.
+  dokploy-network:
+    external: true
+  # Réseau privé de cette stack (web <-> redis uniquement).
+  internal:
