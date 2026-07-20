@@ -25,7 +25,10 @@ function extractCode(url: string): string | null {
 export function SsoDeepLink() {
   const navigate = useNavigate();
   const { refresh } = useAuth();
-  const busy = useRef(false);
+  // Codes we've already attempted. A code is single-use server-side, so the
+  // launch URL being redelivered (cold-start getCurrent + onOpenUrl, refocus,
+  // etc.) must never re-hit the exchange endpoint — that caused a 429 storm.
+  const seen = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     if (!isTauri()) return;
@@ -35,10 +38,10 @@ export function SsoDeepLink() {
       if (!urls) return;
       const list = Array.isArray(urls) ? urls : [urls];
       for (const url of list) {
-        if (busy.current || !url?.startsWith("wikicollab://")) continue;
+        if (!url?.startsWith("wikicollab://")) continue;
         const code = extractCode(url);
-        if (!code) continue;
-        busy.current = true;
+        if (!code || seen.current.has(code)) continue;
+        seen.current.add(code);
         try {
           const res = await api.ssoExchange(code);
           if (res.kind === "tokens") {
@@ -49,8 +52,6 @@ export function SsoDeepLink() {
           }
         } catch {
           navigate("/login", { replace: true });
-        } finally {
-          busy.current = false;
         }
       }
     }

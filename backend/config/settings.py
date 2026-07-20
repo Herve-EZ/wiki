@@ -238,6 +238,10 @@ REST_FRAMEWORK = {
         # Brute-force guard on the auth surface (per IP for anonymous calls).
         "auth": env("THROTTLE_AUTH", "10/min"),
         "auth_burst": env("THROTTLE_AUTH_BURST", "30/min"),
+        # SSO code exchange: single-use random codes (not brute-forceable), on
+        # its own scope so a completed social login isn't blocked by prior
+        # password-login attempts sharing the "auth" budget.
+        "sso": env("THROTTLE_SSO", "30/min"),
     },
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }

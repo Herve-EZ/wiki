@@ -80,7 +80,7 @@ class SSOExchangeView(APIView):
     """Exchange the single-use SSO code for the JWT pair (or an MFA challenge)."""
 
     permission_classes = [AllowAny]
-    throttle_scope = "auth"
+    throttle_scope = "sso"
 
     def post(self, request):
         uid = resolve_sso_code(request.data.get("code", ""))
