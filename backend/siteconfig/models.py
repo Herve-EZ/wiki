@@ -25,21 +25,30 @@ SSO_PROVIDERS = (
 
 
 def configured_provider_ids() -> set[str]:
-    """Provider ids that have real credentials configured server-side.
+    """Provider ids with real credentials configured server-side.
 
-    allauth stores social credentials as ``SocialApp`` rows (seeded via the
-    Django admin or a data migration). A button whose provider has no such row
-    would only lead to an allauth error, so we treat "no SocialApp" as "not
-    configured" and never surface it.
+    Two configuration paths, either of which counts as "configured":
+    - env / settings: ``SOCIALACCOUNT_PROVIDERS[<id>]["APP"|"APPS"]`` (12-factor,
+      recommended — see settings._oauth_app). These are global, no Site wiring.
+    - DB: an allauth ``SocialApp`` row (admin-managed, filtered by Site).
+
+    A button whose provider is configured by neither would only lead to an
+    allauth error, so we never surface it.
     """
+    from django.conf import settings
+
+    ids: set[str] = set()
+    for pid, conf in getattr(settings, "SOCIALACCOUNT_PROVIDERS", {}).items():
+        if isinstance(conf, dict) and (conf.get("APP") or conf.get("APPS")):
+            ids.add(pid)
+
     try:
         from allauth.socialaccount.models import SocialApp
-    except Exception:  # allauth missing / apps not ready
-        return set()
-    try:
-        return set(SocialApp.objects.values_list("provider", flat=True))
-    except Exception:  # table not migrated yet
-        return set()
+
+        ids.update(SocialApp.objects.values_list("provider", flat=True))
+    except Exception:  # allauth missing / table not migrated yet
+        pass
+    return ids
 
 
 class SiteConfiguration(TimeStampedModel):

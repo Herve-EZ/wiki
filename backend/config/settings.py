@@ -185,11 +185,35 @@ ACCOUNT_LOGIN_METHODS = {"email"}
 ACCOUNT_SIGNUP_FIELDS = ["email*", "password1*", "password2*"]
 ACCOUNT_EMAIL_VERIFICATION = "optional"
 SOCIALACCOUNT_ADAPTER = "accounts.sso.JWTSocialAdapter"
-SOCIALACCOUNT_PROVIDERS = {
-    # Real client IDs/secrets are configured per-deployment via the admin
-    # (SocialApp) or env; providers are declared here so allauth loads them.
-    **({"saml": {}} if SAML_AVAILABLE else {}),
-}
+
+
+def _oauth_app(id_key, secret_key):
+    """Build an allauth settings-based `APP` from env, or None if unset.
+
+    Settings-based apps are global (NOT filtered by the Sites framework), so
+    they sidestep the SocialApp/SITE_ID matching that otherwise raises
+    SocialApp.DoesNotExist. Configure a provider purely via env — no DB
+    SocialApp needed (and don't keep both, or allauth sees two apps).
+    """
+    client_id = env(id_key, "")
+    secret = env(secret_key, "")
+    if client_id and secret:
+        return {"APP": {"client_id": client_id, "secret": secret, "key": ""}}
+    return None
+
+
+SOCIALACCOUNT_PROVIDERS = {}
+for _pid, _id_key, _secret_key in (
+    ("google", "GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET"),
+    ("github", "GITHUB_CLIENT_ID", "GITHUB_CLIENT_SECRET"),
+    ("microsoft", "MICROSOFT_CLIENT_ID", "MICROSOFT_CLIENT_SECRET"),
+):
+    _app = _oauth_app(_id_key, _secret_key)
+    if _app:
+        SOCIALACCOUNT_PROVIDERS[_pid] = _app
+if SAML_AVAILABLE:
+    # SAML is configured per-IdP (DB SocialApp), not via a client id/secret.
+    SOCIALACCOUNT_PROVIDERS["saml"] = {}
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
