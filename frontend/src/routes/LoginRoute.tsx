@@ -3,6 +3,8 @@ import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { ApiError, NetworkError, api, ssoLoginUrl } from "../lib/api";
 import { openExternal } from "../lib/native";
 import { useAuth } from "../auth/AuthContext";
+import { useSiteConfig } from "../config/SiteConfigContext";
+import { BrandLogo } from "../components/BrandLogo";
 import { Icon } from "../components/Icon";
 
 interface LoginNavState {
@@ -10,19 +12,16 @@ interface LoginNavState {
   email?: string;
 }
 
-const SSO = [
-  { id: "google", label: "Google" },
-  { id: "github", label: "GitHub" },
-  { id: "microsoft", label: "Microsoft" },
-  { id: "saml", label: "SSO entreprise" },
-];
-
 export function LoginRoute() {
   const navigate = useNavigate();
   const location = useLocation();
   const navState = (location.state as LoginNavState | null) ?? {};
   const next = navState.next ?? "/";
   const { login, verifyMfa, refresh, status } = useAuth();
+  const { config } = useSiteConfig();
+
+  // Only providers the server confirmed are enabled AND configured are offered.
+  const ssoProviders = config.sso_providers;
 
   const [mode, setMode] = useState<"login" | "register">("login");
   const [email, setEmail] = useState(navState.email ?? "");
@@ -111,83 +110,111 @@ export function LoginRoute() {
 
   if (status === "authenticated") return <Navigate to={next} replace />;
 
-  const isRegister = mode === "register";
+  const isRegister = mode === "register" && config.allow_registration;
 
   return (
     <div className="auth-page">
       {challenge === null ? (
         <form className="card" onSubmit={isRegister ? onSubmitRegister : onSubmitLogin}>
-          <h4>{isRegister ? "Créer un compte" : "Connexion à WikiCollab"}</h4>
-          <p className="sub">Wiki collaboratif self-hosted — vos données restent chez vous.</p>
+          <div className="auth-brand">
+            <BrandLogo size={52} />
+            <div>
+              <h4 style={{ margin: 0 }}>
+                {isRegister
+                  ? "Créer un compte"
+                  : config.login_title || `Connexion à ${config.site_name}`}
+              </h4>
+              <p className="sub" style={{ margin: "4px 0 0" }}>
+                {config.login_subtitle || config.tagline}
+              </p>
+            </div>
+          </div>
 
           {error && <p className="form-error">{error}</p>}
 
-          <div className="field">
-            <label htmlFor="email">Adresse email</label>
-            <input
-              id="email"
-              className="input"
-              type="email"
-              autoComplete="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
-          {isRegister && (
-            <div className="field">
-              <label htmlFor="display_name">Nom affiché</label>
-              <input
-                id="display_name"
-                className="input"
-                type="text"
-                autoComplete="name"
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
-              />
+          {config.enable_email_login && (
+            <>
+              <div className="field">
+                <label htmlFor="email">Adresse email</label>
+                <input
+                  id="email"
+                  className="input"
+                  type="email"
+                  autoComplete="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+              {isRegister && (
+                <div className="field">
+                  <label htmlFor="display_name">Nom affiché</label>
+                  <input
+                    id="display_name"
+                    className="input"
+                    type="text"
+                    autoComplete="name"
+                    value={displayName}
+                    onChange={(e) => setDisplayName(e.target.value)}
+                  />
+                </div>
+              )}
+              <div className="field">
+                <label htmlFor="password">Mot de passe</label>
+                <input
+                  id="password"
+                  className="input"
+                  type="password"
+                  autoComplete={isRegister ? "new-password" : "current-password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+              </div>
+              <button className="btn btn-primary btn-block" type="submit" disabled={busy}>
+                {busy
+                  ? isRegister ? "Création…" : "Connexion…"
+                  : isRegister ? "Créer mon compte" : "Se connecter"}
+              </button>
+
+              {config.allow_registration && (
+                <div style={{ marginTop: 12, textAlign: "center" }}>
+                  <button
+                    type="button"
+                    className="link"
+                    onClick={() => { setMode(isRegister ? "login" : "register"); setError(""); }}
+                  >
+                    {isRegister ? "J'ai déjà un compte — me connecter" : "Créer un compte"}
+                  </button>
+                </div>
+              )}
+            </>
+          )}
+
+          {config.enable_email_login && ssoProviders.length > 0 && (
+            <div className="div-or">ou continuer avec</div>
+          )}
+          {ssoProviders.length > 0 && (
+            <div className="sso-grid">
+              {ssoProviders.map((s) => (
+                <button
+                  key={s.id}
+                  type="button"
+                  className="sso"
+                  onClick={() => void openExternal(ssoLoginUrl(s.id))}
+                >
+                  {s.label}
+                </button>
+              ))}
             </div>
           )}
-          <div className="field">
-            <label htmlFor="password">Mot de passe</label>
-            <input
-              id="password"
-              className="input"
-              type="password"
-              autoComplete={isRegister ? "new-password" : "current-password"}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
-          <button className="btn btn-primary btn-block" type="submit" disabled={busy}>
-            {busy
-              ? isRegister ? "Création…" : "Connexion…"
-              : isRegister ? "Créer mon compte" : "Se connecter"}
-          </button>
 
-          <div style={{ marginTop: 12, textAlign: "center" }}>
-            <button
-              type="button"
-              className="link"
-              onClick={() => { setMode(isRegister ? "login" : "register"); setError(""); }}
-            >
-              {isRegister ? "J'ai déjà un compte — me connecter" : "Créer un compte"}
-            </button>
-          </div>
-
-          <div className="div-or">ou continuer avec</div>
-          <div className="sso-grid">
-            {SSO.map((s) => (
-              <button
-                key={s.id}
-                type="button"
-                className="sso"
-                onClick={() => void openExternal(ssoLoginUrl(s.id))}
-              >
-                {s.label}
-              </button>
-            ))}
-          </div>
+          {!config.enable_email_login && ssoProviders.length === 0 && (
+            <p className="sub" style={{ margin: 0 }}>
+              Aucune méthode de connexion n'est configurée. Contactez votre
+              administrateur système.
+            </p>
+          )}
         </form>
       ) : (
         <form className="card" onSubmit={onVerify}>

@@ -8,6 +8,7 @@ from pages.views import SearchView
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/auth/", include("accounts.urls")),
+    path("api/", include("siteconfig.urls")),
     path("api/", include("workspaces.urls")),
     path("api/", include("pages.urls")),
     path("api/", include("workflows.urls")),

@@ -1908,3 +1908,80 @@ svg.ic.spin {
     margin-left: 100%;
   }
 }
+
+/* ======================= Branding / logo ======================= */
+.brand-logo svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.auth-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+  text-align: center;
+}
+.auth-brand .brand-logo,
+.auth-brand > svg {
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+}
+
+/* ======================= System admin page ======================= */
+.admin-provider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border-soft);
+}
+.admin-provider:last-child {
+  border-bottom: none;
+}
+.admin-provider .switch-text {
+  flex: 1;
+  min-width: 0;
+}
+.cfg-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+.cfg-badge.ok {
+  color: var(--diff-add);
+  background: var(--diff-add-wash);
+}
+.cfg-badge.missing {
+  color: var(--warn);
+  background: var(--warn-wash);
+}
+.logo-preview {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  margin-bottom: 12px;
+}
+.color-field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.color-field input[type="color"] {
+  width: 42px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: none;
+  cursor: pointer;
+}

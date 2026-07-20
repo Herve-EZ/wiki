@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import App from "./App.tsx";
 import { AuthProvider } from "./auth/AuthContext";
+import { SiteConfigProvider } from "./config/SiteConfigContext";
 import { persister, queryClient } from "./lib/queryClient";
 import "./index.css";
 
@@ -14,9 +15,11 @@ createRoot(document.getElementById("root")!).render(
       client={queryClient}
       persistOptions={{ persister, buster: "v2-my-role" }}
     >
-      <AuthProvider>
-        <App />
-      </AuthProvider>
+      <SiteConfigProvider>
+        <AuthProvider>
+          <App />
+        </AuthProvider>
+      </SiteConfigProvider>
     </PersistQueryClientProvider>
   </StrictMode>,
 );

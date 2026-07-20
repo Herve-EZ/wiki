@@ -8,6 +8,67 @@ export interface User {
   display_name: string;
   avatar_url: string;
   mfa_enabled: boolean;
+  /** Platform-wide administrator (white-label config, SSO setup, admin roster). */
+  is_system_admin: boolean;
+}
+
+/** An SSO provider that is enabled AND configured server-side (safe to render). */
+export interface SsoProvider {
+  id: string;
+  label: string;
+}
+
+/** Public, anonymously-readable branding + usable auth methods (login page). */
+export interface SiteConfig {
+  site_name: string;
+  tagline: string;
+  logo_svg: string;
+  primary_color: string;
+  primary_color_dark: string;
+  support_email: string;
+  login_title: string;
+  login_subtitle: string;
+  allow_registration: boolean;
+  enable_email_login: boolean;
+  sso_providers: SsoProvider[];
+}
+
+/** Per-provider status in the admin screen: admin intent + server-side config. */
+export interface AdminProviderStatus {
+  id: string;
+  label: string;
+  enabled: boolean;
+  configured: boolean;
+}
+
+/** Full, writable platform config (system admin only). */
+export interface AdminSiteConfig {
+  site_name: string;
+  tagline: string;
+  logo_svg: string;
+  primary_color: string;
+  primary_color_dark: string;
+  support_email: string;
+  login_title: string;
+  login_subtitle: string;
+  allow_registration: boolean;
+  enable_email_login: boolean;
+  enable_google: boolean;
+  enable_github: boolean;
+  enable_microsoft: boolean;
+  enable_saml: boolean;
+  providers: AdminProviderStatus[];
+  updated_at: string;
+}
+
+export interface AdminUser {
+  id: string;
+  email: string;
+  display_name: string;
+  is_superuser: boolean;
+  is_system_admin: boolean;
+  is_effective_admin: boolean;
+  date_joined: string;
 }
 
 export interface Workspace {

@@ -7,6 +7,7 @@ import { WorkspaceLayout } from "./routes/WorkspaceLayout";
 import { WorkspaceHome } from "./routes/WorkspaceHome";
 import { PageRoute } from "./routes/PageRoute";
 import { SettingsRoute } from "./routes/SettingsRoute";
+import { AdminRoute } from "./routes/AdminRoute";
 import { InviteRoute } from "./routes/InviteRoute";
 import { HelpRoute } from "./routes/HelpRoute";
 import { WelcomeRoute } from "./routes/WelcomeRoute";
@@ -45,6 +46,7 @@ export default function App() {
         <Route element={<RequireAuth />}>
           <Route path="/" element={<RootRedirect />} />
           <Route path="/settings" element={<SettingsRoute />} />
+          <Route path="/admin" element={<AdminRoute />} />
           <Route path="/help" element={<HelpRoute />} />
           <Route path="/w/:workspace" element={<WorkspaceLayout />}>
             <Route index element={<WorkspaceHome />} />

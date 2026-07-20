@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { Icon } from "../Icon";
+import { BrandLogo } from "../BrandLogo";
+import { useSiteConfig } from "../../config/SiteConfigContext";
 import { openExternal, systemInfo, type SystemInfo } from "../../lib/native";
 
 interface Props {
@@ -12,6 +14,7 @@ interface Props {
 /** Modales du menu natif Aide → « Version de l'application » et « Crédits ». */
 export function AboutModal({ view, onClose, onCheckUpdates }: Props) {
   const [info, setInfo] = useState<SystemInfo | null>(null);
+  const { config } = useSiteConfig();
   useEffect(() => {
     void systemInfo().then(setInfo);
   }, []);
@@ -21,10 +24,10 @@ export function AboutModal({ view, onClose, onCheckUpdates }: Props) {
       <div className="card about-card" onClick={(e) => e.stopPropagation()}>
         <div className="about-head">
           <div className="about-logo">
-            <Icon name="book" size={26} />
+            <BrandLogo size={40} />
           </div>
           <div>
-            <h4 style={{ margin: 0 }}>WikiCollab</h4>
+            <h4 style={{ margin: 0 }}>{config.site_name}</h4>
             <p className="sub" style={{ margin: 0 }}>
               {view === "version"
                 ? info

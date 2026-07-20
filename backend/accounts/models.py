@@ -18,6 +18,10 @@ class User(UUIDModel, AbstractUser):
     email = models.EmailField("email address", unique=True)
     display_name = models.CharField(max_length=150, blank=True)
     avatar_url = models.URLField(blank=True)
+    # Platform-wide administrator (white-label config, SSO setup, admin roster).
+    # Distinct from the per-workspace `owner` role; superusers are implicitly
+    # system admins (see siteconfig.permissions.is_system_admin).
+    is_system_admin = models.BooleanField(default=False)
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []

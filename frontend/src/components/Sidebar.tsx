@@ -169,6 +169,16 @@ export function Sidebar({
           {user?.display_name || user?.email || "—"}
         </span>
         <ThemeToggle />
+        {user?.is_system_admin && (
+          <button
+            className="icon-btn"
+            onClick={() => navigate("/admin")}
+            title="Administration système"
+            aria-label="Administration système"
+          >
+            <Icon name="shield" size={16} />
+          </button>
+        )}
         <button className="icon-btn" onClick={() => navigate("/help")} title="Aide" aria-label="Aide">
           <Icon name="help" size={16} />
         </button>

@@ -6,6 +6,8 @@
 import { clearTokens, loadTokens, saveTokens } from "./auth";
 import { isForcedOffline, reportBackendReachable } from "./network";
 import type {
+  AdminSiteConfig,
+  AdminUser,
   DiffResult,
   LoginResult,
   Member,
@@ -16,6 +18,7 @@ import type {
   PageVersionDetail,
   PageWorkflow,
   Role,
+  SiteConfig,
   User,
   Workflow,
   WorkflowStage,
@@ -111,6 +114,22 @@ async function publicPost<T>(path: string, body: unknown): Promise<T> {
   return (await res.json()) as T;
 }
 
+/** Pre-auth GET that never attaches a token (branding/config on the login page). */
+async function publicGet<T>(path: string): Promise<T> {
+  if (isForcedOffline()) throw new NetworkError();
+  let res: Response;
+  try {
+    res = await fetch(`${API_URL}${path}`);
+  } catch {
+    throw new NetworkError();
+  }
+  if (!res.ok) {
+    const detail = await res.text().catch(() => res.statusText);
+    throw new ApiError(res.status, detail || res.statusText);
+  }
+  return (await res.json()) as T;
+}
+
 interface TokenPair {
   access: string;
   refresh: string;
@@ -135,6 +154,21 @@ async function requestList<T>(path: string): Promise<T[]> {
 }
 
 export const api = {
+  // ---- platform config / branding ----
+  getConfig: () => publicGet<SiteConfig>("/api/config"),
+  getAdminConfig: () => request<AdminSiteConfig>("/api/admin/config"),
+  updateAdminConfig: (patch: Partial<AdminSiteConfig>) =>
+    request<AdminSiteConfig>("/api/admin/config", {
+      method: "PATCH",
+      body: JSON.stringify(patch),
+    }),
+  listAdminUsers: () => request<AdminUser[]>("/api/admin/users"),
+  setUserSystemAdmin: (id: string, isSystemAdmin: boolean) =>
+    request<AdminUser>(`/api/admin/users/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ is_system_admin: isSystemAdmin }),
+    }),
+
   // ---- auth ----
   async login(email: string, password: string): Promise<LoginResult> {
     const data = await publicPost<LoginResponse>("/api/auth/token", { email, password });

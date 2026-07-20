@@ -7,10 +7,22 @@ User = get_user_model()
 
 class UserSerializer(serializers.ModelSerializer):
     mfa_enabled = serializers.BooleanField(read_only=True)
+    # Effective platform-admin status (dedicated flag OR Django superuser).
+    is_system_admin = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ["id", "email", "display_name", "avatar_url", "mfa_enabled"]
+        fields = [
+            "id",
+            "email",
+            "display_name",
+            "avatar_url",
+            "mfa_enabled",
+            "is_system_admin",
+        ]
+
+    def get_is_system_admin(self, obj) -> bool:
+        return bool(obj.is_superuser or obj.is_system_admin)
 
 
 class ProfileUpdateSerializer(serializers.ModelSerializer):

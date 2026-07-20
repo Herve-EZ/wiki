@@ -68,6 +68,7 @@ INSTALLED_APPS = [
     # Local apps
     "core",
     "accounts",
+    "siteconfig",
     "workspaces",
     "pages",
     "workflows",
