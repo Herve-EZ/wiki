@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../lib/api";
 import { notify as osNotify } from "../lib/native";
+import { pushGlobalToast } from "./ToastContainer";
 import { Icon } from "./Icon";
 import type { AppNotification } from "../lib/types";
 
@@ -30,20 +31,53 @@ export function NotificationBell() {
   const [open, setOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
 
-  const prevCountRef = useRef(0);
+  // `null` = not yet initialised; distinguishes "first load" from "count fell".
+  const prevCountRef = useRef<number | null>(null);
+  // IDs already surfaced, so a notification is never toasted twice.
+  const seenRef = useRef<Set<string>>(new Set());
   const countQ = useQuery({
     queryKey: ["notif-count"],
     queryFn: api.unreadCount,
-    refetchInterval: 30_000,
+    refetchInterval: 15_000,
+    refetchOnWindowFocus: true,
   });
   const count = countQ.data?.count ?? 0;
 
+  // When the unread count rises, surface the freshly-arrived notifications:
+  // an in-app toast (visible even while the window is focused — the OS banner
+  // is suppressed in that case) plus a native banner when the app is in the
+  // background. On the very first load we only seed `seenRef` so pre-existing
+  // notifications don't replay as toasts.
   useEffect(() => {
-    if (count > prevCountRef.current && !document.hasFocus()) {
-      void osNotify("WikiCollab", `${count} notification${count > 1 ? "s" : ""} non lue${count > 1 ? "s" : ""}`);
-    }
+    if (countQ.data === undefined) return; // wait for the first real value
+    const prev = prevCountRef.current;
     prevCountRef.current = count;
-  }, [count]);
+    if (prev !== null && count <= prev) return;
+
+    void (async () => {
+      let unread: AppNotification[];
+      try {
+        unread = await api.listNotifications(true);
+      } catch {
+        return;
+      }
+      if (prev === null) {
+        unread.forEach((n) => seenRef.current.add(n.id));
+        return;
+      }
+      const fresh = unread.filter((n) => !seenRef.current.has(n.id));
+      fresh.forEach((n) => seenRef.current.add(n.id));
+      fresh
+        .slice(0, 3)
+        .forEach((n) => pushGlobalToast(n.title, TYPE_ICONS[n.type] ?? "bell"));
+      if (fresh.length > 0 && !document.hasFocus()) {
+        const top = fresh[0];
+        void osNotify(top.title, top.body || "Nouvelle notification");
+      }
+      // Keep the dropdown list in sync if it happens to be open.
+      void qc.invalidateQueries({ queryKey: ["notifications"] });
+    })();
+  }, [countQ.data, count, qc]);
 
   const listQ = useQuery({
     queryKey: ["notifications"],
@@ -93,9 +127,10 @@ export function NotificationBell() {
   return (
     <div className="notif-bell-wrap" ref={panelRef}>
       <button
-        className="btn btn-ghost notif-bell-btn"
+        className="icon-btn notif-bell-btn"
         onClick={() => setOpen((o) => !o)}
         title="Notifications"
+        aria-label="Notifications"
       >
         <Icon name="bell" size={16} />
         {count > 0 && <span className="notif-badge">{count > 99 ? "99+" : count}</span>}
