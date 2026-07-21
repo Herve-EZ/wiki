@@ -61,6 +61,7 @@ export function TopBar({
                 key={u.user_id}
                 seed={u.email}
                 label={u.display_name || u.email}
+                src={u.avatar_url || undefined}
               />
             ))}
           </div>

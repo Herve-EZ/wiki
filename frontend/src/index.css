@@ -914,23 +914,43 @@ svg.ic {
   grid-template-columns: 1fr 1fr;
   gap: 8px;
 }
+/* A lone provider gets the full card width; two or more sit two per row. */
+.sso-grid.is-single {
+  grid-template-columns: 1fr;
+}
 .sso {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 7px;
-  font-size: 12px;
+  gap: 9px;
+  min-width: 0;
+  font-size: 12.5px;
   font-weight: 600;
   color: var(--ink-2);
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--r-sm);
-  padding: 8px;
+  border-radius: var(--r-md);
+  padding: 10px 12px;
   cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease,
+    transform 0.05s ease;
+}
+.sso > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .sso:hover {
   border-color: var(--accent);
+  background: var(--accent-wash);
   color: var(--ink);
+}
+.sso:active {
+  transform: translateY(1px);
+}
+.sso:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 .otp-row {
   display: flex;
@@ -1927,6 +1947,63 @@ svg.ic.spin {
 .auth-brand > svg {
   border-radius: 14px;
   box-shadow: var(--shadow);
+}
+
+.auth-foot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--ink-3);
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-soft);
+}
+
+/* ---- Welcome / onboarding ---- */
+.welcome-card {
+  max-width: 460px;
+}
+.welcome-cta {
+  margin-top: 4px;
+}
+.welcome-admin {
+  margin-top: 8px;
+  color: var(--accent-on-wash);
+  border-color: var(--border);
+}
+.welcome-admin:hover:not(:disabled) {
+  background: var(--accent-wash);
+  border-color: var(--accent);
+  color: var(--accent-on-wash);
+}
+.welcome-invite-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--r-md);
+  background: var(--accent-wash);
+  color: var(--accent-on-wash);
+  font-size: 14px;
+  font-weight: 700;
+}
+.welcome-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  justify-content: center;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-soft);
+}
+.welcome-footer .link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
 }
 
 /* ======================= System admin page ======================= */

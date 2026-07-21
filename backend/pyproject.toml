@@ -22,6 +22,8 @@ dependencies = [
     "pyotp>=2.9",
     "qrcode[pil]>=8.0",
     "python-dotenv>=1.0",
+    "django-storages[s3]>=1.14",  # S3 (Contabo) storage for profile photos
+    "Pillow>=10.0",  # ImageField validation for avatars
 ]
 
 [project.optional-dependencies]

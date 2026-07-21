@@ -192,6 +192,14 @@ ACCOUNT_USER_MODEL_USERNAME_FIELD = None
 # one-time code via the wikicollab:// deep link (see accounts.sso_views).
 LOGIN_REDIRECT_URL = "/sso/complete"
 SOCIALACCOUNT_ADAPTER = "accounts.sso.JWTSocialAdapter"
+# Skip allauth's intermediate "you are about to sign in…" confirmation page.
+# That page is rendered from allauth templates and, in production (Daphne/ASGI,
+# no collected allauth static), lands unstyled. With LOGIN_ON_GET the provider
+# button hits the provider's OAuth flow directly — the user only ever sees
+# Google/GitHub/Microsoft's own (styled) consent screen, never a bare Django
+# page. Same reason /sso/complete carries its CSS inline: never depend on
+# allauth's static assets being served in prod.
+SOCIALACCOUNT_LOGIN_ON_GET = True
 
 
 def _oauth_app(id_key, secret_key):
@@ -348,6 +356,26 @@ USE_I18N = True
 USE_TZ = True
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
+
+# --- Media / avatars (S3 — Contabo Object Storage) ---------------------------
+# ONLY profile photos live in S3; every other file stays on the local
+# filesystem (see accounts.models.avatar_storage). Set AVATAR_S3_BUCKET to
+# enable S3 — leave it blank and avatars fall back to local media (dev/tests).
+MEDIA_URL = env("MEDIA_URL", "/media/")
+MEDIA_ROOT = BASE_DIR / "media"
+
+# Contabo S3-compatible endpoint, e.g. https://eu2.contabostorage.com
+AVATAR_S3_ENDPOINT_URL = env("AVATAR_S3_ENDPOINT_URL", "")
+AVATAR_S3_BUCKET = env("AVATAR_S3_BUCKET", "")
+AVATAR_S3_ACCESS_KEY = env("AVATAR_S3_ACCESS_KEY", "")
+AVATAR_S3_SECRET_KEY = env("AVATAR_S3_SECRET_KEY", "")
+# Contabo usually ignores the region; leave blank unless your provider needs it.
+AVATAR_S3_REGION = env("AVATAR_S3_REGION", "")
+# Optional public host/CDN in front of the bucket (no scheme), else the
+# endpoint+bucket URL is used.
+AVATAR_S3_CUSTOM_DOMAIN = env("AVATAR_S3_CUSTOM_DOMAIN", "")
+# Avatars are public so the stored URL is directly usable in an <img> tag.
+AVATAR_S3_ACL = env("AVATAR_S3_ACL", "public-read")
 
 # WhiteNoise: in dev, serve straight from the apps' static dirs (no collectstatic
 # needed); in prod, serve the collected + compressed, hashed manifest.

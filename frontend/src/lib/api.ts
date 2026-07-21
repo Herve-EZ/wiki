@@ -70,7 +70,9 @@ async function request<T>(path: string, init: RequestInit = {}, retry = true): P
   if (isForcedOffline()) throw new NetworkError();
   const tokens = await loadTokens();
   const headers = new Headers(init.headers);
-  headers.set("Content-Type", "application/json");
+  // For FormData, let the browser set the multipart Content-Type (with its
+  // boundary); forcing application/json would corrupt file uploads.
+  if (!(init.body instanceof FormData)) headers.set("Content-Type", "application/json");
   if (tokens?.access) headers.set("Authorization", `Bearer ${tokens.access}`);
 
   let res: Response;
@@ -200,8 +202,15 @@ export const api = {
   me: () => request<User>("/api/auth/me"),
 
   // ---- account / settings ----
-  updateProfile: (patch: { display_name?: string; avatar_url?: string }) =>
+  updateProfile: (patch: { display_name?: string }) =>
     request<User>("/api/auth/me", { method: "PATCH", body: JSON.stringify(patch) }),
+  /** Upload a new profile photo (multipart). The file is stored in S3 and the
+   * refreshed user (with its public `avatar_url`) is returned. */
+  uploadAvatar: (file: File) => {
+    const fd = new FormData();
+    fd.append("avatar", file);
+    return request<User>("/api/auth/me", { method: "PATCH", body: fd });
+  },
   changePassword: (current_password: string, new_password: string) =>
     request<void>("/api/auth/password/change", {
       method: "POST",

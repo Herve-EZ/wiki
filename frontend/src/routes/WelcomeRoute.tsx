@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../lib/api";
 import { useAuth } from "../auth/AuthContext";
+import { BrandLogo } from "../components/BrandLogo";
 import { Icon } from "../components/Icon";
 import { NewWorkspaceModal } from "../components/modals/NewWorkspaceModal";
 
@@ -33,35 +34,66 @@ export function WelcomeRoute() {
   });
 
   const invites = invitesQ.data ?? [];
+  const firstName = user?.display_name?.trim().split(/\s+/)[0] || "";
 
   return (
     <div className="auth-page">
-      <div className="card" style={{ maxWidth: 460 }}>
-        <h4>Bienvenue{user?.display_name ? `, ${user.display_name}` : ""} 👋</h4>
-        <p className="sub">
-          Vous n'appartenez encore à aucun espace de travail. Créez le vôtre, ou
-          acceptez une invitation.
-        </p>
+      <div className="card welcome-card">
+        <div className="auth-brand">
+          <BrandLogo size={56} />
+          <div>
+            <h4 style={{ margin: 0 }}>
+              Bienvenue{firstName ? `, ${firstName}` : ""} 👋
+            </h4>
+            <p className="sub" style={{ margin: "6px 0 0" }}>
+              Vous n'appartenez encore à aucun espace de travail. Créez le vôtre,
+              ou acceptez une invitation.
+            </p>
+          </div>
+        </div>
 
-        <button className="btn btn-primary btn-block" onClick={() => setCreateOpen(true)}>
-          <Icon name="plus" size={13} /> Créer mon espace de travail
+        <button
+          className="btn btn-primary btn-block welcome-cta"
+          onClick={() => setCreateOpen(true)}
+        >
+          <Icon name="plus" size={14} /> Créer mon espace de travail
         </button>
+
+        {user?.is_system_admin && (
+          <button
+            className="btn btn-ghost btn-block welcome-admin"
+            onClick={() => navigate("/admin")}
+          >
+            <Icon name="shield" size={14} /> Administration système
+          </button>
+        )}
 
         {invites.length > 0 && (
           <>
             <div className="div-or">invitations en attente</div>
             {invites.map((inv) => (
               <div key={inv.id} className="row-card">
+                <span className="welcome-invite-badge" aria-hidden="true">
+                  {(inv.workspace_name || "?").charAt(0).toUpperCase()}
+                </span>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div className="row-title">{inv.workspace_name}</div>
                   <div className="muted" style={{ fontSize: 11.5 }}>
                     invité par {inv.invited_by_name || inv.invited_by_email || "?"}
                   </div>
                 </div>
-                <button className="btn btn-ghost" disabled={declineM.isPending} onClick={() => declineM.mutate(inv.token)}>
+                <button
+                  className="btn btn-ghost"
+                  disabled={declineM.isPending}
+                  onClick={() => declineM.mutate(inv.token)}
+                >
                   Refuser
                 </button>
-                <button className="btn btn-primary" disabled={acceptM.isPending} onClick={() => acceptM.mutate(inv.token)}>
+                <button
+                  className="btn btn-primary"
+                  disabled={acceptM.isPending}
+                  onClick={() => acceptM.mutate(inv.token)}
+                >
                   Accepter
                 </button>
               </div>
@@ -69,7 +101,7 @@ export function WelcomeRoute() {
           </>
         )}
 
-        <div style={{ display: "flex", gap: 14, justifyContent: "center", marginTop: 18 }}>
+        <div className="welcome-footer">
           <button className="link" onClick={() => navigate("/help")}>
             <Icon name="help" size={12} /> Aide
           </button>

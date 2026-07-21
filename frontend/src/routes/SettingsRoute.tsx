@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ApiError, api } from "../lib/api";
@@ -45,7 +45,7 @@ export function SettingsRoute() {
         <nav className="settings-nav">
           {user && (
             <div className="settings-me">
-              <Avatar seed={user.email} label={user.display_name || user.email} size={38} />
+              <Avatar seed={user.email} label={user.display_name || user.email} src={user.avatar_url || undefined} size={38} />
               <div style={{ minWidth: 0 }}>
                 <div className="row-title">{user.display_name || "Sans nom"}</div>
                 <div className="muted" style={{ fontSize: 11.5 }}>{user.email}</div>
@@ -107,33 +107,88 @@ function Switch({ checked, onChange, disabled }: { checked: boolean; onChange: (
   );
 }
 
+const MAX_AVATAR_BYTES = 5 * 1024 * 1024; // 5 MB
+
 function ProfileSection({ onChanged }: { onChanged: () => void }) {
   const { user } = useAuth();
   const [displayName, setDisplayName] = useState(user?.display_name ?? "");
-  const [avatarUrl, setAvatarUrl] = useState(user?.avatar_url ?? "");
+  const [file, setFile] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
+  const fileInput = useRef<HTMLInputElement>(null);
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
 
+  function pickFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    if (!f.type.startsWith("image/")) {
+      setError("Veuillez choisir un fichier image.");
+      return;
+    }
+    if (f.size > MAX_AVATAR_BYTES) {
+      setError("Image trop volumineuse (5 Mo maximum).");
+      return;
+    }
+    setError("");
+    setNotice("");
+    setFile(f);
+    setPreview(URL.createObjectURL(f));
+  }
+
   const m = useMutation({
-    mutationFn: () => api.updateProfile({ display_name: displayName, avatar_url: avatarUrl }),
+    mutationFn: async () => {
+      // Text field first, then the photo upload (multipart) if one was picked.
+      await api.updateProfile({ display_name: displayName });
+      if (file) await api.uploadAvatar(file);
+    },
     onSuccess: () => {
       setNotice("Profil mis à jour.");
+      setFile(null);
+      setPreview(null);
       onChanged();
     },
     onError: () => setError("Échec de la mise à jour."),
   });
 
+  const currentAvatar = preview ?? user?.avatar_url ?? undefined;
+
   return (
     <Panel title="Profil" subtitle="Vos informations personnelles" icon="user">
       {error && <p className="form-error">{error}</p>}
       {notice && <p className="form-notice">{notice}</p>}
+
+      <div className="field">
+        <label>Photo de profil</label>
+        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          {user && (
+            <Avatar
+              seed={user.email}
+              label={user.display_name || user.email}
+              src={currentAvatar}
+              size={64}
+            />
+          )}
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <input
+              ref={fileInput}
+              type="file"
+              accept="image/*"
+              style={{ display: "none" }}
+              onChange={pickFile}
+            />
+            <button type="button" className="btn btn-ghost" onClick={() => fileInput.current?.click()}>
+              <Icon name="user" size={13} /> Choisir une image…
+            </button>
+            <span className="muted" style={{ fontSize: 11.5 }}>
+              {file ? file.name : "JPG, PNG ou GIF — 5 Mo max."}
+            </span>
+          </div>
+        </div>
+      </div>
+
       <div className="field">
         <label htmlFor="pf-name">Nom affiché</label>
         <input id="pf-name" className="input" value={displayName} onChange={(e) => setDisplayName(e.target.value)} />
-      </div>
-      <div className="field">
-        <label htmlFor="pf-avatar">URL de l'avatar</label>
-        <input id="pf-avatar" className="input" value={avatarUrl} onChange={(e) => setAvatarUrl(e.target.value)} placeholder="https://…" />
       </div>
       <button className="btn btn-primary" disabled={m.isPending} onClick={() => { setError(""); setNotice(""); m.mutate(); }}>
         {m.isPending ? "Enregistrement…" : "Enregistrer"}

@@ -9,6 +9,8 @@ class UserSerializer(serializers.ModelSerializer):
     mfa_enabled = serializers.BooleanField(read_only=True)
     # Effective platform-admin status (dedicated flag OR Django superuser).
     is_system_admin = serializers.SerializerMethodField()
+    # Public URL of the uploaded avatar (model property, read-only).
+    avatar_url = serializers.ReadOnlyField()
 
     class Meta:
         model = User
@@ -26,11 +28,16 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class ProfileUpdateSerializer(serializers.ModelSerializer):
-    """Self-service edit of the caller's own profile fields."""
+    """Self-service edit of the caller's own profile fields.
+
+    `avatar` accepts a multipart file upload; the stored file is pushed to S3
+    by the field's storage backend. The response (UserSerializer) returns the
+    resulting public URL as `avatar_url`.
+    """
 
     class Meta:
         model = User
-        fields = ["display_name", "avatar_url"]
+        fields = ["display_name", "avatar"]
 
 
 class PasswordChangeSerializer(serializers.Serializer):

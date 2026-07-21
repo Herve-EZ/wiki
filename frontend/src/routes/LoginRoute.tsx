@@ -6,6 +6,7 @@ import { useAuth } from "../auth/AuthContext";
 import { useSiteConfig } from "../config/SiteConfigContext";
 import { BrandLogo } from "../components/BrandLogo";
 import { Icon } from "../components/Icon";
+import { SsoProviderIcon } from "../components/SsoProviderIcon";
 
 interface LoginNavState {
   next?: string;
@@ -197,7 +198,7 @@ export function LoginRoute() {
             <div className="div-or">ou continuer avec</div>
           )}
           {ssoProviders.length > 0 && (
-            <div className="sso-grid">
+            <div className={`sso-grid${ssoProviders.length === 1 ? " is-single" : ""}`}>
               {ssoProviders.map((s) => (
                 <button
                   key={s.id}
@@ -205,7 +206,8 @@ export function LoginRoute() {
                   className="sso"
                   onClick={() => void openExternal(ssoLoginUrl(s.id))}
                 >
-                  {s.label}
+                  <SsoProviderIcon id={s.id} />
+                  <span>{s.label}</span>
                 </button>
               ))}
             </div>
@@ -217,6 +219,11 @@ export function LoginRoute() {
               administrateur système.
             </p>
           )}
+
+          <div className="auth-foot">
+            <Icon name="lock" size={11} />
+            Connexion sécurisée · {config.site_name}
+          </div>
         </form>
       ) : (
         <form className="card" onSubmit={onVerify}>

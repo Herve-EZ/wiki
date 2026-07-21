@@ -164,7 +164,7 @@ export function Sidebar({
       />
 
       <div className="sb-user">
-        {user && <Avatar seed={user.email} label={user.display_name || user.email} size={24} className="av-me" />}
+        {user && <Avatar seed={user.email} label={user.display_name || user.email} src={user.avatar_url || undefined} size={24} className="av-me" />}
         <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
           {user?.display_name || user?.email || "—"}
         </span>
