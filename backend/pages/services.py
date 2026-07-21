@@ -99,8 +99,8 @@ def _post_save_notifications(page: Page, author):
 
 def _process_mentions(page: Page, author):
     """Parse @display_name or @email in content and notify mentioned users."""
-    from notifications.services import notify_mention
     from django.contrib.auth import get_user_model
+    from notifications.services import notify_mention
 
     User = get_user_model()
     members = User.objects.filter(
