@@ -1,6 +1,6 @@
 [package]
 name = "wikicollab"
-version = "0.7.1"
+version = "0.7.2"
 description = "WikiCollab — collaborative real-time wiki (desktop)"
 authors = ["EZ Audiovisuel"]
 license = "MIT"
