@@ -6,10 +6,10 @@ stored URL is directly usable by the frontend <img>. Credentials come from
 env-backed settings, never hard-coded.
 """
 from django.conf import settings
-from storages.backends.s3 import S3Boto3Storage
+from storages.backends.s3 import S3Storage
 
 
-class AvatarStorage(S3Boto3Storage):
+class AvatarStorage(S3Storage):
     def __init__(self, **kwargs):
         super().__init__(
             bucket_name=settings.AVATAR_S3_BUCKET,
