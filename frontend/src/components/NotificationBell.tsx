@@ -85,8 +85,8 @@ export function NotificationBell() {
     enabled: open,
   });
 
-  const markReadM = useMutation({
-    mutationFn: (id: string) => api.markRead(id),
+  const deleteM = useMutation({
+    mutationFn: (id: string) => api.deleteNotification(id),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ["notif-count"] });
       void qc.invalidateQueries({ queryKey: ["notifications"] });
@@ -113,7 +113,9 @@ export function NotificationBell() {
   }, [open]);
 
   function handleClick(n: AppNotification) {
-    if (!n.read_at) markReadM.mutate(n.id);
+    // Opening a notification consumes it: remove it server-side and locally.
+    seenRef.current.add(n.id);
+    deleteM.mutate(n.id);
     const p = n.payload;
     if (p.workspace_slug && p.page_id) {
       navigate(`/w/${p.workspace_slug}/${p.page_id}`);

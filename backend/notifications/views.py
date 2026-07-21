@@ -60,6 +60,20 @@ class MarkAllReadView(APIView):
         return Response({"marked": count})
 
 
+class NotificationDetailView(APIView):
+    """DELETE /api/notifications/<id> — remove a single notification."""
+
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, notification_id):
+        deleted, _ = Notification.objects.filter(
+            pk=notification_id, recipient=request.user
+        ).delete()
+        if not deleted:
+            return Response({"detail": "Not found."}, status=404)
+        return Response(status=204)
+
+
 class SubscribePageView(APIView):
     """POST/DELETE /api/pages/<id>/subscribe"""
 

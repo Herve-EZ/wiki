@@ -24,6 +24,11 @@ urlpatterns = [
         name="notification_mark_all_read",
     ),
     path(
+        "notifications/<uuid:notification_id>",
+        views.NotificationDetailView.as_view(),
+        name="notification_detail",
+    ),
+    path(
         "pages/<uuid:page_id>/subscribe",
         views.SubscribePageView.as_view(),
         name="page_subscribe",

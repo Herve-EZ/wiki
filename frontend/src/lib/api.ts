@@ -371,6 +371,8 @@ export const api = {
       method: "POST",
       body: "{}",
     }),
+  deleteNotification: (id: string) =>
+    request<void>(`/api/notifications/${id}`, { method: "DELETE" }),
   subscribePage: (pageId: string) =>
     request<{ subscribed: boolean }>(`/api/pages/${pageId}/subscribe`, {
       method: "POST",

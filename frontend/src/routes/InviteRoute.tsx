@@ -12,6 +12,13 @@ const ROLE_LABEL: Record<Role, string> = {
   viewer: "Lecteur",
 };
 
+const STATUS_LABEL: Record<string, string> = {
+  accepted: "déjà acceptée",
+  declined: "refusée",
+  revoked: "révoquée",
+  expired: "expirée",
+};
+
 export function InviteRoute() {
   const { token = "" } = useParams();
   const navigate = useNavigate();
@@ -55,7 +62,15 @@ export function InviteRoute() {
         {invQ.isLoading && <div className="spinner" />}
 
         {invQ.isError && (
-          <p className="form-error">Invitation introuvable ou expirée.</p>
+          <>
+            <p className="form-error">Invitation introuvable ou expirée.</p>
+            <button
+              className="btn btn-ghost btn-block"
+              onClick={() => navigate("/", { replace: true })}
+            >
+              <Icon name="home" size={14} /> Retour à l'accueil
+            </button>
+          </>
         )}
 
         {invQ.data && (
@@ -69,12 +84,32 @@ export function InviteRoute() {
             {error && <p className="form-error">{error}</p>}
 
             {invQ.data.status !== "pending" ? (
-              <p className="mfa-note">
-                <Icon name="alert" size={12} /> Cette invitation n'est plus active
-                ({invQ.data.status}).
-              </p>
+              <>
+                <p className="mfa-note">
+                  <Icon name="alert" size={12} /> Cette invitation n'est plus
+                  active ({STATUS_LABEL[invQ.data.status] ?? invQ.data.status}).
+                </p>
+                <button
+                  className="btn btn-ghost btn-block"
+                  style={{ marginTop: 10 }}
+                  onClick={() => navigate("/", { replace: true })}
+                >
+                  <Icon name="home" size={14} /> Retour à l'accueil
+                </button>
+              </>
             ) : invQ.data.is_expired ? (
-              <p className="mfa-note"><Icon name="alert" size={12} /> Cette invitation a expiré.</p>
+              <>
+                <p className="mfa-note">
+                  <Icon name="alert" size={12} /> Cette invitation a expiré.
+                </p>
+                <button
+                  className="btn btn-ghost btn-block"
+                  style={{ marginTop: 10 }}
+                  onClick={() => navigate("/", { replace: true })}
+                >
+                  <Icon name="home" size={14} /> Retour à l'accueil
+                </button>
+              </>
             ) : status === "authenticated" ? (
               <div style={{ display: "flex", gap: 8, marginTop: 6 }}>
                 <button className="btn btn-ghost" disabled={declineM.isPending} onClick={() => declineM.mutate()}>
