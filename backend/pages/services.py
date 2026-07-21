@@ -105,7 +105,7 @@ def _process_mentions(page: Page, author):
 
     User = get_user_model()
     members = User.objects.filter(
-        workspace_memberships__workspace=page.workspace
+        memberships__workspace=page.workspace
     )
     name_map: dict[str, object] = {}
     for m in members:
