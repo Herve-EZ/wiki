@@ -7,6 +7,35 @@ import { exportMarkdown, saveBinaryFile } from "../lib/native";
 import type { Page, PageStatus } from "../lib/types";
 import { Icon } from "./Icon";
 
+function FollowButton({ pageId, online }: { pageId: string; online: boolean }) {
+  const qc = useQueryClient();
+  const subQ = useQuery({
+    queryKey: ["page-sub", pageId],
+    queryFn: () => api.pageSubscription(pageId),
+    enabled: online,
+  });
+  const subscribed = subQ.data?.subscribed ?? false;
+
+  const toggleM = useMutation({
+    mutationFn: () => (subscribed ? api.unsubscribePage(pageId) : api.subscribePage(pageId)),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ["page-sub", pageId] }),
+  });
+
+  if (!online) return null;
+
+  return (
+    <button
+      className={`btn btn-ghost follow-btn${subscribed ? " following" : ""}`}
+      onClick={() => toggleM.mutate()}
+      disabled={toggleM.isPending}
+      title={subscribed ? "Ne plus suivre" : "Suivre cette page"}
+    >
+      <Icon name="bell" size={13} />
+      {subscribed ? "Suivi" : "Suivre"}
+    </button>
+  );
+}
+
 const STATUS_LABEL: Record<PageStatus, string> = {
   draft: "Brouillon",
   published: "Publié",
@@ -121,6 +150,8 @@ export function PageActions({
           )}
         </span>
       )}
+
+      <FollowButton pageId={page.id} online={online} />
 
       <span className="page-actions-right">
         <div className="export-menu">

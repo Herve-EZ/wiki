@@ -11,7 +11,7 @@ from workspaces.permissions import WorkspaceAccess, can_write, is_owner
 
 from . import services
 from .models import Page, PageVersion
-from .search import search_pages
+from .search import search_pages, search_pages_with_snippets
 from .serializers import (
     PageListSerializer,
     PageSerializer,
@@ -42,6 +42,8 @@ class PageViewSet(viewsets.ModelViewSet):
         page = serializer.save(author=self.request.user)
         services.snapshot(page, self.request.user)
         services.detect_links(page)
+        from notifications.services import auto_subscribe
+        auto_subscribe(self.request.user, page)
 
     def perform_update(self, serializer):
         page = serializer.instance
@@ -134,5 +136,6 @@ class SearchView(APIView):
         slug = request.query_params.get("workspace")
         if slug:
             qs = qs.filter(workspace__slug=slug)
-        results = search_pages(qs, request.query_params.get("q", ""))[:50]
-        return Response(PageListSerializer(results, many=True).data)
+        q = request.query_params.get("q", "")
+        results = search_pages_with_snippets(qs, q)
+        return Response(results)

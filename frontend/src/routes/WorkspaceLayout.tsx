@@ -8,6 +8,7 @@ import { Sidebar } from "../components/Sidebar";
 import { SearchPalette } from "../components/SearchPalette";
 import { OfflineBanner } from "../components/OfflineBanner";
 import { ConflictsModal } from "../components/ConflictsModal";
+import { ToastContainer } from "../components/ToastContainer";
 import { NewPageModal } from "../components/modals/NewPageModal";
 import type { Role } from "../lib/types";
 import type { WorkspaceCtx } from "./workspaceContext";
@@ -103,6 +104,7 @@ export function WorkspaceLayout() {
 
   return (
     <div className="app">
+      <ToastContainer />
       <OfflineBanner
         online={online}
         pending={pending}
@@ -136,9 +138,13 @@ export function WorkspaceLayout() {
       {searchOpen && current && (
         <SearchPalette
           workspace={current.slug}
-          onPick={(id) => {
+          onPick={(id, query) => {
             setSearchOpen(false);
-            navigate(`/w/${current.slug}/${id}`);
+            navigate(
+              query
+                ? `/w/${current.slug}/${id}?q=${encodeURIComponent(query)}`
+                : `/w/${current.slug}/${id}`,
+            );
           }}
           onClose={() => setSearchOpen(false)}
         />

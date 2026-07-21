@@ -81,8 +81,44 @@ def save_page(page: Page, author, **fields) -> Page:
         page.save()
         snapshot(page, author)
         detect_links(page)
-        transaction.on_commit(lambda: notify_backlinked_pages(page))
+        transaction.on_commit(lambda: _post_save_notifications(page, author))
     return page
+
+
+MENTION_RE = re.compile(r"(?<!\w)@([\w.@+-]+(?:\s[\w.@+-]+)?)", re.UNICODE)
+
+
+def _post_save_notifications(page: Page, author):
+    """Run after commit: backlink WS push + persistent notifications."""
+    notify_backlinked_pages(page)
+    from notifications.services import auto_subscribe, notify_mention, notify_page_updated
+    auto_subscribe(author, page)
+    notify_page_updated(page, author)
+    _process_mentions(page, author)
+
+
+def _process_mentions(page: Page, author):
+    """Parse @display_name or @email in content and notify mentioned users."""
+    from django.contrib.auth import get_user_model
+    from notifications.services import notify_mention
+
+    User = get_user_model()
+    members = User.objects.filter(
+        workspace_memberships__workspace=page.workspace
+    )
+    name_map: dict[str, object] = {}
+    for m in members:
+        if m.display_name:
+            name_map[m.display_name.lower()] = m
+        name_map[m.email.lower()] = m
+
+    mentioned: set[str] = set()
+    for match in MENTION_RE.finditer(page.content_md):
+        token = match.group(1).lower()
+        user = name_map.get(token)
+        if user and str(user.pk) not in mentioned:
+            mentioned.add(str(user.pk))
+            notify_mention(page, author, user)
 
 
 def restore(page: Page, version_number: int, author) -> PageVersion:

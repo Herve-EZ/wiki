@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { Icon } from "../Icon";
 import { PagePicker } from "./PagePicker";
+import { MentionPicker } from "./MentionPicker";
 import { renderMarkdown } from "../../lib/markdown";
 import { preprocessWikilinks, type PageRef } from "../../lib/wikilinks";
 import type { Section } from "../../lib/sections";
 import type { SectionLock } from "../../hooks/usePageSocket";
+import type { Member } from "../../lib/types";
 
 interface Props {
   section: Section;
@@ -16,10 +18,29 @@ interface Props {
   pages: PageRef[];
   pageIndex: Map<string, PageRef>;
   currentPageId: string;
+  searchQuery?: string;
+  members?: Member[];
   onStartEdit: () => void;
   onChangeDraft: (value: string) => void;
   onSaveEdit: () => void;
   onCancelEdit: () => void;
+}
+
+function escapeRegExp(s: string) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function highlightHtml(html: string, query: string): string {
+  if (!query) return html;
+  const escaped = escapeRegExp(query);
+  const re = new RegExp(escaped, "gi");
+  // Split by tags, only replace in text segments.
+  return html.replace(/([^<]*)(<[^>]*>)/g, (_, text, tag) => {
+    return text.replace(re, '<mark class="search-hit">$&</mark>') + tag;
+  // Handle trailing text after last tag.
+  }).replace(/([^<>]+)$/, (_, text) =>
+    text.replace(re, '<mark class="search-hit">$&</mark>'),
+  );
 }
 
 export function SectionBlock({
@@ -32,6 +53,8 @@ export function SectionBlock({
   pages,
   pageIndex,
   currentPageId,
+  searchQuery,
+  members = [],
   onStartEdit,
   onChangeDraft,
   onSaveEdit,
@@ -39,6 +62,7 @@ export function SectionBlock({
 }: Props) {
   const ref = useRef<HTMLTextAreaElement>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [mentionOpen, setMentionOpen] = useState(false);
   useEffect(() => {
     if (editing) ref.current?.focus();
   }, [editing]);
@@ -64,7 +88,8 @@ export function SectionBlock({
     });
   }
 
-  const html = renderMarkdown(preprocessWikilinks(section.text, pageIndex));
+  const rawHtml = renderMarkdown(preprocessWikilinks(section.text, pageIndex));
+  const html = searchQuery ? highlightHtml(rawHtml, searchQuery) : rawHtml;
 
   return (
     <div className={cls}>
@@ -96,11 +121,39 @@ export function SectionBlock({
             <button className="btn btn-ghost" onClick={onCancelEdit}>
               Annuler
             </button>
-            <div style={{ position: "relative", marginLeft: "auto" }}>
+            <div style={{ position: "relative", marginLeft: "auto", display: "flex", gap: 4 }}>
               <button
                 className="btn btn-ghost"
                 type="button"
-                onClick={() => setPickerOpen((o) => !o)}
+                onClick={() => { setMentionOpen((o) => !o); setPickerOpen(false); }}
+                title="Mentionner un membre"
+              >
+                <Icon name="at" size={13} /> Mentionner
+              </button>
+              {mentionOpen && (
+                <MentionPicker
+                  members={members}
+                  onPick={(m) => {
+                    const ta = ref.current;
+                    const pos = ta ? ta.selectionStart : draft.length;
+                    const token = `@${m.display_name || m.email}`;
+                    const next = draft.slice(0, pos) + token + " " + draft.slice(pos);
+                    onChangeDraft(next);
+                    setMentionOpen(false);
+                    requestAnimationFrame(() => {
+                      if (!ta) return;
+                      const p = pos + token.length + 1;
+                      ta.focus();
+                      ta.setSelectionRange(p, p);
+                    });
+                  }}
+                  onClose={() => setMentionOpen(false)}
+                />
+              )}
+              <button
+                className="btn btn-ghost"
+                type="button"
+                onClick={() => { setPickerOpen((o) => !o); setMentionOpen(false); }}
                 title="Insérer un lien vers une page"
               >
                 <Icon name="link" size={13} /> Lier une page

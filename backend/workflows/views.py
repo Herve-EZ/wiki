@@ -129,10 +129,15 @@ class PageWorkflowAdvanceView(APIView):
             )
         if not nxt.is_final and not can_write(request.user, page.workspace):
             raise PermissionDenied("You cannot advance this page.")
+        prev_stage_name = stages[idx].name if idx >= 0 else None
         state.current_stage = nxt
         state.save(update_fields=["current_stage"])
         if nxt.is_final:
             from pages import services
 
             services.save_page(page, request.user, status=Page.Status.PUBLISHED)
+
+        from notifications.services import notify_workflow_stage
+        notify_workflow_stage(page, request.user, prev_stage_name, nxt.name)
+
         return Response(PageWorkflowSerializer(state).data)

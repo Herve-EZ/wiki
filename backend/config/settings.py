@@ -73,6 +73,7 @@ INSTALLED_APPS = [
     "pages",
     "workflows",
     "realtime",
+    "notifications",
 ]
 
 MIDDLEWARE = [

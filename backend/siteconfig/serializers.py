@@ -20,6 +20,15 @@ _BRANDING_FIELDS = [
     "enable_email_login",
 ]
 _PROVIDER_FLAGS = ["enable_google", "enable_github", "enable_microsoft", "enable_saml"]
+_EMAIL_FIELDS = [
+    "email_enabled",
+    "email_host",
+    "email_port",
+    "email_host_user",
+    "email_use_tls",
+    "email_use_ssl",
+    "email_from",
+]
 
 
 class PublicConfigSerializer(serializers.ModelSerializer):
@@ -45,11 +54,23 @@ class AdminConfigSerializer(serializers.ModelSerializer):
     UI can show which providers still lack server-side credentials."""
 
     providers = serializers.SerializerMethodField()
+    email_password_set = serializers.SerializerMethodField()
+    email_host_password = serializers.CharField(
+        write_only=True, required=False, allow_blank=True
+    )
 
     class Meta:
         model = SiteConfiguration
-        fields = [*_BRANDING_FIELDS, *_PROVIDER_FLAGS, "providers", "updated_at"]
-        read_only_fields = ["providers", "updated_at"]
+        fields = [
+            *_BRANDING_FIELDS,
+            *_PROVIDER_FLAGS,
+            *_EMAIL_FIELDS,
+            "email_host_password",
+            "email_password_set",
+            "providers",
+            "updated_at",
+        ]
+        read_only_fields = ["providers", "email_password_set", "updated_at"]
 
     def get_providers(self, obj):
         configured = configured_provider_ids()
@@ -62,6 +83,16 @@ class AdminConfigSerializer(serializers.ModelSerializer):
             }
             for pid, label in SSO_PROVIDERS
         ]
+
+    def get_email_password_set(self, obj) -> bool:
+        return bool(obj.email_host_password)
+
+    def update(self, instance, validated_data):
+        # Only overwrite password when a non-empty value is explicitly sent.
+        pw = validated_data.pop("email_host_password", None)
+        if pw is not None and pw != "":
+            instance.email_host_password = pw
+        return super().update(instance, validated_data)
 
 
 class AdminUserSerializer(serializers.ModelSerializer):

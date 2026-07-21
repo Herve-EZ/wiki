@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Icon } from "./Icon";
 import { ThemeToggle } from "./ThemeToggle";
 import { Avatar } from "./Avatar";
+import { NotificationBell } from "./NotificationBell";
 import { NewPageModal } from "./modals/NewPageModal";
 import { NewWorkspaceModal } from "./modals/NewWorkspaceModal";
 import { SyncButton } from "./SyncButton";
@@ -168,6 +169,7 @@ export function Sidebar({
         <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
           {user?.display_name || user?.email || "—"}
         </span>
+        <NotificationBell />
         <ThemeToggle />
         {user?.is_system_admin && (
           <button

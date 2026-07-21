@@ -15,6 +15,7 @@ urlpatterns = [
     path("api/", include("workspaces.urls")),
     path("api/", include("pages.urls")),
     path("api/", include("workflows.urls")),
+    path("api/", include("notifications.urls")),
     path("api/search", SearchView.as_view(), name="search"),
     # OpenAPI schema + interactive docs
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),

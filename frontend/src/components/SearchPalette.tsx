@@ -3,9 +3,31 @@ import { useQuery } from "@tanstack/react-query";
 import { api } from "../lib/api";
 import { Icon } from "./Icon";
 
+function escapeRegExp(s: string) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function highlightTitle(title: string, query: string) {
+  if (!query) return title;
+  const parts = title.split(new RegExp(`(${escapeRegExp(query)})`, "gi"));
+  return parts.map((p, i) =>
+    p.toLowerCase() === query.toLowerCase() ? (
+      <mark key={i} className="search-hit">
+        {p}
+      </mark>
+    ) : (
+      p
+    ),
+  );
+}
+
+function sanitizeSnippet(html: string): string {
+  return html.replace(/<(?!\/?mark\b)[^>]*>/g, "");
+}
+
 interface Props {
   workspace: string;
-  onPick: (pageId: string) => void;
+  onPick: (pageId: string, query: string) => void;
   onClose: () => void;
 }
 
@@ -44,7 +66,7 @@ export function SearchPalette({ workspace, onPick, onClose }: Props) {
       e.preventDefault();
       setActive((a) => Math.max(a - 1, 0));
     } else if (e.key === "Enter" && results[active]) {
-      onPick(results[active].id);
+      onPick(results[active].id, debounced);
     }
   }
 
@@ -72,10 +94,22 @@ export function SearchPalette({ workspace, onPick, onClose }: Props) {
                 key={p.id}
                 className={`palette-item${i === active ? " active" : ""}`}
                 onMouseEnter={() => setActive(i)}
-                onClick={() => onPick(p.id)}
+                onClick={() => onPick(p.id, debounced)}
               >
-                <Icon name="file" size={14} />
-                <span>{p.title}</span>
+                <div className="palette-item-content">
+                  <div className="palette-item-title">
+                    <Icon name="file" size={14} />
+                    <span>{highlightTitle(p.title, debounced)}</span>
+                  </div>
+                  {p.snippet && (
+                    <div
+                      className="palette-item-snippet"
+                      dangerouslySetInnerHTML={{
+                        __html: sanitizeSnippet(p.snippet),
+                      }}
+                    />
+                  )}
+                </div>
               </button>
             ))
           )}

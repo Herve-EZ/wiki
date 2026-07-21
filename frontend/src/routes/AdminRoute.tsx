@@ -7,11 +7,12 @@ import { BrandLogo } from "../components/BrandLogo";
 import { Icon } from "../components/Icon";
 import type { AdminSiteConfig } from "../lib/types";
 
-type Tab = "branding" | "auth" | "admins";
+type Tab = "branding" | "auth" | "email" | "admins";
 
 const NAV: { id: Tab; label: string; icon: string }[] = [
   { id: "branding", label: "Marque & apparence", icon: "settings" },
   { id: "auth", label: "Authentification", icon: "lock" },
+  { id: "email", label: "E-mail / SMTP", icon: "mail" },
   { id: "admins", label: "Administrateurs", icon: "shield" },
 ];
 
@@ -73,6 +74,7 @@ export function AdminRoute() {
         <div className="settings-panel">
           {tab === "branding" && <BrandingSection />}
           {tab === "auth" && <AuthSection />}
+          {tab === "email" && <EmailSection />}
           {tab === "admins" && <AdminsSection />}
         </div>
       </div>
@@ -265,6 +267,194 @@ function AuthSection() {
           côté serveur via l'administration Django (SocialApp). Tant qu'ils sont absents, le
           bouton reste masqué sur la page de connexion même s'il est activé ici.
         </p>
+      </Panel>
+    </>
+  );
+}
+
+function EmailSection() {
+  const { query, mutation } = useAdminConfig();
+  const cfg = query.data;
+
+  const [form, setForm] = useState<Partial<AdminSiteConfig>>({});
+  const [pw, setPw] = useState("");
+  const [notice, setNotice] = useState("");
+  const [testResult, setTestResult] = useState("");
+  const [testing, setTesting] = useState(false);
+
+  useEffect(() => {
+    if (cfg) {
+      setForm({
+        email_enabled: cfg.email_enabled,
+        email_host: cfg.email_host,
+        email_port: cfg.email_port,
+        email_host_user: cfg.email_host_user,
+        email_use_tls: cfg.email_use_tls,
+        email_use_ssl: cfg.email_use_ssl,
+        email_from: cfg.email_from,
+      });
+    }
+  }, [cfg]);
+
+  if (query.isLoading || !cfg)
+    return (
+      <Panel title="E-mail / SMTP" icon="mail">
+        <p className="muted">Chargement…</p>
+      </Panel>
+    );
+
+  const set = (k: keyof AdminSiteConfig, v: string | number | boolean) =>
+    setForm((f) => ({ ...f, [k]: v }));
+
+  function save() {
+    setNotice("");
+    const patch: Partial<AdminSiteConfig> = { ...form };
+    if (pw) patch.email_host_password = pw;
+    mutation.mutate(patch, {
+      onSuccess: () => {
+        setNotice("Configuration enregistrée.");
+        setPw("");
+      },
+    });
+  }
+
+  async function sendTest() {
+    setTesting(true);
+    setTestResult("");
+    try {
+      const res = await api.testEmail();
+      setTestResult(res.detail);
+    } catch (err: any) {
+      const detail =
+        err?.detail ?? err?.message ?? "Erreur lors de l'envoi du test.";
+      setTestResult(detail);
+    } finally {
+      setTesting(false);
+    }
+  }
+
+  return (
+    <>
+      <Panel
+        title="Serveur SMTP"
+        subtitle="Configurez le serveur d'envoi d'e-mails (invitations, notifications)"
+        icon="mail"
+      >
+        {notice && <p className="form-notice">{notice}</p>}
+
+        <div className="setting-row">
+          <div className="switch-text">
+            <b>Activer la configuration SMTP personnalisée</b>
+            <span className="muted">
+              Désactivé → les variables d'environnement EMAIL_* sont utilisées.
+            </span>
+          </div>
+          <Switch
+            checked={form.email_enabled ?? false}
+            onChange={(v) => set("email_enabled", v)}
+            disabled={mutation.isPending}
+          />
+        </div>
+
+        <div className="field">
+          <label htmlFor="smtp-host">Serveur SMTP</label>
+          <input
+            id="smtp-host"
+            className="input"
+            value={form.email_host ?? ""}
+            onChange={(e) => set("email_host", e.target.value)}
+            placeholder="smtp.exemple.com"
+          />
+        </div>
+
+        <div style={{ display: "flex", gap: 12 }}>
+          <div className="field" style={{ flex: 1 }}>
+            <label htmlFor="smtp-port">Port</label>
+            <input
+              id="smtp-port"
+              className="input"
+              type="number"
+              value={form.email_port ?? 587}
+              onChange={(e) => set("email_port", parseInt(e.target.value, 10) || 587)}
+            />
+          </div>
+          <div className="field" style={{ flex: 1 }}>
+            <label htmlFor="smtp-from">Adresse d'expéditeur</label>
+            <input
+              id="smtp-from"
+              className="input"
+              type="email"
+              value={form.email_from ?? ""}
+              onChange={(e) => set("email_from", e.target.value)}
+              placeholder="no-reply@exemple.com"
+            />
+          </div>
+        </div>
+
+        <div className="field">
+          <label htmlFor="smtp-user">Utilisateur</label>
+          <input
+            id="smtp-user"
+            className="input"
+            value={form.email_host_user ?? ""}
+            onChange={(e) => set("email_host_user", e.target.value)}
+            placeholder="user@exemple.com"
+          />
+        </div>
+
+        <div className="field">
+          <label htmlFor="smtp-pw">
+            Mot de passe
+            {cfg.email_password_set && !pw && (
+              <span className="cfg-badge ok" style={{ marginLeft: 8 }}>
+                <Icon name="check" size={10} /> Configuré
+              </span>
+            )}
+          </label>
+          <input
+            id="smtp-pw"
+            className="input"
+            type="password"
+            value={pw}
+            onChange={(e) => setPw(e.target.value)}
+            placeholder={cfg.email_password_set ? "••••••••  (laisser vide pour conserver)" : "Mot de passe SMTP"}
+          />
+        </div>
+
+        <div className="setting-row">
+          <div className="switch-text">
+            <b>TLS (STARTTLS)</b>
+          </div>
+          <Switch
+            checked={form.email_use_tls ?? true}
+            onChange={(v) => { set("email_use_tls", v); if (v) set("email_use_ssl", false); }}
+            disabled={mutation.isPending}
+          />
+        </div>
+        <div className="setting-row">
+          <div className="switch-text">
+            <b>SSL (connexion implicite)</b>
+          </div>
+          <Switch
+            checked={form.email_use_ssl ?? false}
+            onChange={(v) => { set("email_use_ssl", v); if (v) set("email_use_tls", false); }}
+            disabled={mutation.isPending}
+          />
+        </div>
+
+        <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
+          <button className="btn btn-primary" disabled={mutation.isPending} onClick={save}>
+            {mutation.isPending ? "Enregistrement…" : "Enregistrer"}
+          </button>
+          <button className="btn btn-ghost" disabled={testing} onClick={sendTest}>
+            {testing ? "Envoi…" : "Envoyer un e-mail de test"}
+          </button>
+        </div>
+        {testResult && (
+          <p className={testResult.startsWith("Échec") ? "form-error" : "form-notice"} style={{ marginTop: 8 }}>
+            {testResult}
+          </p>
+        )}
       </Panel>
     </>
   );

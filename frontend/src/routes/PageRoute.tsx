@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ApiError, api } from "../lib/api";
 import { loadPage, savePage } from "../lib/pageStore";
@@ -30,6 +30,8 @@ interface Toast {
 export function PageRoute() {
   const { pageId = "" } = useParams();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const searchQuery = searchParams.get("q") ?? "";
   const qc = useQueryClient();
   const { user } = useAuth();
   const online = useNetworkStatus();
@@ -43,6 +45,13 @@ export function PageRoute() {
   const [createLinkTitle, setCreateLinkTitle] = useState<string | null>(null);
 
   const pageIndex = useMemo(() => buildPageIndex(ctx.pages), [ctx.pages]);
+
+  const membersQ = useQuery({
+    queryKey: ["members", ctx.current?.slug],
+    queryFn: () => api.listMembers(ctx.current!.slug),
+    enabled: online && !!ctx.current?.slug,
+  });
+  const members = membersQ.data ?? [];
 
   const pushToast = useCallback((text: string) => {
     const id = Date.now() + Math.floor(performance.now());
@@ -192,6 +201,23 @@ export function PageRoute() {
     );
   }
 
+  // Scroll to first search hit and clear the ?q= param after a short delay.
+  useEffect(() => {
+    if (!searchQuery) return;
+    const timer = setTimeout(() => {
+      const hit = document.querySelector("mark.search-hit");
+      if (hit) hit.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 200);
+    const cleanup = setTimeout(() => {
+      setSearchParams((prev) => {
+        const next = new URLSearchParams(prev);
+        next.delete("q");
+        return next;
+      }, { replace: true });
+    }, 4000);
+    return () => { clearTimeout(timer); clearTimeout(cleanup); };
+  }, [searchQuery, setSearchParams]);
+
   const lockCount = Object.keys(sock.locks).length;
 
   return (
@@ -248,6 +274,8 @@ export function PageRoute() {
                 pages={ctx.pages}
                 pageIndex={pageIndex}
                 currentPageId={pageId}
+                searchQuery={searchQuery}
+                members={members}
                 onStartEdit={() => startEdit(s.id, s.text)}
                 onChangeDraft={setDraft}
                 onSaveEdit={() => saveEdit(s.id)}

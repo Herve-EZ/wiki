@@ -59,6 +59,16 @@ export interface AdminSiteConfig {
   enable_saml: boolean;
   providers: AdminProviderStatus[];
   updated_at: string;
+  // SMTP
+  email_enabled: boolean;
+  email_host: string;
+  email_port: number;
+  email_host_user: string;
+  email_host_password?: string;
+  email_password_set: boolean;
+  email_use_tls: boolean;
+  email_use_ssl: boolean;
+  email_from: string;
 }
 
 export interface AdminUser {
@@ -164,6 +174,16 @@ export interface PageListItem {
   updated_at: string;
 }
 
+export interface SearchResult {
+  id: string;
+  workspace: string;
+  title: string;
+  slug: string;
+  status: PageStatus;
+  updated_at: string;
+  snippet: string;
+}
+
 export interface PageVersion {
   id: string;
   version_number: number;
@@ -207,6 +227,20 @@ export interface OutboxEntry {
   created_at: string;
   attempts: number;
   last_error: string | null;
+}
+
+export type NotificationType = "invitation" | "mention" | "page_updated" | "workflow_stage";
+
+export interface AppNotification {
+  id: string;
+  type: NotificationType;
+  title: string;
+  body: string;
+  payload: Record<string, string>;
+  actor_display_name: string;
+  actor_email: string;
+  read_at: string | null;
+  created_at: string;
 }
 
 /** Login step 1 result: either the JWT pair, or an MFA challenge. */

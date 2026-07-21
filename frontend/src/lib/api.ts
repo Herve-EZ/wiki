@@ -8,6 +8,7 @@ import { isForcedOffline, reportBackendReachable } from "./network";
 import type {
   AdminSiteConfig,
   AdminUser,
+  AppNotification,
   DiffResult,
   LoginResult,
   Member,
@@ -18,6 +19,7 @@ import type {
   PageVersionDetail,
   PageWorkflow,
   Role,
+  SearchResult,
   SiteConfig,
   User,
   Workflow,
@@ -163,6 +165,11 @@ export const api = {
     request<AdminSiteConfig>("/api/admin/config", {
       method: "PATCH",
       body: JSON.stringify(patch),
+    }),
+  testEmail: () =>
+    request<{ detail: string }>("/api/admin/config/test-email", {
+      method: "POST",
+      body: "{}",
     }),
   listAdminUsers: () => request<AdminUser[]>("/api/admin/users"),
   setUserSystemAdmin: (id: string, isSystemAdmin: boolean) =>
@@ -347,9 +354,38 @@ export const api = {
     ),
   backlinks: (id: string) => requestList<PageListItem>(`/api/pages/${id}/backlinks/`),
 
+  // ---- notifications ----
+  listNotifications: (unread?: boolean) =>
+    requestList<AppNotification>(
+      `/api/notifications${unread ? "?unread=1" : ""}`,
+    ),
+  unreadCount: () =>
+    request<{ count: number }>("/api/notifications/unread-count"),
+  markRead: (id: string) =>
+    request<{ ok: boolean }>(`/api/notifications/${id}/read`, {
+      method: "POST",
+      body: "{}",
+    }),
+  markAllRead: () =>
+    request<{ marked: number }>("/api/notifications/read-all", {
+      method: "POST",
+      body: "{}",
+    }),
+  subscribePage: (pageId: string) =>
+    request<{ subscribed: boolean }>(`/api/pages/${pageId}/subscribe`, {
+      method: "POST",
+      body: "{}",
+    }),
+  unsubscribePage: (pageId: string) =>
+    request<{ subscribed: boolean }>(`/api/pages/${pageId}/subscribe`, {
+      method: "DELETE",
+    }),
+  pageSubscription: (pageId: string) =>
+    request<{ subscribed: boolean }>(`/api/pages/${pageId}/subscribe`),
+
   // ---- search ----
   search: (q: string, workspace?: string) =>
-    requestList<PageListItem>(
+    requestList<SearchResult>(
       `/api/search?q=${encodeURIComponent(q)}` +
         (workspace ? `&workspace=${encodeURIComponent(workspace)}` : ""),
     ),

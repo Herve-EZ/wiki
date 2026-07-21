@@ -2,6 +2,8 @@ import type { CSSProperties } from "react";
 
 /** Stroke icon set (1.6px), matching the validated mockup. No emoji. */
 const PATHS: Record<string, string> = {
+  at: "M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z M16 12v1.5a2.5 2.5 0 0 0 5 0V12a9 9 0 1 0-5.5 8.28",
+  bell: "M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9z M13.73 21a2 2 0 0 1-3.46 0",
   book: "M4 19.5A2.5 2.5 0 0 1 6.5 17H20V4H6.5A2.5 2.5 0 0 0 4 6.5v13z",
   file: "M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8z M14 3v5h5",
   home: "M3 10.5 12 3l9 7.5 M5 9.5V21h14V9.5",

@@ -16,11 +16,12 @@ const ROLE_LABEL: Record<Role, string> = {
   viewer: "Lecteur",
 };
 
-type Tab = "profile" | "security" | "sync" | "invitations";
+type Tab = "profile" | "security" | "notifications" | "sync" | "invitations";
 
 const NAV: { id: Tab; label: string; icon: string }[] = [
   { id: "profile", label: "Profil", icon: "user" },
   { id: "security", label: "Sécurité & 2FA", icon: "shield" },
+  { id: "notifications", label: "Notifications", icon: "bell" },
   { id: "sync", label: "Synchronisation", icon: "refresh" },
   { id: "invitations", label: "Invitations", icon: "mail" },
 ];
@@ -75,6 +76,7 @@ export function SettingsRoute() {
         <div className="settings-panel">
           {tab === "profile" && <ProfileSection onChanged={() => void refresh()} />}
           {tab === "security" && <SecuritySection mfaEnabled={!!user?.mfa_enabled} onChanged={() => void refresh()} />}
+          {tab === "notifications" && <NotificationsSection />}
           {tab === "sync" && <SyncSection />}
           {tab === "invitations" && <InvitationsSection />}
         </div>
@@ -324,6 +326,58 @@ function PasswordCard() {
       <button className="btn btn-primary" disabled={m.isPending || !current || !next} onClick={() => { setError(""); setNotice(""); m.mutate(); }}>
         {m.isPending ? "…" : "Changer le mot de passe"}
       </button>
+    </Panel>
+  );
+}
+
+const NOTIF_PREF_KEY = "wc-notif-prefs";
+type NotifPrefs = Record<string, boolean>;
+
+function loadNotifPrefs(): NotifPrefs {
+  try {
+    return JSON.parse(localStorage.getItem(NOTIF_PREF_KEY) || "{}");
+  } catch {
+    return {};
+  }
+}
+
+function saveNotifPrefs(prefs: NotifPrefs) {
+  localStorage.setItem(NOTIF_PREF_KEY, JSON.stringify(prefs));
+}
+
+const NOTIF_TYPES = [
+  { id: "invitation", label: "Invitations à un workspace", desc: "Quand vous recevez une invitation" },
+  { id: "mention", label: "Mentions @", desc: "Quand quelqu'un vous mentionne dans une page" },
+  { id: "page_updated", label: "Pages suivies", desc: "Quand une page que vous suivez est modifiée" },
+  { id: "workflow_stage", label: "Changements de workflow", desc: "Quand une page change d'étape" },
+] as const;
+
+function NotificationsSection() {
+  const [prefs, setPrefs] = useState<NotifPrefs>(loadNotifPrefs);
+
+  function toggle(id: string, v: boolean) {
+    const next = { ...prefs, [id]: v };
+    setPrefs(next);
+    saveNotifPrefs(next);
+  }
+
+  return (
+    <Panel title="Notifications" subtitle="Choisissez les notifications que vous souhaitez recevoir" icon="bell">
+      {NOTIF_TYPES.map((t) => (
+        <div key={t.id} className="setting-row">
+          <div className="switch-text">
+            <b>{t.label}</b>
+            <span className="muted">{t.desc}</span>
+          </div>
+          <Switch
+            checked={prefs[t.id] !== false}
+            onChange={(v) => toggle(t.id, v)}
+          />
+        </div>
+      ))}
+      <p className="muted" style={{ fontSize: 12, marginTop: 12 }}>
+        Ces préférences sont enregistrées localement sur cet appareil.
+      </p>
     </Panel>
   );
 }

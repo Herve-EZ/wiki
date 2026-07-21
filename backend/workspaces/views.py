@@ -1,5 +1,5 @@
 from django.conf import settings
-from django.core.mail import send_mail
+from django.core.mail import EmailMessage
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -25,19 +25,25 @@ from .serializers import (
 def _send_invitation_email(invitation: WorkspaceInvitation) -> None:
     """Deliver the invite link. Never let a mail misconfig break the request —
     in DEBUG the console backend just prints the message (link included)."""
+    from siteconfig.email import get_email_connection, get_from_email
+
     link = f"{settings.FRONTEND_URL.rstrip('/')}/invite/{invitation.token}"
-    send_mail(
-        subject=f"Invitation à rejoindre « {invitation.workspace.name} »",
-        message=(
-            f"Vous avez été invité(e) à rejoindre l'espace "
-            f"« {invitation.workspace.name} » en tant que "
-            f"{invitation.get_role_display()}.\n\n"
-            f"Ouvrez ce lien pour accepter l'invitation :\n{link}\n"
-        ),
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=[invitation.email],
-        fail_silently=True,
-    )
+    try:
+        msg = EmailMessage(
+            subject=f"Invitation à rejoindre « {invitation.workspace.name} »",
+            body=(
+                f"Vous avez été invité(e) à rejoindre l'espace "
+                f"« {invitation.workspace.name} » en tant que "
+                f"{invitation.get_role_display()}.\n\n"
+                f"Ouvrez ce lien pour accepter l'invitation :\n{link}\n"
+            ),
+            from_email=get_from_email(),
+            to=[invitation.email],
+            connection=get_email_connection(),
+        )
+        msg.send(fail_silently=True)
+    except Exception:
+        pass
 
 
 def _is_last_owner(workspace: Workspace, member: WorkspaceMember) -> bool:
@@ -137,6 +143,8 @@ class WorkspaceViewSet(viewsets.ModelViewSet):
             invitation.invited_by = request.user
             invitation.save(update_fields=["role", "invited_by"])
         _send_invitation_email(invitation)
+        from notifications.services import notify_invitation
+        notify_invitation(invitation, actor=request.user)
         return Response(
             WorkspaceInvitationSerializer(invitation).data,
             status=status.HTTP_201_CREATED,

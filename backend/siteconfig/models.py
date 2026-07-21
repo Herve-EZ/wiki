@@ -89,6 +89,23 @@ class SiteConfiguration(TimeStampedModel):
     enable_microsoft = models.BooleanField(default=True)
     enable_saml = models.BooleanField(default=True)
 
+    # --- SMTP / email -------------------------------------------------------
+    email_enabled = models.BooleanField(
+        default=False,
+        help_text="Activer l'envoi d'e-mails via la configuration ci-dessous (sinon fallback sur les variables d'environnement).",
+    )
+    email_host = models.CharField(max_length=255, blank=True, default="")
+    email_port = models.PositiveIntegerField(default=587)
+    email_host_user = models.CharField(max_length=255, blank=True, default="")
+    email_host_password = models.CharField(max_length=255, blank=True, default="")
+    email_use_tls = models.BooleanField(default=True)
+    email_use_ssl = models.BooleanField(default=False)
+    email_from = models.EmailField(
+        blank=True,
+        default="",
+        help_text="Adresse d'expéditeur. Vide → DEFAULT_FROM_EMAIL de l'environnement.",
+    )
+
     class Meta:
         verbose_name = "Configuration de la plateforme"
         verbose_name_plural = "Configuration de la plateforme"

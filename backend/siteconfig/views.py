@@ -1,10 +1,12 @@
 from django.contrib.auth import get_user_model
+from django.core.mail import EmailMessage
 from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from .email import get_email_connection, get_from_email
 from .models import SiteConfiguration
 from .permissions import IsSystemAdmin
 from .serializers import (
@@ -40,6 +42,30 @@ class AdminConfigView(APIView):
         s.is_valid(raise_exception=True)
         s.save()
         return Response(s.data)
+
+
+class AdminTestEmailView(APIView):
+    """POST /api/admin/config/test-email — send a test mail to the logged-in admin."""
+
+    permission_classes = [IsSystemAdmin]
+
+    def post(self, request):
+        try:
+            conn = get_email_connection()
+            msg = EmailMessage(
+                subject="WikiCollab — e-mail de test",
+                body="Si vous lisez ce message, la configuration SMTP fonctionne correctement.",
+                from_email=get_from_email(),
+                to=[request.user.email],
+                connection=conn,
+            )
+            msg.send(fail_silently=False)
+        except Exception as exc:
+            return Response(
+                {"detail": f"Échec de l'envoi : {exc}"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        return Response({"detail": f"E-mail de test envoyé à {request.user.email}."})
 
 
 class AdminUserListView(APIView):
