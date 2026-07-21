@@ -11,7 +11,10 @@ User = get_user_model()
 PAGE_UPDATE_DEDUP_MINUTES = 15
 
 
-def notify(*, recipient, type: str, title: str, body: str = "", actor=None, payload: dict | None = None):
+def notify(
+    *, recipient, type: str, title: str,
+    body: str = "", actor=None, payload: dict | None = None,
+):
     """Create a single notification."""
     return Notification.objects.create(
         recipient=recipient,

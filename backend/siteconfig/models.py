@@ -92,7 +92,10 @@ class SiteConfiguration(TimeStampedModel):
     # --- SMTP / email -------------------------------------------------------
     email_enabled = models.BooleanField(
         default=False,
-        help_text="Activer l'envoi d'e-mails via la configuration ci-dessous (sinon fallback sur les variables d'environnement).",
+        help_text=(
+            "Activer l'envoi d'e-mails via la configuration ci-dessous"
+            " (sinon fallback sur les variables d'environnement)."
+        ),
     )
     email_host = models.CharField(max_length=255, blank=True, default="")
     email_port = models.PositiveIntegerField(default=587)

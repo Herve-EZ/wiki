@@ -11,8 +11,7 @@ keeps one contract everywhere.
 import re
 
 from django.db import connection
-from django.db.models import Q, QuerySet, Value
-from django.db.models.functions import Concat
+from django.db.models import Q, QuerySet
 
 
 def search_pages(queryset: QuerySet, query: str) -> QuerySet:

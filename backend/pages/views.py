@@ -11,7 +11,7 @@ from workspaces.permissions import WorkspaceAccess, can_write, is_owner
 
 from . import services
 from .models import Page, PageVersion
-from .search import search_pages, search_pages_with_snippets
+from .search import search_pages_with_snippets
 from .serializers import (
     PageListSerializer,
     PageSerializer,

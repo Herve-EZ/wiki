@@ -91,7 +91,7 @@ MENTION_RE = re.compile(r"(?<!\w)@([\w.@+-]+(?:\s[\w.@+-]+)?)", re.UNICODE)
 def _post_save_notifications(page: Page, author):
     """Run after commit: backlink WS push + persistent notifications."""
     notify_backlinked_pages(page)
-    from notifications.services import auto_subscribe, notify_mention, notify_page_updated
+    from notifications.services import auto_subscribe, notify_page_updated
     auto_subscribe(author, page)
     notify_page_updated(page, author)
     _process_mentions(page, author)
@@ -99,8 +99,8 @@ def _post_save_notifications(page: Page, author):
 
 def _process_mentions(page: Page, author):
     """Parse @display_name or @email in content and notify mentioned users."""
-    from django.contrib.auth import get_user_model
     from notifications.services import notify_mention
+    from django.contrib.auth import get_user_model
 
     User = get_user_model()
     members = User.objects.filter(

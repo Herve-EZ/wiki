@@ -175,6 +175,23 @@ export function PageRoute() {
     saveM.mutate({ ...page, title });
   }
 
+  // Scroll to first search hit and clear the ?q= param after a short delay.
+  useEffect(() => {
+    if (!searchQuery || !page) return;
+    const timer = setTimeout(() => {
+      const hit = document.querySelector("mark.search-hit");
+      if (hit) hit.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 200);
+    const cleanup = setTimeout(() => {
+      setSearchParams((prev) => {
+        const next = new URLSearchParams(prev);
+        next.delete("q");
+        return next;
+      }, { replace: true });
+    }, 4000);
+    return () => { clearTimeout(timer); clearTimeout(cleanup); };
+  }, [searchQuery, setSearchParams, page]);
+
   if (pageQ.isLoading) {
     return (
       <div className="center-fill">
@@ -200,23 +217,6 @@ export function PageRoute() {
       </div>
     );
   }
-
-  // Scroll to first search hit and clear the ?q= param after a short delay.
-  useEffect(() => {
-    if (!searchQuery) return;
-    const timer = setTimeout(() => {
-      const hit = document.querySelector("mark.search-hit");
-      if (hit) hit.scrollIntoView({ behavior: "smooth", block: "center" });
-    }, 200);
-    const cleanup = setTimeout(() => {
-      setSearchParams((prev) => {
-        const next = new URLSearchParams(prev);
-        next.delete("q");
-        return next;
-      }, { replace: true });
-    }, 4000);
-    return () => { clearTimeout(timer); clearTimeout(cleanup); };
-  }, [searchQuery, setSearchParams]);
 
   const lockCount = Object.keys(sock.locks).length;
 
