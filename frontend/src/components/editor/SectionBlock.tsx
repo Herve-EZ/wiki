@@ -1,5 +1,7 @@
+import { useRef } from "react";
 import { Icon } from "../Icon";
 import { MarkdownEditor } from "./MarkdownEditor";
+import { useMermaid } from "../../hooks/useMermaid";
 import { renderMarkdown } from "../../lib/markdown";
 import { preprocessWikilinks, type PageRef } from "../../lib/wikilinks";
 import type { Section } from "../../lib/sections";
@@ -58,11 +60,13 @@ export function SectionBlock({
   onSaveEdit,
   onCancelEdit,
 }: Props) {
+  const bodyRef = useRef<HTMLDivElement>(null);
   const lockedByOther = lock && !isMine;
   const cls = editing || isMine ? "section locked-mine" : lockedByOther ? "section locked-theirs" : "section";
 
   const rawHtml = renderMarkdown(preprocessWikilinks(section.text, pageIndex));
   const html = searchQuery ? highlightHtml(rawHtml, searchQuery) : rawHtml;
+  useMermaid(bodyRef, editing ? "" : html);
 
   return (
     <div className={cls} id={`sec-${section.id}`}>
@@ -99,7 +103,7 @@ export function SectionBlock({
           </div>
         </>
       ) : (
-        <div className="md-body" dangerouslySetInnerHTML={{ __html: html }} />
+        <div className="md-body" ref={bodyRef} dangerouslySetInnerHTML={{ __html: html }} />
       )}
 
       {!editing && canEdit && !lockedByOther && (

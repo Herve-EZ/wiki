@@ -103,7 +103,103 @@ def test_editor_cannot_delete_page(editor_client, page):
 def test_owner_can_delete_page(client, page):
     r = client.delete(f"/api/pages/{page.pk}/")
     assert r.status_code == 204
+    # Soft delete: the row survives (recoverable) but is trashed.
+    page.refresh_from_db()
+    assert page.deleted_at is not None
+
+
+def test_trashed_page_hidden_from_reads(client, workspace, page):
+    client.delete(f"/api/pages/{page.pk}/")
+    # No longer in the workspace tree, search, or retrievable.
+    r = client.get(f"/api/workspaces/{workspace.slug}/pages/")
+    assert page.slug not in [p["slug"] for p in r.data]
+    assert client.get(f"/api/pages/{page.pk}/").status_code == 404
+    r = client.get(f"/api/search?q=docker")
+    assert page.slug not in [p["slug"] for p in r.data]
+
+
+def test_owner_can_view_untrash_and_purge(client, workspace, page):
+    client.delete(f"/api/pages/{page.pk}/")
+    # Trash listing shows it.
+    r = client.get(f"/api/workspaces/{workspace.slug}/trash/")
+    assert [p["slug"] for p in r.data] == [page.slug]
+    # Restore brings it back.
+    r = client.post(f"/api/pages/{page.pk}/untrash/")
+    assert r.status_code == 200
+    page.refresh_from_db()
+    assert page.deleted_at is None
+    # Trash again, then purge permanently.
+    client.delete(f"/api/pages/{page.pk}/")
+    r = client.delete(f"/api/pages/{page.pk}/purge/")
+    assert r.status_code == 204
     assert not Page.objects.filter(pk=page.pk).exists()
+
+
+def test_editor_cannot_view_trash(editor_client, workspace, page):
+    r = editor_client.get(f"/api/workspaces/{workspace.slug}/trash/")
+    assert r.status_code == 403
+
+
+def test_slug_reusable_after_trashing(client, workspace, page):
+    client.delete(f"/api/pages/{page.pk}/")
+    # A brand-new page may take the trashed page's slug.
+    r = client.post(
+        "/api/pages/",
+        {"workspace": workspace.pk, "title": "New", "slug": page.slug},
+        format="json",
+    )
+    assert r.status_code == 201, r.data
+
+
+def test_untrash_resolves_slug_clash(client, workspace, page):
+    original = page.slug
+    client.delete(f"/api/pages/{page.pk}/")
+    client.post(
+        "/api/pages/",
+        {"workspace": workspace.pk, "title": "New", "slug": original},
+        format="json",
+    )
+    # Restoring must not violate the unique constraint — slug gets a suffix.
+    r = client.post(f"/api/pages/{page.pk}/untrash/")
+    assert r.status_code == 200
+    page.refresh_from_db()
+    assert page.slug != original
+    assert page.deleted_at is None
+
+
+def test_create_page_with_parent(client, workspace, page):
+    r = client.post(
+        "/api/pages/",
+        {"workspace": workspace.pk, "title": "Child", "slug": "child",
+         "parent": str(page.pk)},
+        format="json",
+    )
+    assert r.status_code == 201, r.data
+    assert str(r.data["parent"]) == str(page.pk)
+
+
+def test_page_cannot_be_its_own_ancestor(client, workspace, page, author):
+    child = Page.objects.create(
+        workspace=workspace, title="Child", slug="child", author=author, parent=page
+    )
+    # Making `page` a child of its own descendant would create a cycle.
+    r = client.patch(
+        f"/api/pages/{page.pk}/", {"parent": str(child.pk)}, format="json"
+    )
+    assert r.status_code == 400
+
+
+def test_parent_must_be_same_workspace(client, workspace, page, author):
+    other_ws = Workspace.objects.create(slug="other", name="Other", created_by=author)
+    WorkspaceMember.objects.create(
+        workspace=other_ws, user=author, role=WorkspaceMember.Role.OWNER
+    )
+    r = client.post(
+        "/api/pages/",
+        {"workspace": other_ws.pk, "title": "X", "slug": "x", "parent": str(page.pk)},
+        format="json",
+    )
+    assert r.status_code == 400
 
 
 def test_editor_cannot_publish_page(editor_client, page):

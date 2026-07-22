@@ -8,11 +8,22 @@ interface Props {
   workspaceId: string;
   workspaceSlug: string;
   initialTitle?: string;
+  /** When set, the new page is created as a child of this page. */
+  parentId?: string | null;
+  parentTitle?: string;
   onClose: () => void;
   onCreated: (pageId: string) => void;
 }
 
-export function NewPageModal({ workspaceId, workspaceSlug, initialTitle, onClose, onCreated }: Props) {
+export function NewPageModal({
+  workspaceId,
+  workspaceSlug,
+  initialTitle,
+  parentId,
+  parentTitle,
+  onClose,
+  onCreated,
+}: Props) {
   const qc = useQueryClient();
   const [title, setTitle] = useState(initialTitle ?? "");
   const [slug, setSlug] = useState(initialTitle ? slugify(initialTitle) : "");
@@ -25,6 +36,7 @@ export function NewPageModal({ workspaceId, workspaceSlug, initialTitle, onClose
     mutationFn: () =>
       api.createPage({
         workspace: workspaceId,
+        parent: parentId ?? null,
         title: title.trim(),
         slug: (slug || slugify(title)).trim(),
         // Imported file content wins; otherwise start from a titled stub.
@@ -72,8 +84,12 @@ export function NewPageModal({ workspaceId, workspaceSlug, initialTitle, onClose
   return (
     <div className="overlay" onClick={onClose}>
       <form className="card" onClick={(e) => e.stopPropagation()} onSubmit={submit}>
-        <h4>Nouvelle page</h4>
-        <p className="sub">Créez une page dans « {workspaceSlug} », vierge ou depuis un fichier Markdown.</p>
+        <h4>{parentId ? "Nouvelle sous-page" : "Nouvelle page"}</h4>
+        <p className="sub">
+          {parentId && parentTitle
+            ? `Sous « ${parentTitle} », vierge ou depuis un fichier Markdown.`
+            : `Créez une page dans « ${workspaceSlug} », vierge ou depuis un fichier Markdown.`}
+        </p>
         {error && <p className="form-error">{error}</p>}
 
         <input

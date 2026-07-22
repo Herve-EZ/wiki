@@ -509,6 +509,47 @@ svg.ic {
   white-space: nowrap;
 }
 
+/* ---- Page tree rows ---- */
+.sb-tree-row {
+  display: flex;
+  align-items: center;
+}
+.sb-twisty {
+  flex: none;
+  width: 16px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: var(--ink-3);
+  cursor: pointer;
+  border-radius: var(--r-sm);
+}
+.sb-twisty.hidden {
+  visibility: hidden;
+  cursor: default;
+}
+.sb-caret {
+  transition: transform 0.13s ease;
+}
+.sb-caret.closed {
+  transform: rotate(-90deg);
+}
+.sb-tree-item {
+  width: auto;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.sb-row-add {
+  flex: none;
+  opacity: 0;
+}
+.sb-tree-row:hover .sb-row-add {
+  opacity: 1;
+}
+
 /* ---- Section label + count ---- */
 .sb-label {
   display: flex;
@@ -1000,6 +1041,21 @@ svg.ic {
 .md-body .task-check {
   margin-right: 6px;
   vertical-align: middle;
+}
+.md-body pre.mermaid {
+  background: var(--surface-2);
+  border-radius: var(--r-md);
+  padding: 12px;
+  margin: 0 0 12px;
+  text-align: center;
+  overflow-x: auto;
+  color: var(--ink-3);
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+.md-body pre.mermaid svg {
+  max-width: 100%;
+  height: auto;
 }
 
 .caret {
@@ -2115,6 +2171,10 @@ svg.ic.spin {
   display: flex;
   flex-direction: column;
   gap: 2px;
+}
+.menu-pop-scroll {
+  max-height: 320px;
+  overflow-y: auto;
 }
 .menu-item {
   display: flex;

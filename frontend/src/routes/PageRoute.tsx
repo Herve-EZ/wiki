@@ -131,6 +131,20 @@ export function PageRoute() {
       ),
   });
 
+  const moveM = useMutation({
+    mutationFn: (parentId: string | null) => api.updatePage(pageId, { parent: parentId }),
+    onSuccess: (res) => {
+      qc.setQueryData(["page", pageId], res);
+      void qc.invalidateQueries({ queryKey: ["pages", ctx.current?.slug] });
+    },
+    onError: (err) =>
+      pushToast(
+        err instanceof ApiError && err.status === 403
+          ? "Action non autorisée par votre rôle."
+          : "Déplacement impossible.",
+      ),
+  });
+
   const deleteM = useMutation({
     mutationFn: () => api.deletePage(pageId),
     onSuccess: async () => {
@@ -249,7 +263,9 @@ export function PageRoute() {
             canWrite={ctx.canWrite}
             isOwner={ctx.isOwner}
             online={online}
+            pages={ctx.pages}
             onChangeStatus={(status) => saveM.mutate({ ...page, status })}
+            onMove={(parentId) => moveM.mutate(parentId)}
             onDelete={() => deleteM.mutate()}
             pushToast={pushToast}
           />

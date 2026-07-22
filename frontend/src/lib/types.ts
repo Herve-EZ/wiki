@@ -156,6 +156,8 @@ export interface PageWorkflow {
 export interface Page {
   id: string;
   workspace: string;
+  /** Parent page id for the hierarchy, or null at the root. */
+  parent?: string | null;
   title: string;
   slug: string;
   content_md: string;
@@ -168,6 +170,7 @@ export interface Page {
 export interface PageListItem {
   id: string;
   workspace: string;
+  parent?: string | null;
   title: string;
   slug: string;
   status: PageStatus;

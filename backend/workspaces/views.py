@@ -173,7 +173,18 @@ class WorkspaceViewSet(viewsets.ModelViewSet):
         from pages.serializers import PageListSerializer
 
         workspace = self.get_object()
-        qs = workspace.pages.order_by("title")
+        qs = workspace.pages.filter(deleted_at__isnull=True).order_by("title")
+        return Response(PageListSerializer(qs, many=True).data)
+
+    @action(detail=True, methods=["get"])
+    def trash(self, request, slug=None):
+        """Soft-deleted pages, most-recently-trashed first (owner-only)."""
+        from pages.serializers import PageListSerializer
+
+        workspace = self.get_object()
+        if not is_owner(request.user, workspace):
+            raise PermissionDenied("Only the workspace owner can view the trash.")
+        qs = workspace.pages.filter(deleted_at__isnull=False).order_by("-deleted_at")
         return Response(PageListSerializer(qs, many=True).data)
 
 

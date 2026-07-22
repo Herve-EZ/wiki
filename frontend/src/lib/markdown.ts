@@ -61,6 +61,28 @@ function headingAnchorPlugin(mdi: MarkdownIt) {
 md.use(taskListPlugin);
 md.use(headingAnchorPlugin);
 
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+// Render ```mermaid fences as a container the useMermaid hook turns into a
+// diagram after mount (mermaid itself is lazy-loaded, so it stays out of the
+// main bundle).
+const defaultFence =
+  md.renderer.rules.fence ||
+  ((tokens, idx, options, _env, self) => self.renderToken(tokens, idx, options));
+md.renderer.rules.fence = (tokens, idx, options, env, self) => {
+  const info = tokens[idx].info.trim().split(/\s+/)[0];
+  if (info === "mermaid") {
+    return `<pre class="mermaid">${escapeHtml(tokens[idx].content)}</pre>`;
+  }
+  return defaultFence(tokens, idx, options, env, self);
+};
+
 // Wrap tables so wide ones scroll horizontally instead of breaking the layout.
 const defaultTableOpen =
   md.renderer.rules.table_open ||

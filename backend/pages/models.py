@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.db import models
+from django.db.models import Q
 
 from core.models import BaseModel, TimeStampedModel, UUIDModel
 from workspaces.models import Workspace
@@ -14,6 +15,10 @@ class Page(BaseModel):
     workspace = models.ForeignKey(
         Workspace, on_delete=models.CASCADE, related_name="pages"
     )
+    parent = models.ForeignKey(
+        "self", on_delete=models.SET_NULL, null=True, blank=True,
+        related_name="children",
+    )
     title = models.CharField(max_length=300)
     slug = models.SlugField(max_length=300)
     content_md = models.TextField(blank=True)
@@ -24,11 +29,16 @@ class Page(BaseModel):
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True,
         related_name="pages",
     )
+    deleted_at = models.DateTimeField(null=True, blank=True, db_index=True)
 
     class Meta:
         constraints = [
+            # Slug is unique among *live* pages only, so trashing a page frees its
+            # slug for reuse (Postgres/SQLite partial unique index).
             models.UniqueConstraint(
-                fields=["workspace", "slug"], name="unique_page_slug_per_workspace"
+                fields=["workspace", "slug"],
+                condition=Q(deleted_at__isnull=True),
+                name="unique_live_page_slug_per_workspace",
             )
         ]
         indexes = [models.Index(fields=["workspace", "-updated_at"])]

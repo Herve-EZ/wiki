@@ -44,7 +44,9 @@ def detect_links(page: Page) -> list[PageLink]:
     - plain-text mentions of another page's exact title (word-bounded,
       case-insensitive, titles of 3+ chars to avoid noise)
     """
-    siblings = Page.objects.filter(workspace=page.workspace).exclude(pk=page.pk)
+    siblings = Page.objects.filter(
+        workspace=page.workspace, deleted_at__isnull=True
+    ).exclude(pk=page.pk)
     by_key = {}
     for p in siblings:
         by_key[p.slug.lower()] = p

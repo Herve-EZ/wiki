@@ -36,6 +36,7 @@ interface Command {
 }
 
 const CODE_BLOCK = "```\n\n```";
+const MERMAID_BLOCK = "```mermaid\nflowchart LR\n  A[Début] --> B[Fin]\n```";
 
 const COMMANDS: Command[] = [
   { key: "h2", label: "Titre", icon: "heading", run: (t, s, e) => toggleLinePrefix(t, s, e, "## ") },
@@ -45,6 +46,7 @@ const COMMANDS: Command[] = [
   { key: "quote", label: "Citation", icon: "quote", run: (t, s, e) => toggleLinePrefix(t, s, e, "> ") },
   { key: "code", label: "Bloc de code", icon: "code", run: (t, s, e) => insertBlock(t, s, e, CODE_BLOCK) },
   { key: "table", label: "Tableau", icon: "table", opens: "table" },
+  { key: "diagram", label: "Diagramme (Mermaid)", icon: "diagram", run: (t, s, e) => insertBlock(t, s, e, MERMAID_BLOCK) },
   { key: "link", label: "Lien vers une page", icon: "link", opens: "link" },
   { key: "mention", label: "Mention", icon: "at", opens: "mention" },
 ];
@@ -183,6 +185,7 @@ export function MarkdownEditor({
     { title: "Citation", icon: "quote", act: () => apply((t, s, e) => toggleLinePrefix(t, s, e, "> ")) },
     { title: "Code en ligne", icon: "code", act: () => wrap("`") },
     { title: "Tableau", icon: "table", act: openTable },
+    { title: "Diagramme (Mermaid)", icon: "diagram", act: () => apply((t, s, e) => insertBlock(t, s, e, MERMAID_BLOCK)) },
     { title: "Insérer un lien vers une page", icon: "link", act: () => setLinkOpen(true) },
     { title: "Mentionner un membre", icon: "at", act: () => setMentionOpen(true) },
   ];

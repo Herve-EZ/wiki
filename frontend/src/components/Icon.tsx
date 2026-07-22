@@ -46,6 +46,7 @@ const PATHS: Record<string, string> = {
   alignLeft: "M4 6h16 M4 12h10 M4 18h13",
   alignCenter: "M4 6h16 M7 12h10 M6 18h12",
   alignRight: "M4 6h16 M10 12h10 M7 18h13",
+  diagram: "M4 4h6v4H4z M14 16h6v4h-6z M7 8v4h10v4",
 };
 
 interface Props {

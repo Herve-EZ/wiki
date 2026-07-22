@@ -354,6 +354,14 @@ export const api = {
     ),
   backlinks: (id: string) => requestList<PageListItem>(`/api/pages/${id}/backlinks/`),
 
+  // ---- trash (soft-deleted pages) ----
+  listTrash: (slug: string) =>
+    requestList<PageListItem>(`/api/workspaces/${slug}/trash/`),
+  untrashPage: (id: string) =>
+    request<Page>(`/api/pages/${id}/untrash/`, { method: "POST", body: "{}" }),
+  purgePage: (id: string) =>
+    request<void>(`/api/pages/${id}/purge/`, { method: "DELETE" }),
+
   // ---- notifications ----
   listNotifications: (unread?: boolean) =>
     requestList<AppNotification>(

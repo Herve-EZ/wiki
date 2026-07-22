@@ -4,7 +4,8 @@ import { ApiError, api } from "../lib/api";
 import { exportPdf } from "../lib/export/pdf";
 import { markdownToDocx } from "../lib/export/docx";
 import { exportMarkdown, saveBinaryFile } from "../lib/native";
-import type { Page, PageStatus } from "../lib/types";
+import { descendantIds } from "../lib/pageTree";
+import type { Page, PageListItem, PageStatus } from "../lib/types";
 import { Icon } from "./Icon";
 
 function FollowButton({ pageId, online }: { pageId: string; online: boolean }) {
@@ -47,7 +48,9 @@ interface Props {
   canWrite: boolean;
   isOwner: boolean;
   online: boolean;
+  pages: PageListItem[];
   onChangeStatus: (status: PageStatus) => void;
+  onMove: (parentId: string | null) => void;
   onDelete: () => void;
   pushToast: (t: string) => void;
 }
@@ -59,13 +62,20 @@ export function PageActions({
   canWrite,
   isOwner,
   online,
+  pages,
   onChangeStatus,
+  onMove,
   onDelete,
   pushToast,
 }: Props) {
   const qc = useQueryClient();
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
+  const [moveOpen, setMoveOpen] = useState(false);
+
+  // Valid parents: any page that is not this page or one of its descendants.
+  const blocked = descendantIds(pages, page.id);
+  const moveTargets = pages.filter((p) => !blocked.has(p.id));
 
   const baseName = page.slug || "page";
 
@@ -175,6 +185,44 @@ export function PageActions({
             </>
           )}
         </div>
+
+        {canWrite && online && (
+          <div className="export-menu">
+            <button className="btn btn-ghost" onClick={() => setMoveOpen((o) => !o)} title="Déplacer dans l'arborescence">
+              <Icon name="file" size={13} /> Déplacer
+            </button>
+            {moveOpen && (
+              <>
+                <div className="menu-backdrop" onClick={() => setMoveOpen(false)} />
+                <div className="menu-pop menu-pop-scroll">
+                  <button
+                    className="menu-item"
+                    disabled={!page.parent}
+                    onClick={() => {
+                      setMoveOpen(false);
+                      onMove(null);
+                    }}
+                  >
+                    <Icon name="home" size={13} /> Racine (aucun parent)
+                  </button>
+                  {moveTargets.map((p) => (
+                    <button
+                      key={p.id}
+                      className="menu-item"
+                      disabled={p.id === page.parent}
+                      onClick={() => {
+                        setMoveOpen(false);
+                        onMove(p.id);
+                      }}
+                    >
+                      <Icon name="file" size={13} /> {p.title}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        )}
 
         {isOwner &&
           (!confirmDelete ? (
