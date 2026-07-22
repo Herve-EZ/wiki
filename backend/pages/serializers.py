@@ -1,6 +1,19 @@
 from rest_framework import serializers
 
-from .models import Attachment, Page, PageVersion
+from .models import Attachment, Comment, Page, PageVersion
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    author_display = serializers.CharField(source="author.display_name", read_only=True)
+    author_email = serializers.EmailField(source="author.email", read_only=True)
+
+    class Meta:
+        model = Comment
+        fields = [
+            "id", "page", "parent", "section_id", "body", "resolved",
+            "author", "author_display", "author_email", "created_at", "updated_at",
+        ]
+        read_only_fields = ["id", "author", "created_at", "updated_at"]
 
 
 class AttachmentSerializer(serializers.ModelSerializer):

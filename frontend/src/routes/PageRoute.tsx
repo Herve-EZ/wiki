@@ -16,6 +16,7 @@ import { SectionBlock } from "../components/editor/SectionBlock";
 import { TableOfContents } from "../components/editor/TableOfContents";
 import { HistoryModal } from "../components/history/HistoryModal";
 import { PageActions } from "../components/PageActions";
+import { CommentsPanel } from "../components/CommentsPanel";
 import { MissingPageDialog } from "../components/MissingPageDialog";
 import { NewPageModal } from "../components/modals/NewPageModal";
 import { Icon } from "../components/Icon";
@@ -42,6 +43,7 @@ export function PageRoute() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [commentsOpen, setCommentsOpen] = useState(false);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [createLinkTitle, setCreateLinkTitle] = useState<string | null>(null);
 
@@ -95,6 +97,15 @@ export function PageRoute() {
     queryFn: () => api.backlinks(pageId),
     enabled: online && !!pageId,
   });
+
+  const commentsQ = useQuery({
+    queryKey: ["comments", pageId],
+    queryFn: () => api.listComments(pageId),
+    enabled: online && !!pageId,
+  });
+  const openCommentCount = (commentsQ.data ?? []).filter(
+    (c) => !c.parent && !c.resolved,
+  ).length;
 
   const sock = usePageSocket(pageId, {
     enabled: online,
@@ -243,8 +254,10 @@ export function PageRoute() {
         saved={!saveM.isPending}
         saving={saveM.isPending}
         present={sock.present}
+        commentCount={openCommentCount}
         onOpenSearch={ctx.openSearch}
         onOpenHistory={() => setHistoryOpen(true)}
+        onOpenComments={() => setCommentsOpen(true)}
       />
 
       <div className="content">
@@ -327,6 +340,17 @@ export function PageRoute() {
 
       {historyOpen && (
         <HistoryModal pageId={pageId} canRestore={online} onClose={() => setHistoryOpen(false)} />
+      )}
+
+      {commentsOpen && (
+        <CommentsPanel
+          pageId={pageId}
+          sections={sections}
+          userId={myId}
+          canWrite={ctx.canWrite}
+          isOwner={ctx.isOwner}
+          onClose={() => setCommentsOpen(false)}
+        />
       )}
 
       {createLinkTitle !== null && ctx.current && (

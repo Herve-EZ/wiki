@@ -9,8 +9,10 @@ interface Props {
   saving: boolean;
   versionLabel?: string;
   present: PresentUser[];
+  commentCount?: number;
   onOpenSearch: () => void;
   onOpenHistory: () => void;
+  onOpenComments: () => void;
 }
 
 export function TopBar({
@@ -20,8 +22,10 @@ export function TopBar({
   saving,
   versionLabel,
   present,
+  commentCount = 0,
   onOpenSearch,
   onOpenHistory,
+  onOpenComments,
 }: Props) {
   return (
     <div className="tb">
@@ -66,6 +70,12 @@ export function TopBar({
             ))}
           </div>
         )}
+
+        <button className="btn btn-ghost" onClick={onOpenComments}>
+          <Icon name="mail" size={14} />
+          Commentaires
+          {commentCount > 0 && <span className="tb-badge">{commentCount}</span>}
+        </button>
 
         <button className="btn btn-ghost" onClick={onOpenHistory}>
           <Icon name="history" size={14} />

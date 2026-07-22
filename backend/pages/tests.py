@@ -310,6 +310,53 @@ def test_viewer_cannot_upload_attachment(workspace, settings, tmp_path):
     assert r.status_code == 403
 
 
+def test_member_can_comment_and_list(client, page):
+    r = client.post(
+        "/api/comments/",
+        {"page": str(page.pk), "section_id": "intro", "body": "Nice page"},
+        format="json",
+    )
+    assert r.status_code == 201, r.data
+    assert r.data["author_email"] == "author@x.com"
+    r = client.get(f"/api/comments/?page={page.pk}")
+    assert r.status_code == 200
+    assert [c["body"] for c in r.data] == ["Nice page"]
+
+
+def test_reply_and_resolve(client, editor_client, page):
+    top = client.post(
+        "/api/comments/", {"page": str(page.pk), "body": "Question?"}, format="json"
+    ).data
+    # Editor replies on the same page.
+    r = editor_client.post(
+        "/api/comments/",
+        {"page": str(page.pk), "parent": top["id"], "body": "Answer."},
+        format="json",
+    )
+    assert r.status_code == 201, r.data
+    # A writer (editor) can resolve someone else's comment.
+    r = editor_client.patch(f"/api/comments/{top['id']}/", {"resolved": True}, format="json")
+    assert r.status_code == 200
+    assert r.data["resolved"] is True
+
+
+def test_only_author_can_edit_comment(client, editor_client, page):
+    c = client.post(
+        "/api/comments/", {"page": str(page.pk), "body": "Mine"}, format="json"
+    ).data
+    r = editor_client.patch(f"/api/comments/{c['id']}/", {"body": "hacked"}, format="json")
+    assert r.status_code == 403
+
+
+def test_author_or_owner_can_delete_comment(client, editor_client, page):
+    c = editor_client.post(
+        "/api/comments/", {"page": str(page.pk), "body": "By editor"}, format="json"
+    ).data
+    # Owner (client) can delete another member's comment.
+    r = client.delete(f"/api/comments/{c['id']}/")
+    assert r.status_code == 204
+
+
 def test_page_history_is_recorded(page, author):
     services.save_page(page, author, title="Guide Docker v2")
     assert page.history.count() >= 2

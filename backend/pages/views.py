@@ -9,12 +9,13 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from workspaces.models import Workspace
-from workspaces.permissions import WorkspaceAccess, can_write, is_owner
+from workspaces.permissions import WorkspaceAccess, can_read, can_write, is_owner
 
 from . import services
-from .models import Attachment, Page, PageVersion
+from .models import Attachment, Comment, Page, PageVersion
 from .search import search_pages_with_snippets
 from .serializers import (
+    CommentSerializer,
     PageListSerializer,
     PageSerializer,
     PageVersionDetailSerializer,
@@ -176,6 +177,55 @@ class PageViewSet(viewsets.ModelViewSet):
             links_out__to_page=page, deleted_at__isnull=True
         ).select_related("workspace")
         return Response(PageListSerializer(pages, many=True).data)
+
+
+class CommentViewSet(viewsets.ModelViewSet):
+    """Page discussions. Anyone with read access can comment; editing a comment
+    is author-only, resolving is author-or-writer, deleting is author-or-owner."""
+
+    serializer_class = CommentSerializer
+    permission_classes = [IsAuthenticated]
+    # Return the full thread as a plain array; also frees the `page` query param
+    # from colliding with DRF's page-number pagination.
+    pagination_class = None
+
+    def get_queryset(self):
+        qs = Comment.objects.filter(
+            page__workspace__in=_accessible_workspaces(self.request.user),
+            page__deleted_at__isnull=True,
+        ).select_related("author", "page", "page__workspace")
+        page_id = self.request.query_params.get("page")
+        if page_id:
+            qs = qs.filter(page_id=page_id)
+        return qs
+
+    def perform_create(self, serializer):
+        page = serializer.validated_data["page"]
+        if not can_read(self.request.user, page.workspace):
+            raise PermissionDenied("You cannot comment on this page.")
+        parent = serializer.validated_data.get("parent")
+        if parent and parent.page_id != page.id:
+            raise ValidationError({"parent": "Reply must be on the same page."})
+        serializer.save(author=self.request.user)
+
+    def perform_update(self, serializer):
+        comment = serializer.instance
+        is_author = comment.author_id == self.request.user.id
+        changed = set(serializer.validated_data.keys())
+        if changed <= {"resolved"}:
+            # Resolving/reopening: author or any workspace writer.
+            if not (is_author or can_write(self.request.user, comment.page.workspace)):
+                raise PermissionDenied("You cannot resolve this comment.")
+        elif not is_author:
+            raise PermissionDenied("You can only edit your own comment.")
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        if instance.author_id != self.request.user.id and not is_owner(
+            self.request.user, instance.page.workspace
+        ):
+            raise PermissionDenied("You cannot delete this comment.")
+        instance.delete()
 
 
 class AttachmentRawView(APIView):

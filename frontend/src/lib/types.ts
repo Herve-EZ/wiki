@@ -177,6 +177,20 @@ export interface PageListItem {
   updated_at: string;
 }
 
+export interface Comment {
+  id: string;
+  page: string;
+  parent: string | null;
+  section_id: string;
+  body: string;
+  resolved: boolean;
+  author: string | null;
+  author_display: string;
+  author_email: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Attachment {
   id: string;
   /** Capability path on the backend, e.g. /api/attachments/<id>/raw. */

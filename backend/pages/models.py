@@ -101,6 +101,33 @@ class PageLink(UUIDModel, TimeStampedModel):
         return f"{self.from_page} → {self.to_page}"
 
 
+class Comment(UUIDModel, TimeStampedModel):
+    """A discussion note on a page, optionally anchored to a section (by the
+    section slug from lib/sections). Top-level comments can have one level of
+    replies (parent) and be marked resolved."""
+
+    page = models.ForeignKey(Page, on_delete=models.CASCADE, related_name="comments")
+    author = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True,
+        related_name="comments",
+    )
+    parent = models.ForeignKey(
+        "self", on_delete=models.CASCADE, null=True, blank=True,
+        related_name="replies",
+    )
+    # Section slug this comment refers to; blank = general page comment.
+    section_id = models.CharField(max_length=255, blank=True)
+    body = models.TextField()
+    resolved = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ["created_at"]
+        indexes = [models.Index(fields=["page", "created_at"])]
+
+    def __str__(self):
+        return f"comment on {self.page} by {self.author_id}"
+
+
 class Attachment(UUIDModel, TimeStampedModel):
     """A file (image or document) uploaded into a workspace and embedded in a
     page via Markdown. Served by an unguessable-UUID capability URL so plain
