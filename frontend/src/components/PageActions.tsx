@@ -93,7 +93,7 @@ export function PageActions({
   async function doDocx() {
     setExportOpen(false);
     try {
-      const data = markdownToDocx(page.content_md);
+      const data = await markdownToDocx(page.content_md);
       await saveBinaryFile(`${baseName}.docx`, data, [{ name: "Word", extensions: ["docx"] }]);
     } catch {
       pushToast("Échec de l'export Word.");
