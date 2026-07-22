@@ -1057,6 +1057,22 @@ svg.ic {
   max-width: 100%;
   height: auto;
 }
+.md-body img {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--r-sm);
+}
+.md-upload-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--ink-3);
+  padding: 6px 2px 0;
+}
+.md-upload-status.error {
+  color: var(--danger);
+}
 
 .caret {
   display: inline-block;

@@ -9,6 +9,7 @@ import type {
   AdminSiteConfig,
   AdminUser,
   AppNotification,
+  Attachment,
   DiffResult,
   LoginResult,
   Member,
@@ -29,7 +30,13 @@ import type {
   WorkspacePermission,
 } from "./types";
 
-const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
+export const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
+
+/** Turn an attachment's capability path into an absolute URL that a plain
+ * <img>/<a> can load (the app and backend may be on different origins). */
+export function attachmentUrl(path: string): string {
+  return path.startsWith("http") ? path : `${API_URL}${path}`;
+}
 
 export class ApiError extends Error {
   readonly status: number;
@@ -353,6 +360,16 @@ export const api = {
       { method: "POST" },
     ),
   backlinks: (id: string) => requestList<PageListItem>(`/api/pages/${id}/backlinks/`),
+
+  // ---- attachments ----
+  uploadAttachment: (slug: string, file: File) => {
+    const form = new FormData();
+    form.append("file", file);
+    return request<Attachment>(`/api/workspaces/${slug}/attachments/`, {
+      method: "POST",
+      body: form,
+    });
+  },
 
   // ---- trash (soft-deleted pages) ----
   listTrash: (slug: string) =>

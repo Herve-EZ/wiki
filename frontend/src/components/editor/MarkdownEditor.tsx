@@ -11,8 +11,9 @@ import {
   wrapInline,
 } from "../../lib/editorActions";
 import { parseTableAt } from "../../lib/tables";
+import { api, attachmentUrl } from "../../lib/api";
+import type { Attachment, Member } from "../../lib/types";
 import type { PageRef } from "../../lib/wikilinks";
-import type { Member } from "../../lib/types";
 
 interface Props {
   value: string;
@@ -20,7 +21,17 @@ interface Props {
   pages: PageRef[];
   currentPageId: string;
   members: Member[];
+  /** Workspace slug for file uploads (attachments). Omit to disable uploads. */
+  workspaceSlug?: string;
   autoFocus?: boolean;
+}
+
+/** Markdown embed for an uploaded file: images inline, everything else a link. */
+function embedFor(att: Attachment): string {
+  const abs = attachmentUrl(att.url);
+  return att.content_type.startsWith("image/")
+    ? `![${att.original_name}](${abs})`
+    : `[${att.original_name}](${abs})`;
 }
 
 type SlashState = { query: string; slashPos: number } | null;
@@ -60,14 +71,18 @@ export function MarkdownEditor({
   pages,
   currentPageId,
   members,
+  workspaceSlug,
   autoFocus,
 }: Props) {
   const ref = useRef<HTMLTextAreaElement>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
   const [linkOpen, setLinkOpen] = useState(false);
   const [mentionOpen, setMentionOpen] = useState(false);
   const [tableOpen, setTableOpen] = useState(false);
   const [tableInitial, setTableInitial] = useState<ReturnType<typeof parseTableAt> | null>(null);
   const [slash, setSlash] = useState<SlashState>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
 
   function focusAt(res: EditResult) {
     onChange(res.text);
@@ -132,6 +147,46 @@ export function MarkdownEditor({
     setTableInitial(null);
   }
 
+  // ---- File uploads (attachments) ----
+  async function handleFiles(files: File[]) {
+    if (!files.length || !workspaceSlug) return;
+    setUploading(true);
+    setUploadError("");
+    try {
+      const embeds: string[] = [];
+      for (const f of files) {
+        const att = await api.uploadAttachment(workspaceSlug, f);
+        embeds.push(embedFor(att));
+      }
+      const ta = ref.current;
+      const start = ta ? ta.selectionStart : value.length;
+      const end = ta ? ta.selectionEnd : value.length;
+      focusAt(insertInline(value, start, end, embeds.join("\n")));
+    } catch {
+      setUploadError("Échec de l'envoi du fichier (10 Mo max).");
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  function onDrop(e: React.DragEvent<HTMLTextAreaElement>) {
+    const files = Array.from(e.dataTransfer?.files ?? []);
+    if (files.length && workspaceSlug) {
+      e.preventDefault();
+      void handleFiles(files);
+    }
+  }
+
+  function onPaste(e: React.ClipboardEvent<HTMLTextAreaElement>) {
+    const imgs = Array.from(e.clipboardData?.files ?? []).filter((f) =>
+      f.type.startsWith("image/"),
+    );
+    if (imgs.length && workspaceSlug) {
+      e.preventDefault();
+      void handleFiles(imgs);
+    }
+  }
+
   function runCommand(cmd: Command) {
     if (cmd.opens === "link") setLinkOpen(true);
     else if (cmd.opens === "mention") setMentionOpen(true);
@@ -189,6 +244,13 @@ export function MarkdownEditor({
     { title: "Insérer un lien vers une page", icon: "link", act: () => setLinkOpen(true) },
     { title: "Mentionner un membre", icon: "at", act: () => setMentionOpen(true) },
   ];
+  if (workspaceSlug) {
+    toolbar.push({
+      title: "Image / pièce jointe",
+      icon: "upload",
+      act: () => fileRef.current?.click(),
+    });
+  }
 
   return (
     <div className="md-editor">
@@ -215,6 +277,8 @@ export function MarkdownEditor({
           value={value}
           autoFocus={autoFocus}
           onChange={handleChange}
+          onDrop={onDrop}
+          onPaste={onPaste}
           onKeyDown={(e) => {
             if (slash && e.key === "Escape") {
               e.preventDefault();
@@ -223,6 +287,32 @@ export function MarkdownEditor({
           }}
           placeholder="Rédigez en Markdown… Tapez « / » pour insérer un élément."
         />
+        {workspaceSlug && (
+          <input
+            ref={fileRef}
+            type="file"
+            multiple
+            style={{ display: "none" }}
+            onChange={(e) => {
+              const files = Array.from(e.target.files ?? []);
+              e.target.value = "";
+              void handleFiles(files);
+            }}
+          />
+        )}
+        {(uploading || uploadError) && (
+          <div className={`md-upload-status${uploadError ? " error" : ""}`}>
+            {uploading ? (
+              <>
+                <span className="spinner" style={{ width: 12, height: 12 }} /> Envoi du fichier…
+              </>
+            ) : (
+              <>
+                <Icon name="alert" size={12} /> {uploadError}
+              </>
+            )}
+          </div>
+        )}
 
         {slash && slashMatches.length > 0 && (
           <div className="slash-menu">

@@ -4,7 +4,7 @@ from django.urls import include, path
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
 from accounts.sso_views import SSOCompleteView
-from pages.views import SearchView
+from pages.views import AttachmentRawView, SearchView
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -17,6 +17,7 @@ urlpatterns = [
     path("api/", include("workflows.urls")),
     path("api/", include("notifications.urls")),
     path("api/search", SearchView.as_view(), name="search"),
+    path("api/attachments/<uuid:pk>/raw", AttachmentRawView.as_view(), name="attachment-raw"),
     # OpenAPI schema + interactive docs
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     path("api/docs/", SpectacularSwaggerView.as_view(url_name="schema"), name="docs"),

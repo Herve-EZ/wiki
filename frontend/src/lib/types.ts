@@ -177,6 +177,16 @@ export interface PageListItem {
   updated_at: string;
 }
 
+export interface Attachment {
+  id: string;
+  /** Capability path on the backend, e.g. /api/attachments/<id>/raw. */
+  url: string;
+  original_name: string;
+  content_type: string;
+  size: number;
+  created_at: string;
+}
+
 export interface SearchResult {
   id: string;
   workspace: string;

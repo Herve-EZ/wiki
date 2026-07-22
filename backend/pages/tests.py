@@ -1,5 +1,6 @@
 import pytest
 from django.contrib.auth import get_user_model
+from django.core.files.uploadedfile import SimpleUploadedFile
 from rest_framework.test import APIClient
 
 from workspaces.models import Workspace, WorkspaceMember
@@ -278,6 +279,35 @@ def test_search_scoped_to_accessible_workspaces(client, page, author):
     slugs = [p["slug"] for p in r.data]
     assert "guide-docker" in slugs
     assert "guide-secret" not in slugs
+
+
+def test_editor_can_upload_and_fetch_attachment(editor_client, workspace, settings, tmp_path):
+    settings.MEDIA_ROOT = tmp_path
+    f = SimpleUploadedFile("logo.png", b"\x89PNG\r\n fake image", content_type="image/png")
+    r = editor_client.post(
+        f"/api/workspaces/{workspace.slug}/attachments/", {"file": f}, format="multipart"
+    )
+    assert r.status_code == 201, r.data
+    assert r.data["original_name"] == "logo.png"
+    assert r.data["content_type"] == "image/png"
+    assert r.data["url"].endswith("/raw")
+    raw = editor_client.get(r.data["url"])
+    assert raw.status_code == 200
+
+
+def test_viewer_cannot_upload_attachment(workspace, settings, tmp_path):
+    settings.MEDIA_ROOT = tmp_path
+    viewer = User.objects.create_user(email="v2@x.com", password="testpass123")
+    WorkspaceMember.objects.create(
+        workspace=workspace, user=viewer, role=WorkspaceMember.Role.VIEWER
+    )
+    c = APIClient()
+    c.force_authenticate(viewer)
+    f = SimpleUploadedFile("x.txt", b"hi", content_type="text/plain")
+    r = c.post(
+        f"/api/workspaces/{workspace.slug}/attachments/", {"file": f}, format="multipart"
+    )
+    assert r.status_code == 403
 
 
 def test_page_history_is_recorded(page, author):

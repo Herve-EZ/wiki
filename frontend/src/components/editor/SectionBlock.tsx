@@ -18,6 +18,7 @@ interface Props {
   pages: PageRef[];
   pageIndex: Map<string, PageRef>;
   currentPageId: string;
+  workspaceSlug?: string;
   searchQuery?: string;
   members?: Member[];
   onStartEdit: () => void;
@@ -53,6 +54,7 @@ export function SectionBlock({
   pages,
   pageIndex,
   currentPageId,
+  workspaceSlug,
   searchQuery,
   members = [],
   onStartEdit,
@@ -91,6 +93,7 @@ export function SectionBlock({
             pages={pages}
             currentPageId={currentPageId}
             members={members}
+            workspaceSlug={workspaceSlug}
             autoFocus
           />
           <div style={{ display: "flex", gap: 8, marginTop: 8, alignItems: "center" }}>

@@ -293,6 +293,7 @@ export function PageRoute() {
                 pages={ctx.pages}
                 pageIndex={pageIndex}
                 currentPageId={pageId}
+                workspaceSlug={ctx.current?.slug}
                 searchQuery={searchQuery}
                 members={members}
                 onStartEdit={() => startEdit(s.id, s.text)}

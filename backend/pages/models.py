@@ -1,9 +1,17 @@
+from uuid import uuid4
+
 from django.conf import settings
 from django.db import models
 from django.db.models import Q
 
 from core.models import BaseModel, TimeStampedModel, UUIDModel
 from workspaces.models import Workspace
+
+
+def attachment_path(instance, filename):
+    """Store uploads under a per-workspace, per-attachment folder so filenames
+    never collide and the original name is preserved for downloads."""
+    return f"attachments/{instance.workspace_id}/{uuid4().hex}/{filename}"
 
 
 class Page(BaseModel):
@@ -91,3 +99,27 @@ class PageLink(UUIDModel, TimeStampedModel):
 
     def __str__(self):
         return f"{self.from_page} → {self.to_page}"
+
+
+class Attachment(UUIDModel, TimeStampedModel):
+    """A file (image or document) uploaded into a workspace and embedded in a
+    page via Markdown. Served by an unguessable-UUID capability URL so plain
+    <img> tags can load it without an auth header."""
+
+    workspace = models.ForeignKey(
+        Workspace, on_delete=models.CASCADE, related_name="attachments"
+    )
+    uploaded_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True,
+        related_name="attachments",
+    )
+    file = models.FileField(upload_to=attachment_path)
+    original_name = models.CharField(max_length=255)
+    content_type = models.CharField(max_length=100, blank=True)
+    size = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        indexes = [models.Index(fields=["workspace", "-created_at"])]
+
+    def __str__(self):
+        return self.original_name

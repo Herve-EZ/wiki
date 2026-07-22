@@ -1,9 +1,10 @@
 from django.db.models import Q
+from django.http import FileResponse, Http404
 from django.utils import timezone
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -11,7 +12,7 @@ from workspaces.models import Workspace
 from workspaces.permissions import WorkspaceAccess, can_write, is_owner
 
 from . import services
-from .models import Page, PageVersion
+from .models import Attachment, Page, PageVersion
 from .search import search_pages_with_snippets
 from .serializers import (
     PageListSerializer,
@@ -175,6 +176,27 @@ class PageViewSet(viewsets.ModelViewSet):
             links_out__to_page=page, deleted_at__isnull=True
         ).select_related("workspace")
         return Response(PageListSerializer(pages, many=True).data)
+
+
+class AttachmentRawView(APIView):
+    """Stream an uploaded file. Access is by unguessable-UUID capability URL so
+    plain <img>/<a> tags work without an auth header — the whole point of the
+    embed. Uploading still requires auth + write access (see WorkspaceViewSet)."""
+
+    permission_classes = [AllowAny]
+
+    def get(self, request, pk=None):
+        try:
+            att = Attachment.objects.get(pk=pk)
+        except (Attachment.DoesNotExist, ValueError, ValidationError):
+            raise Http404 from None
+        resp = FileResponse(
+            att.file.open("rb"),
+            content_type=att.content_type or "application/octet-stream",
+        )
+        # Inline so images render in place; browsers still download other types.
+        resp["Content-Disposition"] = f'inline; filename="{att.original_name}"'
+        return resp
 
 
 class SearchView(APIView):

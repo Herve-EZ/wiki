@@ -1,6 +1,21 @@
 from rest_framework import serializers
 
-from .models import Page, PageVersion
+from .models import Attachment, Page, PageVersion
+
+
+class AttachmentSerializer(serializers.ModelSerializer):
+    """Read payload for an uploaded file. `url` is the capability path the
+    frontend embeds in Markdown (prefixed with the API base client-side)."""
+
+    url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Attachment
+        fields = ["id", "url", "original_name", "content_type", "size", "created_at"]
+        read_only_fields = fields
+
+    def get_url(self, obj) -> str:
+        return f"/api/attachments/{obj.pk}/raw"
 
 
 class PageListSerializer(serializers.ModelSerializer):
