@@ -39,11 +39,12 @@ Aucune dépendance, fonctionne hors-ligne.
 
 Un document `.docx` est produit sur votre appareil, en conservant : titres,
 paragraphes, **gras**/*italique*/`code`, liens, listes, citations, blocs de code,
-**tableaux** (avec en-têtes et alignement) et traits horizontaux. Vous êtes invité à
-l'enregistrer.
+**tableaux** (avec en-têtes et alignement), **images** et traits horizontaux. Vous
+êtes invité à l'enregistrer.
 
-> Les **images** sont exportées sous forme de texte alternatif dans le `.docx` (le PDF,
-> lui, les affiche). En cas d'échec : *Échec de l'export Word.*
+> Les images sont **téléchargées et intégrées** au fichier `.docx` (dimensions
+> préservées, largeur limitée à la page). Une image injoignable retombe sur son texte
+> alternatif. En cas d'échec : *Échec de l'export Word.*
 
 ### Markdown (.md)
 

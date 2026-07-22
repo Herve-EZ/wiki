@@ -84,9 +84,20 @@ Il n'apparaît que s'il y a quelque chose à signaler :
 
 ---
 
+## Fichiers ajoutés hors-ligne (upload différé)
+
+Si vous ajoutez une **image ou une pièce jointe** pendant que vous êtes hors-ligne
+(application de bureau), le fichier est **mis en file d'attente** et un espace réservé
+est inséré dans la page. À la reconnexion, la synchronisation **envoie les fichiers
+d'abord**, puis remplace automatiquement les espaces réservés par les vraies URL — vos
+modifications de page partent alors avec les bons liens.
+
+---
+
 ## Que se passe-t-il à la reconnexion ?
 
-La file d'attente est **rejouée dans l'ordre**. Pour chaque modification :
+La file d'attente est **rejouée dans l'ordre** (les **fichiers en attente d'envoi**
+sont traités en premier). Pour chaque modification :
 
 - **Succès** → envoyée et retirée de la file ; le compteur *en attente* baisse.
 - **Toujours hors-ligne** → la synchro s'arrête, la modification reste en file pour la prochaine tentative.
