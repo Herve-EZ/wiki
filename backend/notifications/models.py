@@ -9,6 +9,7 @@ class NotificationType(models.TextChoices):
     MENTION = "mention", "Mention"
     PAGE_UPDATED = "page_updated", "Page modifiée"
     WORKFLOW_STAGE = "workflow_stage", "Changement de workflow"
+    COMMENT = "comment", "Commentaire"
 
 
 class Notification(models.Model):

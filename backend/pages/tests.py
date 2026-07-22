@@ -357,6 +357,20 @@ def test_author_or_owner_can_delete_comment(client, editor_client, page):
     assert r.status_code == 204
 
 
+def test_new_comment_notifies_subscribers(client, editor_client, page):
+    from notifications.models import Notification
+
+    # Owner comments first, which subscribes them to the page.
+    client.post("/api/comments/", {"page": str(page.pk), "body": "hi"}, format="json")
+    # Editor then comments; the owner (a subscriber) is notified.
+    editor_client.post(
+        "/api/comments/", {"page": str(page.pk), "body": "a new one"}, format="json"
+    )
+    assert Notification.objects.filter(
+        recipient__email="author@x.com", type="comment"
+    ).exists()
+
+
 def test_page_history_is_recorded(page, author):
     services.save_page(page, author, title="Guide Docker v2")
     assert page.history.count() >= 2
