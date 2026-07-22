@@ -43,6 +43,24 @@ fn migrations() -> Vec<Migration> {
             "#,
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 2,
+            description: "page hierarchy + deferred uploads",
+            sql: r#"
+                ALTER TABLE page_cache ADD COLUMN parent TEXT;
+
+                CREATE TABLE IF NOT EXISTS pending_uploads (
+                    id           TEXT PRIMARY KEY,        -- referenced by the `pending:<id>` placeholder
+                    workspace    TEXT NOT NULL,           -- workspace slug (upload target)
+                    page_id      TEXT NOT NULL,
+                    filename     TEXT NOT NULL,
+                    content_type TEXT NOT NULL DEFAULT '',
+                    data         TEXT NOT NULL,           -- base64 file bytes
+                    created_at   TEXT NOT NULL
+                );
+            "#,
+            kind: MigrationKind::Up,
+        },
     ]
 }
 

@@ -12,6 +12,9 @@ import {
 } from "../../lib/editorActions";
 import { parseTableAt } from "../../lib/tables";
 import { api, attachmentUrl } from "../../lib/api";
+import { addPendingUpload } from "../../lib/db";
+import { isOnline } from "../../lib/network";
+import { isTauri } from "../../lib/platform";
 import type { Attachment, Member } from "../../lib/types";
 import type { PageRef } from "../../lib/wikilinks";
 
@@ -32,6 +35,26 @@ function embedFor(att: Attachment): string {
   return att.content_type.startsWith("image/")
     ? `![${att.original_name}](${abs})`
     : `[${att.original_name}](${abs})`;
+}
+
+/** Placeholder embed for a file queued offline; sync rewrites `pending:<id>`. */
+function pendingEmbed(file: File, id: string): string {
+  const token = `pending:${id}`;
+  return file.type.startsWith("image/")
+    ? `![${file.name}](${token})`
+    : `[${file.name}](${token})`;
+}
+
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const s = String(reader.result);
+      resolve(s.slice(s.indexOf(",") + 1));
+    };
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
 }
 
 type SlashState = { query: string; slashPos: number } | null;
@@ -154,9 +177,26 @@ export function MarkdownEditor({
     setUploadError("");
     try {
       const embeds: string[] = [];
-      for (const f of files) {
-        const att = await api.uploadAttachment(workspaceSlug, f);
-        embeds.push(embedFor(att));
+      if (!isOnline() && isTauri()) {
+        // Offline: queue the file and embed a placeholder that sync rewrites.
+        for (const f of files) {
+          const id = crypto.randomUUID();
+          const dataB64 = await fileToBase64(f);
+          await addPendingUpload({
+            id,
+            workspace: workspaceSlug,
+            pageId: currentPageId,
+            filename: f.name,
+            contentType: f.type,
+            dataB64,
+          });
+          embeds.push(pendingEmbed(f, id));
+        }
+      } else {
+        for (const f of files) {
+          const att = await api.uploadAttachment(workspaceSlug, f);
+          embeds.push(embedFor(att));
+        }
       }
       const ta = ref.current;
       const start = ta ? ta.selectionStart : value.length;
