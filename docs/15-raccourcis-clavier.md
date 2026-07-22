@@ -43,8 +43,15 @@
 
 ## Édition
 
+| Raccourci | Action |
+|---|---|
+| **/** (en début de ligne) | Ouvrir le menu d'insertion (titre, liste, tableau, diagramme…) |
+| **Échap** | Fermer le menu `/` |
+
+- La **barre d'outils** applique la mise en forme (gras, titre, tableau, image…) à la sélection.
 - Le **titre** d'une page s'enregistre automatiquement quand vous **quittez le champ** (clic ailleurs).
 - Une **section** s'enregistre via le bouton **« Enregistrer »** de sa barre d'outils (ou **« Annuler »** pour abandonner).
+- **Glisser-déposer** ou **coller** une image dans la zone d'édition l'envoie et l'insère.
 
 ---
 

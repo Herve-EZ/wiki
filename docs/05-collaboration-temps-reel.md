@@ -84,10 +84,44 @@ présence exacte.
 
 ---
 
+## Commentaires
+
+Chaque page a un fil de **commentaires** pour discuter sans modifier le contenu.
+
+### Ouvrir les commentaires
+
+Cliquez sur **« Commentaires »** dans la barre supérieure. Un **panneau latéral**
+s'ouvre à droite. Le bouton affiche un **badge** avec le nombre de commentaires non
+résolus.
+
+### Commenter
+
+1. En bas du panneau, saisissez votre message.
+2. (Optionnel) choisissez la **section concernée** dans le menu (sinon *Commentaire
+   général*).
+3. Cliquez sur **« Commenter »**.
+
+Chaque commentaire indique son auteur, l'heure, et éventuellement la **section** visée
+(**§ Titre**).
+
+### Répondre, résoudre, supprimer
+
+- **Répondre** — ouvre un champ de réponse (un niveau de fil).
+- **Résoudre / Rouvrir** — marque la discussion comme traitée (auteur ou éditeur/propriétaire).
+  Les commentaires résolus sont **masqués** par défaut ; cochez **« Afficher les
+  résolus »** pour les revoir.
+- **Supprimer** — l'auteur, ou le propriétaire de l'espace.
+
+> Tout membre ayant accès à la page peut commenter.
+
+---
+
 ## Bonnes pratiques
 
 - **Découpez vos pages en sections** (titres `##`) : plus il y a de sections, plus
   vous pouvez travailler en parallèle sans vous bloquer.
+- **Utilisez les commentaires** pour les questions et relectures, plutôt que d'écrire
+  dans le contenu.
 - **Enregistrez ou annulez** dès que vous avez fini une section, pour libérer le
   verrou au plus vite.
 - Un collègue est bloqué par un verrou que vous avez oublié ? Il suffit d'enregistrer

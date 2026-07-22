@@ -38,10 +38,12 @@ Aucune dépendance, fonctionne hors-ligne.
 ### Word (.docx)
 
 Un document `.docx` est produit sur votre appareil, en conservant : titres,
-paragraphes, **gras**/*italique*/`code`, liens, listes, citations, blocs de code et
-traits horizontaux. Vous êtes invité à l'enregistrer.
+paragraphes, **gras**/*italique*/`code`, liens, listes, citations, blocs de code,
+**tableaux** (avec en-têtes et alignement) et traits horizontaux. Vous êtes invité à
+l'enregistrer.
 
-> En cas d'échec : *Échec de l'export Word.*
+> Les **images** sont exportées sous forme de texte alternatif dans le `.docx` (le PDF,
+> lui, les affiche). En cas d'échec : *Échec de l'export Word.*
 
 ### Markdown (.md)
 

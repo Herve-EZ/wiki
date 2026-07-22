@@ -5,8 +5,8 @@
 ---
 
 Les pages sont écrites en **Markdown** et découpées automatiquement en **sections**
-éditables indépendamment. Ce découpage rend la collaboration fluide : plusieurs
-personnes peuvent travailler sur la même page, chacune sur sa section.
+éditables indépendamment. Une **barre d'outils** et un **menu `/`** facilitent la mise
+en forme : tableaux, listes de tâches, diagrammes, images…
 
 ---
 
@@ -18,24 +18,19 @@ bouton **+** à côté de **« Pages »** dans la barre latérale.
 La fenêtre **« Nouvelle page »** s'ouvre :
 
 1. **Titre** de la page (obligatoire).
-2. **Slug** — généré automatiquement à partir du titre, modifiable manuellement.
+2. **Slug** — généré automatiquement à partir du titre, modifiable.
 3. (Optionnel) **« Importer un fichier Markdown »** — importez un `.md`, `.markdown`
-   ou `.txt`. Si le titre est vide, il est déduit du premier titre `#` du fichier ou
-   de son nom.
-4. Cliquez sur **« Créer »** (ou **« Importer »** si un fichier a été chargé).
+   ou `.txt`.
+4. Cliquez sur **« Créer »** (ou **« Importer »**).
 
-> Une page vierge démarre avec `# Titre`. En cas de slug déjà pris :
-> *Un slug identique existe déjà dans cet espace.*
+> En cas de slug déjà pris : *Un slug identique existe déjà dans cet espace.*
 
 ---
 
 ## Comprendre les sections
 
 Le contenu est **automatiquement découpé en sections** à chaque titre de niveau 1 à 3
-(`#`, `##`, `###`). Le texte avant le premier titre forme sa propre section.
-
-Vous ne créez pas les sections à la main : elles apparaissent là où vous placez des
-titres. C'est ce découpage qui permet les **verrous par section**
+(`#`, `##`, `###`). C'est ce découpage qui permet les **verrous par section**
 (voir [Collaboration temps réel](05-collaboration-temps-reel.md)).
 
 ---
@@ -44,121 +39,181 @@ titres. C'est ce découpage qui permet les **verrous par section**
 
 ### Le titre
 
-Le titre est un champ éditable en haut de la page. Cliquez dedans, modifiez, puis
-cliquez ailleurs : il est **enregistré automatiquement** en quittant le champ.
+Cliquez dans le champ du titre, modifiez, puis cliquez ailleurs : il est **enregistré
+automatiquement**.
 
 ### Une section
 
-1. Survolez la section : un bouton **« Éditer »** (icône engrenage) apparaît en bas
-   de celle-ci (si vous avez les droits d'écriture et qu'elle n'est pas verrouillée
-   par un collègue).
-2. Cliquez sur **« Éditer »** : la section se transforme en **zone de texte** pré-remplie avec son Markdown. Une étiquette **« Vous éditez cette section »** s'affiche.
-3. Une barre d'outils apparaît :
-   - **« Enregistrer »** — enregistre la section.
-   - **« Annuler »** — abandonne les modifications.
-   - **« Mentionner »** — insère une mention @ (voir plus bas).
-   - **« Lier une page »** — insère un lien vers une autre page.
-4. Cliquez sur **« Enregistrer »** : la section est réintégrée et la page enregistrée.
+1. Survolez la section : un bouton **« Éditer »** apparaît.
+2. Cliquez : la section devient une **zone d'édition** avec une **barre d'outils** au-dessus.
+3. Rédigez, puis **« Enregistrer »** (ou **« Annuler »**).
 
-> Une seule section peut être éditée à la fois. L'indicateur en haut passe par
-> *Modifié* → *Enregistrement…* → *Enregistré*.
+### La barre d'outils
+
+Au-dessus de la zone d'édition, des boutons appliquent la mise en forme à la sélection :
+
+| Bouton | Effet |
+|---|---|
+| **Gras** / **Italique** / **Barré** | `**gras**`, `*italique*`, `~~barré~~` |
+| **Titre** | Préfixe `## ` |
+| **Liste à puces** / **Liste de tâches** | `- ` / `- [ ] ` |
+| **Citation** / **Code en ligne** | `> ` / `` `code` `` |
+| **Tableau** | Ouvre l'éditeur de tableau visuel |
+| **Diagramme** | Insère un squelette Mermaid |
+| **Lien** / **Mention** | Insère un wikilien ou une mention @ |
+| **Image / pièce jointe** | Envoie un fichier et l'insère |
+
+### Le menu `/` (commandes rapides)
+
+Tapez **`/`** en début de ligne : un menu s'ouvre pour insérer un élément (titre,
+liste, tâche, citation, bloc de code, tableau, diagramme, lien, mention). Filtrez en
+tapant (ex. `/tab` → Tableau), validez d'un clic.
 
 ---
 
 ## Syntaxe Markdown prise en charge
 
-- Titres `#`, `##`, `###` (et plus)
-- **Gras**, *italique*, `code en ligne`
-- Blocs de code, listes, citations `>`, tableaux
-- Images, liens (les URL brutes deviennent cliquables automatiquement)
-- Traits horizontaux `---`
-- Corrections typographiques automatiques (guillemets « intelligents »)
+- Titres, **gras**, *italique*, `code`, blocs de code, listes, citations, tableaux
+- Images, liens (URL brutes cliquables), traits horizontaux `---`
+- **Listes de tâches** `- [ ]` → cases à cocher
+- **Tableaux** et **diagrammes Mermaid** (voir ci-dessous)
 
-> Le HTML brut est **désactivé** dans le rendu, pour des raisons de sécurité.
+> Le HTML brut est **désactivé** dans le rendu, pour la sécurité.
+
+---
+
+## Insérer un tableau
+
+Cliquez sur **« Tableau »** dans la barre d'outils (ou `/tableau`). L'**éditeur visuel**
+s'ouvre :
+
+- **Ajouter / supprimer** des lignes et colonnes ;
+- **éditer** chaque cellule ;
+- **aligner** une colonne en cliquant sur son en-tête (défaut → gauche → centre → droite) ;
+- **« Insérer »** génère un tableau **Markdown standard** (portable, versionné, comparable).
+
+> Placez le curseur dans un tableau existant puis rouvrez **« Tableau »** pour le
+> **modifier** dans l'éditeur visuel. Les tableaux sont conservés à l'**export**
+> PDF et Word.
+
+---
+
+## Listes de tâches
+
+Écrivez (ou insérez via la barre d'outils) :
+
+```
+- [ ] À faire
+- [x] Fait
+```
+
+Elles s'affichent avec des **cases à cocher**.
+
+---
+
+## Diagrammes (Mermaid)
+
+Insérez un bloc **Mermaid** (bouton **Diagramme** ou `/diagramme`) :
+
+````
+```mermaid
+flowchart LR
+  A[Début] --> B[Fin]
+```
+````
+
+Le diagramme est **rendu automatiquement** (organigrammes, séquences, Gantt…), en
+thème clair ou sombre. Une syntaxe invalide affiche un message d'erreur Mermaid sans
+casser la page.
+
+---
+
+## Images & pièces jointes
+
+Trois façons d'ajouter un fichier pendant l'édition :
+
+- **Bouton « Image / pièce jointe »** dans la barre d'outils → choisissez un fichier ;
+- **Glisser-déposer** un fichier sur la zone d'édition ;
+- **Coller** une image depuis le presse-papiers.
+
+Le fichier est **envoyé** (10 Mo max) puis inséré : les **images** s'affichent en place
+(`![]()`), les autres fichiers sous forme de **lien**. Un indicateur *« Envoi du
+fichier… »* s'affiche pendant l'upload.
+
+> Les fichiers sont stockés sur votre instance et rattachés à l'espace de travail.
+
+---
+
+## Sommaire automatique
+
+Dès qu'une page a au moins deux titres, un **Sommaire** repliable apparaît en haut :
+cliquez sur une entrée pour aller à la section.
 
 ---
 
 ## Lier des pages entre elles (wikiliens)
 
-Les **wikiliens** connectent les pages d'un même espace.
-
-### Syntaxe
-
 | Vous écrivez | Résultat |
 |---|---|
-| `[[Titre de la page]]` | lien vers la page dont le titre (ou slug) correspond |
+| `[[Titre de la page]]` | lien vers la page (titre ou slug) |
 | `[[slug\|Texte affiché]]` | lien vers `slug`, affiché « Texte affiché » |
 
-La correspondance est **insensible à la casse** et se fait sur le titre **ou** le slug.
-
-### Insérer un lien sans tout taper
-
-1. En mode édition, cliquez sur **« Lier une page »**.
-2. Un sélecteur s'ouvre (champ *Lier une page…*). Tapez pour filtrer.
-3. Cliquez sur une page (ou **Entrée** pour la première, **Échap** pour fermer) :
-   le wikilien est inséré au curseur. Si du texte était sélectionné, il devient le
-   libellé du lien.
-
-### Cliquer sur un wikilien en lecture
-
-- **Page existante** → vous y êtes redirigé.
-- **Page inexistante** (et vous pouvez écrire) → la fenêtre de création s'ouvre, pré-remplie avec le titre du lien.
-- **Page inexistante** (lecture seule) → message *« … » n'existe pas encore.*
-
-### Backlinks (« Lié à : »)
-
-En bas de chaque page, la ligne **« Lié à : »** liste les pages qui **pointent vers**
-la page courante, sous forme de puces cliquables. S'il n'y en a aucune :
-*aucune page liée*.
+Insérez-en un via **« Lier une page »**. En lecture, cliquer sur un lien vers une page
+inexistante propose de la **créer** (si vous avez les droits). En bas de page, la ligne
+**« Lié à : »** liste les **backlinks**.
 
 ---
 
 ## Mentionner un collègue (@)
 
-1. En mode édition, cliquez sur **« Mentionner »**.
-2. Un sélecteur s'ouvre (champ *Mentionner un membre…*). Filtrez par nom ou email.
-3. Naviguez avec **↑/↓**, validez avec **Entrée** (**Échap** ferme).
-4. La mention `@Nom` est insérée au curseur.
+**« Mentionner »** (ou tapez `@`) insère `@Nom`. La personne reçoit une
+[notification](09-notifications.md).
 
-La personne mentionnée reçoit une **notification**
-(voir [Notifications](09-notifications.md)).
+---
+
+## Organiser les pages
+
+### Sous-pages (arborescence)
+
+Les pages forment un **arbre**. Dans la barre latérale :
+
+- survolez une page → bouton **+** pour créer une **sous-page** ;
+- cliquez sur le **chevron** pour replier / déplier une branche.
+
+### Déplacer une page
+
+Dans la barre d'actions de la page, **« Déplacer »** ouvre un menu : choisissez le
+**parent** (ou **Racine**). Les descendants de la page sont exclus (pas de cycle).
+
+### Corbeille
+
+Supprimer une page la met à la **corbeille** (elle n'est pas perdue). Le propriétaire
+ouvre la corbeille via l'icône dans l'en-tête **« Pages »** de la barre latérale, pour
+**restaurer** ou **supprimer définitivement**.
 
 ---
 
 ## Statut d'une page : Brouillon → Publié → Archivé
 
-En haut du corps de la page, un menu de **statut** :
-
-- **Brouillon** — travail en cours.
-- **Publié** — page validée *(réservé au propriétaire)*.
-- **Archivé** — mise de côté *(réservé au propriétaire)*.
-
-Les éditeurs voient et modifient le brouillon ; la **publication et l'archivage sont
-réservés au propriétaire**. Un [workflow](08-workflows.md) peut structurer ce passage.
-
----
+En haut du corps de la page, un menu de **statut**. **Publier** et **archiver** sont
+réservés au **propriétaire**. Un [workflow](08-workflows.md) peut structurer ce passage.
 
 ## Suivre une page
 
-Cliquez sur **« Suivre »** (icône cloche) dans la barre d'actions de la page pour être
-notifié à chaque modification. Le bouton devient **« Suivi »** ; recliquez pour ne
-plus suivre.
-
----
+**« Suivre »** (icône cloche) vous notifie à chaque modification. Recliquez (**« Suivi »**)
+pour ne plus suivre.
 
 ## Supprimer une page
 
-> Réservé au **propriétaire**.
+> Réservé au **propriétaire**. La page part à la **corbeille** (restaurable).
 
-Cliquez sur **« Supprimer »** dans la barre d'actions, puis **« Confirmer »**. La page
-est supprimée et vous revenez à l'espace.
+Cliquez sur **« Supprimer »**, puis **« Confirmer »**.
 
 ---
 
 ## Voir aussi
 
-- [Collaboration temps réel](05-collaboration-temps-reel.md) — présence et verrous de section.
-- [Historique & versions](06-historique-et-versions.md) — chaque enregistrement crée une version.
-- [Export](11-export.md) — sortir une page en PDF, Word ou Markdown.
+- [Collaboration temps réel](05-collaboration-temps-reel.md) — présence, verrous, **commentaires**.
+- [Historique & versions](06-historique-et-versions.md) · [Export](11-export.md)
 
 [← Espaces de travail](03-espaces-de-travail.md) · [Retour au sommaire](README.md) · [Collaboration temps réel →](05-collaboration-temps-reel.md)

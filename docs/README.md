@@ -22,8 +22,8 @@ bouton et chaque parcours tel que vous le voyez à l'écran.
 - [3. Espaces de travail, rôles & membres](03-espaces-de-travail.md)
 
 ### Utilisation au quotidien
-- [4. Rédiger des pages (sections, wikiliens, mentions)](04-rediger-des-pages.md)
-- [5. Collaboration en temps réel (présence & verrous)](05-collaboration-temps-reel.md)
+- [4. Rédiger des pages (barre d'outils, tableaux, images, Mermaid, arborescence)](04-rediger-des-pages.md)
+- [5. Collaboration en temps réel (présence, verrous & commentaires)](05-collaboration-temps-reel.md)
 - [6. Historique & versions (diff, restauration)](06-historique-et-versions.md)
 - [7. Recherche](07-recherche.md)
 - [8. Workflows de validation](08-workflows.md)
@@ -48,8 +48,9 @@ bouton et chaque parcours tel que vous le voyez à l'écran.
 | Vous connecter pour la première fois | [Démarrage](01-demarrage.md) |
 | Activer la double authentification | [Compte & sécurité](02-compte-et-securite.md) |
 | Créer un espace et inviter des collègues | [Espaces de travail](03-espaces-de-travail.md) |
-| Écrire une page et lier d'autres pages | [Rédiger des pages](04-rediger-des-pages.md) |
-| Voir qui édite en même temps que vous | [Collaboration temps réel](05-collaboration-temps-reel.md) |
+| Écrire une page, insérer un tableau ou une image | [Rédiger des pages](04-rediger-des-pages.md) |
+| Créer des sous-pages / restaurer une page supprimée | [Rédiger des pages](04-rediger-des-pages.md#organiser-les-pages) |
+| Voir qui édite, ou commenter une page | [Collaboration temps réel](05-collaboration-temps-reel.md) |
 | Revenir à une ancienne version | [Historique & versions](06-historique-et-versions.md) |
 | Travailler sans connexion | [Hors-ligne & synchronisation](10-hors-ligne-et-synchro.md) |
 | Exporter une page en PDF ou Word | [Export](11-export.md) |
