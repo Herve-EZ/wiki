@@ -104,13 +104,28 @@ function inlineToRuns(inline: MdToken): Run[] {
   return runs;
 }
 
-function tokensToParas(src: string): Para[] {
+type CellAlign = "" | "left" | "center" | "right";
+interface TableData {
+  align: CellAlign[];
+  header: Run[][];
+  rows: Run[][][];
+}
+type Block = { kind: "para"; para: Para } | { kind: "table"; table: TableData };
+
+function tokensToBlocks(src: string): Block[] {
   const tokens = md.parse(src, {});
-  const paras: Para[] = [];
+  const blocks: Block[] = [];
   const listStack: { ordered: boolean; next: number }[] = [];
   let heading = 0;
   let quote = 0;
   let pendingPrefix: string | null = null;
+
+  // Table-collection state.
+  let table: TableData | null = null;
+  let inHeader = false;
+  let curRow: Run[][] | null = null;
+
+  const para = (p: Para) => blocks.push({ kind: "para", para: p });
 
   for (const t of tokens) {
     switch (t.type) {
@@ -141,10 +156,42 @@ function tokensToParas(src: string): Para[] {
         pendingPrefix = top ? (top.ordered ? `${top.next++}. ` : "•  ") : "•  ";
         break;
       }
+      case "table_open":
+        table = { align: [], header: [], rows: [] };
+        break;
+      case "thead_open":
+        inHeader = true;
+        break;
+      case "thead_close":
+        inHeader = false;
+        break;
+      case "tr_open":
+        curRow = [];
+        break;
+      case "tr_close":
+        if (table && curRow) {
+          if (inHeader) table.header = curRow;
+          else table.rows.push(curRow);
+        }
+        curRow = null;
+        break;
+      case "th_open": {
+        if (table && inHeader) {
+          const m = /text-align:(left|center|right)/.exec(t.attrGet("style") ?? "");
+          table.align.push((m ? m[1] : "") as CellAlign);
+        }
+        break;
+      }
+      case "table_close":
+        if (table) blocks.push({ kind: "table", table });
+        table = null;
+        break;
       case "inline": {
         const runs = inlineToRuns(t);
-        if (heading > 0) {
-          paras.push({ style: (heading <= 4 ? `h${heading}` : "h4") as Style, runs });
+        if (curRow) {
+          curRow.push(runs);
+        } else if (heading > 0) {
+          para({ style: (heading <= 4 ? `h${heading}` : "h4") as Style, runs });
         } else {
           const style: Style = quote > 0 ? "quote" : "p";
           const indent = listStack.length
@@ -156,7 +203,7 @@ function tokensToParas(src: string): Para[] {
             runs.unshift({ text: pendingPrefix });
             pendingPrefix = null;
           }
-          paras.push({ style, runs, indent });
+          para({ style, runs, indent });
         }
         break;
       }
@@ -164,17 +211,17 @@ function tokensToParas(src: string): Para[] {
       case "code_block": {
         const lines = t.content.replace(/\n$/, "").split("\n");
         const runs: Run[] = lines.map((ln, i) => ({ text: ln, code: true, brBefore: i > 0 }));
-        paras.push({ style: "code", runs });
+        para({ style: "code", runs });
         break;
       }
       case "hr":
-        paras.push({ style: "p", runs: [], hr: true });
+        para({ style: "p", runs: [], hr: true });
         break;
       default:
         break;
     }
   }
-  return paras;
+  return blocks;
 }
 
 function baseFor(style: Style): Partial<Run> & { size?: number } {
@@ -241,6 +288,37 @@ function paraXml(p: Para): string {
   return `<w:p>${pprXml}${runs}</w:p>`;
 }
 
+function cellXml(runs: Run[], align: CellAlign, header: boolean): string {
+  const jc = align === "center" ? '<w:jc w:val="center"/>' : align === "right" ? '<w:jc w:val="right"/>' : "";
+  const base: Partial<Run> & { size?: number } = header ? { bold: true } : {};
+  const body = (runs.length ? runs : [{ text: "" } as Run]).map((r) => runXml(r, base)).join("");
+  const shd = header ? '<w:shd w:val="clear" w:color="auto" w:fill="F0F0F4"/>' : "";
+  const tcPr = `<w:tcPr><w:tcW w:w="0" w:type="auto"/>${shd}</w:tcPr>`;
+  const ppr = `<w:pPr><w:spacing w:after="0"/>${jc}</w:pPr>`;
+  return `<w:tc>${tcPr}<w:p>${ppr}${body}</w:p></w:tc>`;
+}
+
+function rowXml(cells: Run[][], align: CellAlign[], header: boolean): string {
+  return `<w:tr>${cells.map((c, i) => cellXml(c, align[i] ?? "", header)).join("")}</w:tr>`;
+}
+
+function tableXml(t: TableData): string {
+  const sides = ["top", "left", "bottom", "right", "insideH", "insideV"];
+  const borders =
+    "<w:tblBorders>" +
+    sides.map((s) => `<w:${s} w:val="single" w:sz="4" w:space="0" w:color="CCCCCC"/>`).join("") +
+    "</w:tblBorders>";
+  const pr = `<w:tblPr><w:tblW w:w="0" w:type="auto"/>${borders}</w:tblPr>`;
+  const head = t.header.length ? rowXml(t.header, t.align, true) : "";
+  const body = t.rows.map((r) => rowXml(r, t.align, false)).join("");
+  // A paragraph must follow a table in WordprocessingML.
+  return `<w:tbl>${pr}${head}${body}</w:tbl><w:p/>`;
+}
+
+function blockXml(b: Block): string {
+  return b.kind === "para" ? paraXml(b.para) : tableXml(b.table);
+}
+
 const CONTENT_TYPES =
   '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
   '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">' +
@@ -257,7 +335,7 @@ const RELS =
 
 /** Build a .docx package (as bytes) from a Markdown string. */
 export function markdownToDocx(markdown: string): Uint8Array {
-  const body = tokensToParas(markdown).map(paraXml).join("");
+  const body = tokensToBlocks(markdown).map(blockXml).join("");
   const document =
     '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
     '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">' +

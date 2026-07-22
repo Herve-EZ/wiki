@@ -9,6 +9,8 @@ import type {
   AdminSiteConfig,
   AdminUser,
   AppNotification,
+  Attachment,
+  Comment,
   DiffResult,
   LoginResult,
   Member,
@@ -29,7 +31,13 @@ import type {
   WorkspacePermission,
 } from "./types";
 
-const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
+export const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
+
+/** Turn an attachment's capability path into an absolute URL that a plain
+ * <img>/<a> can load (the app and backend may be on different origins). */
+export function attachmentUrl(path: string): string {
+  return path.startsWith("http") ? path : `${API_URL}${path}`;
+}
 
 export class ApiError extends Error {
   readonly status: number;
@@ -353,6 +361,42 @@ export const api = {
       { method: "POST" },
     ),
   backlinks: (id: string) => requestList<PageListItem>(`/api/pages/${id}/backlinks/`),
+
+  // ---- comments ----
+  listComments: (pageId: string) =>
+    requestList<Comment>(`/api/comments/?page=${pageId}`),
+  createComment: (body: {
+    page: string;
+    body: string;
+    section_id?: string;
+    parent?: string | null;
+  }) =>
+    request<Comment>("/api/comments/", { method: "POST", body: JSON.stringify(body) }),
+  updateComment: (id: string, patch: { body?: string; resolved?: boolean }) =>
+    request<Comment>(`/api/comments/${id}/`, {
+      method: "PATCH",
+      body: JSON.stringify(patch),
+    }),
+  deleteComment: (id: string) =>
+    request<void>(`/api/comments/${id}/`, { method: "DELETE" }),
+
+  // ---- attachments ----
+  uploadAttachment: (slug: string, file: File) => {
+    const form = new FormData();
+    form.append("file", file);
+    return request<Attachment>(`/api/workspaces/${slug}/attachments/`, {
+      method: "POST",
+      body: form,
+    });
+  },
+
+  // ---- trash (soft-deleted pages) ----
+  listTrash: (slug: string) =>
+    requestList<PageListItem>(`/api/workspaces/${slug}/trash/`),
+  untrashPage: (id: string) =>
+    request<Page>(`/api/pages/${id}/untrash/`, { method: "POST", body: "{}" }),
+  purgePage: (id: string) =>
+    request<void>(`/api/pages/${id}/purge/`, { method: "DELETE" }),
 
   // ---- notifications ----
   listNotifications: (unread?: boolean) =>

@@ -36,8 +36,13 @@ const PRINT_CSS = `
   pre code { background: none; padding: 0; }
   blockquote { margin: 0 0 10px; padding: 4px 14px; border-left: 3px solid #cfcadf;
                color: #555; font-style: italic; }
-  table { border-collapse: collapse; width: 100%; margin: 0 0 12px; }
+  .md-table-wrap { overflow-x: auto; margin: 0 0 12px; }
+  table { border-collapse: collapse; width: 100%; }
   th, td { border: 1px solid #d9d6e6; padding: 6px 9px; text-align: left; }
+  th { background: #f0f0f4; font-weight: 600; }
+  ul.contains-task-list, li.task-item { list-style: none; }
+  li.task-item { margin-left: -18px; }
+  .task-check { margin-right: 6px; }
   img { max-width: 100%; }
   hr { border: none; border-top: 1px solid #d9d6e6; margin: 18px 0; }
 `;

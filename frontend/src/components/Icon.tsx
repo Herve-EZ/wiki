@@ -34,6 +34,19 @@ const PATHS: Record<string, string> = {
   wifi: "M2 8.8a15 15 0 0 1 20 0 M5 12.5a10 10 0 0 1 14 0 M8.5 16a5 5 0 0 1 7 0 M12 20h.01",
   download: "M12 3v12 M7 10l5 5 5-5 M5 21h14",
   upload: "M12 21V9 M7 14l5-5 5 5 M5 3h14",
+  bold: "M7 5v14 M7 5h6a3.5 3.5 0 0 1 0 7H7 M7 12h7a3.5 3.5 0 0 1 0 7H7",
+  italic: "M19 5h-6 M11 19H5 M15 5 9 19",
+  strike: "M5 12h14 M8 8c0-2 2-3 4-3s3 1 3 2 M16 16c0 2-2 3-4 3s-4-1-4-3",
+  heading: "M6 5v14 M18 5v14 M6 12h12",
+  list: "M8 6h13 M8 12h13 M8 18h13 M3 6h.01 M3 12h.01 M3 18h.01",
+  checkSquare: "M9 11l3 3 6-6 M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11",
+  quote: "M8 6H5a1 1 0 0 0-1 1v4a1 1 0 0 0 1 1h3 M8 12c0 3-1 4-3 5 M20 6h-3a1 1 0 0 0-1 1v4a1 1 0 0 0 1 1h3 M20 12c0 3-1 4-3 5",
+  code: "m8 8-4 4 4 4 M16 8l4 4-4 4 M13 5l-2 14",
+  table: "M3 5h18v14H3z M3 10h18 M3 15h18 M9 5v14 M15 5v14",
+  alignLeft: "M4 6h16 M4 12h10 M4 18h13",
+  alignCenter: "M4 6h16 M7 12h10 M6 18h12",
+  alignRight: "M4 6h16 M10 12h10 M7 18h13",
+  diagram: "M4 4h6v4H4z M14 16h6v4h-6z M7 8v4h10v4",
 };
 
 interface Props {

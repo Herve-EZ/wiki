@@ -156,6 +156,8 @@ export interface PageWorkflow {
 export interface Page {
   id: string;
   workspace: string;
+  /** Parent page id for the hierarchy, or null at the root. */
+  parent?: string | null;
   title: string;
   slug: string;
   content_md: string;
@@ -168,10 +170,35 @@ export interface Page {
 export interface PageListItem {
   id: string;
   workspace: string;
+  parent?: string | null;
   title: string;
   slug: string;
   status: PageStatus;
   updated_at: string;
+}
+
+export interface Comment {
+  id: string;
+  page: string;
+  parent: string | null;
+  section_id: string;
+  body: string;
+  resolved: boolean;
+  author: string | null;
+  author_display: string;
+  author_email: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Attachment {
+  id: string;
+  /** Capability path on the backend, e.g. /api/attachments/<id>/raw. */
+  url: string;
+  original_name: string;
+  content_type: string;
+  size: number;
+  created_at: string;
 }
 
 export interface SearchResult {

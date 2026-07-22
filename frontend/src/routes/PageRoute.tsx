@@ -13,8 +13,10 @@ import { usePageSocket } from "../hooks/usePageSocket";
 import { TopBar } from "../components/TopBar";
 import { PresenceBar } from "../components/PresenceBar";
 import { SectionBlock } from "../components/editor/SectionBlock";
+import { TableOfContents } from "../components/editor/TableOfContents";
 import { HistoryModal } from "../components/history/HistoryModal";
 import { PageActions } from "../components/PageActions";
+import { CommentsPanel } from "../components/CommentsPanel";
 import { MissingPageDialog } from "../components/MissingPageDialog";
 import { NewPageModal } from "../components/modals/NewPageModal";
 import { Icon } from "../components/Icon";
@@ -41,6 +43,7 @@ export function PageRoute() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [commentsOpen, setCommentsOpen] = useState(false);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [createLinkTitle, setCreateLinkTitle] = useState<string | null>(null);
 
@@ -95,6 +98,15 @@ export function PageRoute() {
     enabled: online && !!pageId,
   });
 
+  const commentsQ = useQuery({
+    queryKey: ["comments", pageId],
+    queryFn: () => api.listComments(pageId),
+    enabled: online && !!pageId,
+  });
+  const openCommentCount = (commentsQ.data ?? []).filter(
+    (c) => !c.parent && !c.resolved,
+  ).length;
+
   const sock = usePageSocket(pageId, {
     enabled: online,
     onNotifyUpdate: (p) => {
@@ -127,6 +139,20 @@ export function PageRoute() {
         err instanceof ApiError && err.status === 403
           ? "Action non autorisée par votre rôle."
           : "Échec de l'enregistrement",
+      ),
+  });
+
+  const moveM = useMutation({
+    mutationFn: (parentId: string | null) => api.updatePage(pageId, { parent: parentId }),
+    onSuccess: (res) => {
+      qc.setQueryData(["page", pageId], res);
+      void qc.invalidateQueries({ queryKey: ["pages", ctx.current?.slug] });
+    },
+    onError: (err) =>
+      pushToast(
+        err instanceof ApiError && err.status === 403
+          ? "Action non autorisée par votre rôle."
+          : "Déplacement impossible.",
       ),
   });
 
@@ -228,8 +254,10 @@ export function PageRoute() {
         saved={!saveM.isPending}
         saving={saveM.isPending}
         present={sock.present}
+        commentCount={openCommentCount}
         onOpenSearch={ctx.openSearch}
         onOpenHistory={() => setHistoryOpen(true)}
+        onOpenComments={() => setCommentsOpen(true)}
       />
 
       <div className="content">
@@ -248,7 +276,9 @@ export function PageRoute() {
             canWrite={ctx.canWrite}
             isOwner={ctx.isOwner}
             online={online}
+            pages={ctx.pages}
             onChangeStatus={(status) => saveM.mutate({ ...page, status })}
+            onMove={(parentId) => moveM.mutate(parentId)}
             onDelete={() => deleteM.mutate()}
             pushToast={pushToast}
           />
@@ -258,6 +288,8 @@ export function PageRoute() {
             key={page.id + page.title}
             onBlur={(e) => saveTitle(e.target.value.trim())}
           />
+
+          <TableOfContents sections={sections} />
 
           {sections.map((s) => {
             const lock = sock.locks[s.id];
@@ -274,6 +306,7 @@ export function PageRoute() {
                 pages={ctx.pages}
                 pageIndex={pageIndex}
                 currentPageId={pageId}
+                workspaceSlug={ctx.current?.slug}
                 searchQuery={searchQuery}
                 members={members}
                 onStartEdit={() => startEdit(s.id, s.text)}
@@ -307,6 +340,17 @@ export function PageRoute() {
 
       {historyOpen && (
         <HistoryModal pageId={pageId} canRestore={online} onClose={() => setHistoryOpen(false)} />
+      )}
+
+      {commentsOpen && (
+        <CommentsPanel
+          pageId={pageId}
+          sections={sections}
+          userId={myId}
+          canWrite={ctx.canWrite}
+          isOwner={ctx.isOwner}
+          onClose={() => setCommentsOpen(false)}
+        />
       )}
 
       {createLinkTitle !== null && ctx.current && (

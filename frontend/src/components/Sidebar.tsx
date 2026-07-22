@@ -6,11 +6,13 @@ import { Avatar } from "./Avatar";
 import { NotificationBell } from "./NotificationBell";
 import { NewPageModal } from "./modals/NewPageModal";
 import { NewWorkspaceModal } from "./modals/NewWorkspaceModal";
+import { TrashModal } from "./modals/TrashModal";
 import { SyncButton } from "./SyncButton";
 import {
   WorkspaceSettingsModal,
   type SettingsTab,
 } from "./modals/WorkspaceSettingsModal";
+import { buildPageTree, flattenVisible } from "../lib/pageTree";
 import type { PageListItem, Role, User, Workspace } from "../lib/types";
 
 const ROLE_LABEL: Record<Role, string> = {
@@ -56,9 +58,23 @@ export function Sidebar({
 }: Props) {
   const navigate = useNavigate();
   const [switcherOpen, setSwitcherOpen] = useState(false);
-  const [newPageOpen, setNewPageOpen] = useState(false);
+  const [newPage, setNewPage] = useState<{ parentId?: string; parentTitle?: string } | null>(null);
   const [newWsOpen, setNewWsOpen] = useState(false);
   const [settingsTab, setSettingsTab] = useState<SettingsTab | null>(null);
+  const [trashOpen, setTrashOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+
+  const tree = buildPageTree(pages);
+  const visible = flattenVisible(tree, collapsed);
+
+  function toggleCollapse(id: string) {
+    setCollapsed((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
 
   return (
     <nav className="sb">
@@ -138,12 +154,22 @@ export function Sidebar({
         <div className="sb-label">
           <span className="sb-label-text">Pages</span>
           {pages.length > 0 && <span className="sb-count">{pages.length}</span>}
+          {current && isOwner && (
+            <button
+              className="icon-btn sb-add"
+              title="Corbeille"
+              aria-label="Corbeille"
+              onClick={() => setTrashOpen(true)}
+            >
+              <Icon name="x" size={15} />
+            </button>
+          )}
           {current && canWrite && (
             <button
               className="icon-btn sb-add"
               title="Nouvelle page"
               aria-label="Nouvelle page"
-              onClick={() => setNewPageOpen(true)}
+              onClick={() => setNewPage({})}
             >
               <Icon name="plus" size={15} />
             </button>
@@ -154,23 +180,47 @@ export function Sidebar({
             <Icon name="file" size={22} />
             <span>Aucune page pour l'instant.</span>
             {current && canWrite && (
-              <button className="link" onClick={() => setNewPageOpen(true)}>
+              <button className="link" onClick={() => setNewPage({})}>
                 Créer la première page
               </button>
             )}
           </div>
         )}
-        {pages.map((p) => (
-          <Link
-            key={p.id}
-            to={`/w/${current?.slug}/${p.id}`}
-            className={`sb-item${p.id === currentPageId ? " active" : ""}`}
-          >
-            <Icon name="file" size={15} />
-            <span className="label">{p.title}</span>
-            {updatedPageIds.has(p.id) && <span className="badge-maj">MàJ</span>}
-          </Link>
-        ))}
+        {visible.map((node) => {
+          const p = node.page;
+          const hasChildren = node.children.length > 0;
+          const isCollapsed = collapsed.has(p.id);
+          return (
+            <div key={p.id} className="sb-tree-row" style={{ paddingLeft: node.depth * 14 }}>
+              <button
+                className={`sb-twisty${hasChildren ? "" : " hidden"}`}
+                title={isCollapsed ? "Déplier" : "Replier"}
+                aria-label={isCollapsed ? "Déplier" : "Replier"}
+                onClick={() => toggleCollapse(p.id)}
+              >
+                <Icon name="chevronDown" size={13} className={`sb-caret${isCollapsed ? " closed" : ""}`} />
+              </button>
+              <Link
+                to={`/w/${current?.slug}/${p.id}`}
+                className={`sb-item sb-tree-item${p.id === currentPageId ? " active" : ""}`}
+              >
+                <Icon name="file" size={15} />
+                <span className="label">{p.title}</span>
+                {updatedPageIds.has(p.id) && <span className="badge-maj">MàJ</span>}
+              </Link>
+              {current && canWrite && (
+                <button
+                  className="icon-btn sb-row-add"
+                  title="Nouvelle sous-page"
+                  aria-label="Nouvelle sous-page"
+                  onClick={() => setNewPage({ parentId: p.id, parentTitle: p.title })}
+                >
+                  <Icon name="plus" size={13} />
+                </button>
+              )}
+            </div>
+          );
+        })}
       </div>
 
       {/* ---- Sync status (always visible) ---- */}
@@ -233,16 +283,21 @@ export function Sidebar({
         </div>
       </div>
 
-      {newPageOpen && current && (
+      {newPage && current && (
         <NewPageModal
           workspaceId={current.id}
           workspaceSlug={current.slug}
-          onClose={() => setNewPageOpen(false)}
+          parentId={newPage.parentId}
+          parentTitle={newPage.parentTitle}
+          onClose={() => setNewPage(null)}
           onCreated={(pageId) => {
-            setNewPageOpen(false);
+            setNewPage(null);
             navigate(`/w/${current.slug}/${pageId}`);
           }}
         />
+      )}
+      {trashOpen && current && (
+        <TrashModal workspaceSlug={current.slug} onClose={() => setTrashOpen(false)} />
       )}
       {newWsOpen && (
         <NewWorkspaceModal

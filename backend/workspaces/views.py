@@ -6,12 +6,13 @@ from django.utils import timezone
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
+from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .models import Workspace, WorkspaceInvitation, WorkspaceMember
-from .permissions import WorkspaceAccess, is_owner
+from .permissions import WorkspaceAccess, can_write, is_owner
 from .serializers import (
     InvitationCreateSerializer,
     MemberRoleSerializer,
@@ -173,8 +174,56 @@ class WorkspaceViewSet(viewsets.ModelViewSet):
         from pages.serializers import PageListSerializer
 
         workspace = self.get_object()
-        qs = workspace.pages.order_by("title")
+        qs = workspace.pages.filter(deleted_at__isnull=True).order_by("title")
         return Response(PageListSerializer(qs, many=True).data)
+
+    @action(detail=True, methods=["get"])
+    def trash(self, request, slug=None):
+        """Soft-deleted pages, most-recently-trashed first (owner-only)."""
+        from pages.serializers import PageListSerializer
+
+        workspace = self.get_object()
+        if not is_owner(request.user, workspace):
+            raise PermissionDenied("Only the workspace owner can view the trash.")
+        qs = workspace.pages.filter(deleted_at__isnull=False).order_by("-deleted_at")
+        return Response(PageListSerializer(qs, many=True).data)
+
+    # 10 MB upload ceiling (matches the frontend hint).
+    MAX_UPLOAD = 10 * 1024 * 1024
+
+    @action(
+        detail=True,
+        methods=["post"],
+        parser_classes=[MultiPartParser, FormParser],
+        permission_classes=[IsAuthenticated],
+    )
+    def attachments(self, request, slug=None):
+        """Upload a file (image or document) into the workspace (write access).
+
+        Editors need write, not ownership, so this action opts out of the
+        owner-only WorkspaceAccess gate and checks `can_write` itself."""
+        from pages.models import Attachment
+        from pages.serializers import AttachmentSerializer
+
+        workspace = self.get_object()
+        if not can_write(request.user, workspace):
+            raise PermissionDenied("You cannot upload files to this workspace.")
+        upload = request.FILES.get("file")
+        if not upload:
+            raise ValidationError({"file": "No file provided."})
+        if upload.size > self.MAX_UPLOAD:
+            raise ValidationError({"file": "File too large (10 MB maximum)."})
+        att = Attachment.objects.create(
+            workspace=workspace,
+            uploaded_by=request.user,
+            file=upload,
+            original_name=upload.name[:255],
+            content_type=getattr(upload, "content_type", "") or "",
+            size=upload.size,
+        )
+        return Response(
+            AttachmentSerializer(att).data, status=status.HTTP_201_CREATED
+        )
 
 
 class MyInvitationsView(APIView):
