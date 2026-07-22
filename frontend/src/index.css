@@ -773,6 +773,235 @@ svg.ic {
   border-radius: var(--r-sm);
   padding: 10px;
 }
+
+/* ---- Markdown editor: toolbar, slash menu, popovers ---- */
+.md-editor {
+  position: relative;
+}
+.md-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  padding: 5px 6px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-bottom: none;
+  border-radius: var(--r-sm) var(--r-sm) 0 0;
+}
+.md-tool {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  color: var(--ink-2);
+  border-radius: var(--r-sm);
+  cursor: pointer;
+}
+.md-tool:hover {
+  background: var(--surface);
+  color: var(--ink);
+}
+.md-editor .sec-textarea {
+  border-radius: 0 0 var(--r-sm) var(--r-sm);
+  min-height: 160px;
+}
+.md-editor-body {
+  position: relative;
+}
+.slash-menu {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 30;
+  min-width: 220px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow);
+  padding: 4px;
+}
+.slash-hint {
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ink-3);
+  padding: 6px 8px 4px;
+}
+.slash-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 8px;
+  border: none;
+  background: transparent;
+  color: var(--ink);
+  font-size: 13px;
+  text-align: left;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+}
+.slash-item:hover {
+  background: var(--accent-wash);
+  color: var(--accent-on-wash);
+}
+.editor-popover {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 30;
+}
+
+/* ---- Visual table editor ---- */
+.table-editor {
+  width: min(760px, 94vw);
+}
+.table-editor-scroll {
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+.table-editor-grid {
+  border-collapse: separate;
+  border-spacing: 4px;
+}
+.te-colhead {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.te-input {
+  width: 130px;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 12.5px;
+}
+.te-header-input {
+  font-weight: 650;
+}
+.te-align,
+.te-del,
+.te-addbtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: transparent;
+  color: var(--ink-3);
+  border-radius: var(--r-sm);
+  cursor: pointer;
+}
+.te-align:hover,
+.te-del:hover:not(:disabled),
+.te-addbtn:hover {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+.te-del:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+.te-add-col,
+.te-row-actions {
+  vertical-align: middle;
+}
+
+/* ---- Table of contents ---- */
+.toc {
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  margin: 4px 0 16px;
+  overflow: hidden;
+}
+.toc-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 9px 12px;
+  border: none;
+  background: transparent;
+  color: var(--ink-2);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+}
+.toc-caret {
+  margin-left: auto;
+  transition: transform 0.15s ease;
+}
+.toc-caret.up {
+  transform: rotate(180deg);
+}
+.toc-list {
+  list-style: none;
+  margin: 0;
+  padding: 0 8px 8px;
+}
+.toc-l3 {
+  padding-left: 16px;
+}
+.toc-link {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 4px 8px;
+  border: none;
+  background: transparent;
+  color: var(--ink-2);
+  font-size: 13px;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+}
+.toc-link:hover {
+  background: var(--surface);
+  color: var(--accent-on-wash);
+}
+
+/* ---- Rendered tables & task lists ---- */
+.md-table-wrap {
+  overflow-x: auto;
+  margin: 0 0 12px;
+}
+.md-body table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 13px;
+}
+.md-body th,
+.md-body td {
+  border: 1px solid var(--border);
+  padding: 6px 10px;
+  text-align: left;
+}
+.md-body th {
+  background: var(--surface-2);
+  font-weight: 650;
+  color: var(--ink);
+}
+.md-body tbody tr:nth-child(even) {
+  background: var(--border-soft);
+}
+.md-body li.task-item {
+  list-style: none;
+  margin-left: -18px;
+}
+.md-body .task-check {
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
 .caret {
   display: inline-block;
   width: 2px;

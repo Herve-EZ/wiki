@@ -13,6 +13,7 @@ import { usePageSocket } from "../hooks/usePageSocket";
 import { TopBar } from "../components/TopBar";
 import { PresenceBar } from "../components/PresenceBar";
 import { SectionBlock } from "../components/editor/SectionBlock";
+import { TableOfContents } from "../components/editor/TableOfContents";
 import { HistoryModal } from "../components/history/HistoryModal";
 import { PageActions } from "../components/PageActions";
 import { MissingPageDialog } from "../components/MissingPageDialog";
@@ -258,6 +259,8 @@ export function PageRoute() {
             key={page.id + page.title}
             onBlur={(e) => saveTitle(e.target.value.trim())}
           />
+
+          <TableOfContents sections={sections} />
 
           {sections.map((s) => {
             const lock = sock.locks[s.id];
