@@ -115,7 +115,7 @@ def test_trashed_page_hidden_from_reads(client, workspace, page):
     r = client.get(f"/api/workspaces/{workspace.slug}/pages/")
     assert page.slug not in [p["slug"] for p in r.data]
     assert client.get(f"/api/pages/{page.pk}/").status_code == 404
-    r = client.get(f"/api/search?q=docker")
+    r = client.get("/api/search?q=docker")
     assert page.slug not in [p["slug"] for p in r.data]
 
 

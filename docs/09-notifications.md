@@ -30,6 +30,11 @@ Cliquez sur la cloche pour ouvrir le panneau **« Notifications »** :
 | **Mention** | @ | Quelqu'un vous mentionne dans une page |
 | **Page mise à jour** | 📄 | Une page que vous suivez est modifiée |
 | **Étape de workflow** | 🕐 | Une page change d'étape |
+| **Commentaire** | 💬 | Un nouveau commentaire (ou une réponse) sur une page que vous suivez |
+
+> Commenter une page vous y **abonne** automatiquement (pour recevoir les réponses).
+> Cliquer sur une notification de commentaire ouvre la page **avec son panneau de
+> commentaires**.
 
 ### Cliquer sur une notification
 
