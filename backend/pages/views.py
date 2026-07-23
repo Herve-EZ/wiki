@@ -206,7 +206,9 @@ class CommentViewSet(viewsets.ModelViewSet):
         parent = serializer.validated_data.get("parent")
         if parent and parent.page_id != page.id:
             raise ValidationError({"parent": "Reply must be on the same page."})
-        serializer.save(author=self.request.user)
+        comment = serializer.save(author=self.request.user)
+        from notifications.services import notify_comment
+        notify_comment(comment)
 
     def perform_update(self, serializer):
         comment = serializer.instance

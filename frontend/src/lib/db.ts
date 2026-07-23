@@ -37,15 +37,15 @@ export async function cachePageFromServer(page: Page): Promise<void> {
   const db = await getDb();
   await db.execute(
     `INSERT INTO page_cache
-       (id, workspace, title, slug, content_md, status, base_version, server_updated, local_updated, dirty)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
+       (id, workspace, parent, title, slug, content_md, status, base_version, server_updated, local_updated, dirty)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
      ON CONFLICT(id) DO UPDATE SET
-       workspace=excluded.workspace, title=excluded.title, slug=excluded.slug,
+       workspace=excluded.workspace, parent=excluded.parent, title=excluded.title, slug=excluded.slug,
        content_md=excluded.content_md, status=excluded.status,
        base_version=excluded.base_version, server_updated=excluded.server_updated,
        local_updated=excluded.local_updated, dirty=0`,
     [
-      page.id, page.workspace, page.title, page.slug, page.content_md,
+      page.id, page.workspace, page.parent ?? null, page.title, page.slug, page.content_md,
       page.status, null, page.updated_at ?? null, nowIso(),
     ],
   );
@@ -54,7 +54,7 @@ export async function cachePageFromServer(page: Page): Promise<void> {
 export async function getCachedPage(id: string): Promise<CachedPage | null> {
   const db = await getDb();
   const rows = await db.select<CachedPage[]>(
-    `SELECT id, workspace, title, slug, content_md, status,
+    `SELECT id, workspace, parent, title, slug, content_md, status,
             base_version, local_updated, dirty FROM page_cache WHERE id = ?`,
     [id],
   );
@@ -64,7 +64,7 @@ export async function getCachedPage(id: string): Promise<CachedPage | null> {
 export async function listCachedPages(workspace: string): Promise<CachedPage[]> {
   const db = await getDb();
   return db.select<CachedPage[]>(
-    `SELECT id, workspace, title, slug, content_md, status,
+    `SELECT id, workspace, parent, title, slug, content_md, status,
             base_version, local_updated, dirty
        FROM page_cache WHERE workspace = ? ORDER BY title`,
     [workspace],
@@ -160,4 +160,59 @@ export async function conflictCount(): Promise<number> {
     `SELECT COUNT(*) AS n FROM outbox WHERE last_error IS NOT NULL`,
   );
   return rows[0]?.n ?? 0;
+}
+
+// ---- Deferred file uploads (offline) ----
+
+export interface PendingUpload {
+  id: string;
+  workspace: string;
+  page_id: string;
+  filename: string;
+  content_type: string;
+  data: string; // base64
+  created_at: string;
+}
+
+/** Queue a file uploaded while offline; `id` is referenced by the
+ * `pending:<id>` placeholder embedded in the page. */
+export async function addPendingUpload(u: {
+  id: string;
+  workspace: string;
+  pageId: string;
+  filename: string;
+  contentType: string;
+  dataB64: string;
+}): Promise<void> {
+  const db = await getDb();
+  await db.execute(
+    `INSERT INTO pending_uploads (id, workspace, page_id, filename, content_type, data, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    [u.id, u.workspace, u.pageId, u.filename, u.contentType, u.dataB64, nowIso()],
+  );
+}
+
+export async function listPendingUploads(): Promise<PendingUpload[]> {
+  const db = await getDb();
+  return db.select<PendingUpload[]>(
+    `SELECT id, workspace, page_id, filename, content_type, data, created_at
+       FROM pending_uploads ORDER BY created_at ASC`,
+  );
+}
+
+export async function deletePendingUpload(id: string): Promise<void> {
+  const db = await getDb();
+  await db.execute(`DELETE FROM pending_uploads WHERE id = ?`, [id]);
+}
+
+/** Replace `pending:<id>` placeholders with real URLs across queued edits and
+ * the local mirror, once the files have been uploaded on reconnect. */
+export async function rewritePlaceholders(
+  pairs: { from: string; to: string }[],
+): Promise<void> {
+  const db = await getDb();
+  for (const { from, to } of pairs) {
+    await db.execute(`UPDATE outbox SET payload = REPLACE(payload, ?, ?)`, [from, to]);
+    await db.execute(`UPDATE page_cache SET content_md = REPLACE(content_md, ?, ?)`, [from, to]);
+  }
 }

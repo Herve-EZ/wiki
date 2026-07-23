@@ -12,6 +12,7 @@ const TYPE_ICONS: Record<string, string> = {
   mention: "at",
   page_updated: "file",
   workflow_stage: "clock",
+  comment: "comment",
 };
 
 function timeAgo(iso: string): string {
@@ -118,7 +119,9 @@ export function NotificationBell() {
     deleteM.mutate(n.id);
     const p = n.payload;
     if (p.workspace_slug && p.page_id) {
-      navigate(`/w/${p.workspace_slug}/${p.page_id}`);
+      // Comment notifications open the page with its comments panel showing.
+      const suffix = n.type === "comment" ? "?comments=1" : "";
+      navigate(`/w/${p.workspace_slug}/${p.page_id}${suffix}`);
       setOpen(false);
     } else if (p.invitation_token) {
       navigate(`/invite/${p.invitation_token}`);

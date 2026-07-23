@@ -98,6 +98,46 @@ def notify_workflow_stage(page, actor, from_stage_name, to_stage_name):
         )
 
 
+def notify_comment(comment):
+    """Notify page followers (and the parent comment's author, for replies) of a
+    new comment. The commenter is auto-subscribed so they hear about replies."""
+    page = comment.page
+    actor = comment.author
+    if actor is None:
+        return
+    auto_subscribe(actor, page)
+
+    recipients = {
+        sub.user
+        for sub in PageSubscription.objects.filter(page=page)
+        .exclude(user=actor)
+        .select_related("user")
+    }
+    if comment.parent and comment.parent.author and comment.parent.author != actor:
+        recipients.add(comment.parent.author)
+
+    is_reply = comment.parent_id is not None
+    actor_name = actor.display_name or actor.email
+    for user in recipients:
+        notify(
+            recipient=user,
+            actor=actor,
+            type=NotificationType.COMMENT,
+            title=(
+                f"Réponse sur « {page.title} »"
+                if is_reply
+                else f"Nouveau commentaire sur « {page.title} »"
+            ),
+            body=f"{actor_name} : {comment.body[:140]}",
+            payload={
+                "page_id": str(page.id),
+                "workspace_id": str(page.workspace_id),
+                "workspace_slug": page.workspace.slug,
+                "comment_id": str(comment.id),
+            },
+        )
+
+
 def notify_mention(page, actor, mentioned_user):
     """Notify a user who was mentioned in a page."""
     if mentioned_user == actor:

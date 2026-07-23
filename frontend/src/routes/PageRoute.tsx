@@ -43,7 +43,7 @@ export function PageRoute() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
   const [historyOpen, setHistoryOpen] = useState(false);
-  const [commentsOpen, setCommentsOpen] = useState(false);
+  const [commentsOpen, setCommentsOpen] = useState(searchParams.get("comments") === "1");
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [createLinkTitle, setCreateLinkTitle] = useState<string | null>(null);
 
@@ -106,6 +106,11 @@ export function PageRoute() {
   const openCommentCount = (commentsQ.data ?? []).filter(
     (c) => !c.parent && !c.resolved,
   ).length;
+
+  // Open the comments panel when arriving from a comment notification.
+  useEffect(() => {
+    if (searchParams.get("comments") === "1") setCommentsOpen(true);
+  }, [searchParams]);
 
   const sock = usePageSocket(pageId, {
     enabled: online,

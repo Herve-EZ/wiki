@@ -256,7 +256,7 @@ export interface OutboxEntry {
   last_error: string | null;
 }
 
-export type NotificationType = "invitation" | "mention" | "page_updated" | "workflow_stage";
+export type NotificationType = "invitation" | "mention" | "page_updated" | "workflow_stage" | "comment";
 
 export interface AppNotification {
   id: string;

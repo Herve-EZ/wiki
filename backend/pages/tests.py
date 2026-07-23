@@ -115,7 +115,7 @@ def test_trashed_page_hidden_from_reads(client, workspace, page):
     r = client.get(f"/api/workspaces/{workspace.slug}/pages/")
     assert page.slug not in [p["slug"] for p in r.data]
     assert client.get(f"/api/pages/{page.pk}/").status_code == 404
-    r = client.get(f"/api/search?q=docker")
+    r = client.get("/api/search?q=docker")
     assert page.slug not in [p["slug"] for p in r.data]
 
 
@@ -355,6 +355,20 @@ def test_author_or_owner_can_delete_comment(client, editor_client, page):
     # Owner (client) can delete another member's comment.
     r = client.delete(f"/api/comments/{c['id']}/")
     assert r.status_code == 204
+
+
+def test_new_comment_notifies_subscribers(client, editor_client, page):
+    from notifications.models import Notification
+
+    # Owner comments first, which subscribes them to the page.
+    client.post("/api/comments/", {"page": str(page.pk), "body": "hi"}, format="json")
+    # Editor then comments; the owner (a subscriber) is notified.
+    editor_client.post(
+        "/api/comments/", {"page": str(page.pk), "body": "a new one"}, format="json"
+    )
+    assert Notification.objects.filter(
+        recipient__email="author@x.com", type="comment"
+    ).exists()
 
 
 def test_page_history_is_recorded(page, author):
