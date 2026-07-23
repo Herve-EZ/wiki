@@ -41,7 +41,7 @@ export function TrashModal({ workspaceSlug, onClose }: Props) {
     <div className="overlay" onClick={onClose}>
       <div className="card" style={{ width: "min(560px, 94vw)" }} onClick={(e) => e.stopPropagation()}>
         <div className="panel-title" style={{ marginBottom: 4 }}>
-          <Icon name="x" size={16} />
+          <Icon name="trash" size={16} />
           <h4 style={{ margin: 0 }}>Corbeille</h4>
         </div>
         <p className="sub" style={{ marginTop: 0 }}>

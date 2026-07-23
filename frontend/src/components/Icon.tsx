@@ -44,6 +44,7 @@ const PATHS: Record<string, string> = {
   code: "m8 8-4 4 4 4 M16 8l4 4-4 4 M13 5l-2 14",
   table: "M3 5h18v14H3z M3 10h18 M3 15h18 M9 5v14 M15 5v14",
   alignLeft: "M4 6h16 M4 12h10 M4 18h13",
+  trash: "M4 7h16 M10 11v6 M14 11v6 M6 7l1 13h10l1-13 M9 7V4h6v3",
   alignCenter: "M4 6h16 M7 12h10 M6 18h12",
   alignRight: "M4 6h16 M10 12h10 M7 18h13",
   diagram: "M4 4h6v4H4z M14 16h6v4h-6z M7 8v4h10v4",

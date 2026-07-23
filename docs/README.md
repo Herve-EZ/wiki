@@ -39,6 +39,9 @@ bouton et chaque parcours tel que vous le voyez à l'écran.
 - [14. FAQ & dépannage](14-faq-et-depannage.md)
 - [15. Raccourcis clavier](15-raccourcis-clavier.md)
 
+### Produit
+- [📍 Feuille de route & spécifications](roadmap/README.md) — vision, versions à venir, specs détaillées
+
 ---
 
 ## Vue d'ensemble en 30 secondes
