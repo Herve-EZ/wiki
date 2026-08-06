@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pytest
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -6,7 +8,7 @@ from rest_framework.test import APIClient
 from workspaces.models import Workspace, WorkspaceMember
 
 from . import services
-from .models import Page, PageLink, PageTemplate
+from .models import Attachment, Page, PageLink, PageTemplate
 
 User = get_user_model()
 
@@ -293,6 +295,23 @@ def test_editor_can_upload_and_fetch_attachment(editor_client, workspace, settin
     assert r.data["url"].endswith("/raw")
     raw = editor_client.get(r.data["url"])
     assert raw.status_code == 200
+
+
+def test_attachment_with_missing_file_is_404(editor_client, workspace, settings, tmp_path):
+    """A row whose bytes are gone (deployment without a persistent MEDIA_ROOT)
+    must 404, not raise FileNotFoundError and return a 500."""
+    settings.MEDIA_ROOT = tmp_path
+    f = SimpleUploadedFile("logo.png", b"\x89PNG\r\n fake image", content_type="image/png")
+    r = editor_client.post(
+        f"/api/workspaces/{workspace.slug}/attachments/", {"file": f}, format="multipart"
+    )
+    assert r.status_code == 201, r.data
+
+    att = Attachment.objects.get(pk=r.data["id"])
+    Path(att.file.path).unlink()
+
+    raw = editor_client.get(r.data["url"])
+    assert raw.status_code == 404
 
 
 def test_viewer_cannot_upload_attachment(workspace, settings, tmp_path):

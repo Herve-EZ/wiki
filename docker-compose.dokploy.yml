@@ -72,6 +72,12 @@ services:
       AVATAR_S3_REGION: ${AVATAR_S3_REGION:-}
       AVATAR_S3_CUSTOM_DOMAIN: ${AVATAR_S3_CUSTOM_DOMAIN:-}
       AVATAR_S3_ACL: ${AVATAR_S3_ACL:-public-read}
+    volumes:
+      # Pièces jointes et images des pages (MEDIA_ROOT = /app/media).
+      # SANS ce volume, chaque redéploiement reconstruit l'image et repart d'un
+      # système de fichiers vide : les lignes restent en base (volume `pgdata`)
+      # mais les fichiers ont disparu, et l'URL de la pièce jointe casse.
+      - media:/app/media
     # Pas de `ports:` — Dokploy/Traefik route le trafic vers ce service via
     # dokploy-network (configure le domaine + port 8000 dans l'UI Dokploy).
     expose:
@@ -107,3 +113,5 @@ networks:
 volumes:
   # Persiste les données PostgreSQL entre redéploiements.
   pgdata:
+  # Persiste les fichiers téléversés entre redéploiements (cf. `web.volumes`).
+  media:

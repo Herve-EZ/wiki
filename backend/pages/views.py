@@ -1,3 +1,5 @@
+import logging
+
 from django.db.models import Q
 from django.http import FileResponse, Http404
 from django.utils import timezone
@@ -22,6 +24,9 @@ from .serializers import (
     PageVersionDetailSerializer,
     PageVersionSerializer,
 )
+
+
+logger = logging.getLogger(__name__)
 
 
 def _accessible_workspaces(user):
@@ -273,8 +278,19 @@ class AttachmentRawView(APIView):
             att = Attachment.objects.get(pk=pk)
         except (Attachment.DoesNotExist, ValueError, ValidationError):
             raise Http404 from None
+        try:
+            handle = att.file.open("rb")
+        except (FileNotFoundError, ValueError):
+            # The row survived but the bytes didn't — a deployment without a
+            # persistent volume for MEDIA_ROOT is the usual cause. A missing
+            # file is a 404, not a 500: a broken <img> beats an error page, and
+            # the log stays readable.
+            logger.warning(
+                "Attachment %s references a missing file: %s", att.pk, att.file.name
+            )
+            raise Http404 from None
         resp = FileResponse(
-            att.file.open("rb"),
+            handle,
             content_type=att.content_type or "application/octet-stream",
         )
         # Inline so images render in place; browsers still download other types.
