@@ -661,7 +661,10 @@ body.is-resizing {
   top: 100%;
   left: 0;
   right: 0;
-  z-index: 20;
+  /* Above `.menu-backdrop` (40), which sits behind every popover to catch the
+     click that dismisses it. Below that value the backdrop swallows the menu's
+     own clicks and nothing is selectable. */
+  z-index: 50;
   margin-top: 6px;
   background: var(--surface);
   border: 1px solid var(--border);
