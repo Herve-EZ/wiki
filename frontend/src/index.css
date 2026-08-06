@@ -3185,12 +3185,16 @@ svg.ic.spin {
 }
 
 /* Link picker popover (editor) */
+/* Anchored inside `.editor-popover`, a zero-size box at the top-left of the
+   editor body. `right`/`bottom` therefore measured from nothing and pushed the
+   panel off the left edge of the column and up over the page title — it opens
+   down and to the right instead. */
 .link-picker {
   position: absolute;
-  bottom: calc(100% + 6px);
-  right: 0;
+  top: 0;
+  left: 0;
   z-index: 50;
-  width: 280px;
+  width: min(280px, calc(100vw - 48px));
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--r-md);
@@ -3229,12 +3233,13 @@ svg.ic.spin {
 }
 
 /* Mention picker popover (editor) */
+/* Same anchor and same fix as `.link-picker`. */
 .mention-picker {
   position: absolute;
-  bottom: calc(100% + 6px);
-  right: 0;
+  top: 0;
+  left: 0;
   z-index: 50;
-  width: 280px;
+  width: min(280px, calc(100vw - 48px));
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--r-md);

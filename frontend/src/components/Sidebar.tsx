@@ -278,18 +278,6 @@ export function Sidebar({
                   <Icon name="plus" size="sm" />
                   <span className="label">Nouvel espace</span>
                 </button>
-                {current && isOwner && (
-                  <button
-                    className="sb-item"
-                    onClick={() => {
-                      setSwitcherOpen(false);
-                      setTrashOpen(true);
-                    }}
-                  >
-                    <Icon name="trash" size="sm" />
-                    <span className="label">Corbeille de l'espace</span>
-                  </button>
-                )}
               </div>
             </>
           )}
@@ -311,6 +299,14 @@ export function Sidebar({
           <button className="sb-item" onClick={() => setSettingsTab("general")}>
             <Icon name="settings" size="md" />
             <span className="label">Réglages de l'espace</span>
+          </button>
+        )}
+        {/* A named nav item, not an icon buried in the workspace menu: this is
+            where people look for the trash. */}
+        {current && isOwner && (
+          <button className="sb-item" onClick={() => setTrashOpen(true)}>
+            <Icon name="trash" size="md" />
+            <span className="label">Corbeille de l'espace</span>
           </button>
         )}
       </div>

@@ -20,6 +20,14 @@ interface MenuAnchor {
   flipUp: boolean;
 }
 
+/**
+ * Width the widest view of the menu needs (the delete confirmation), plus a
+ * margin. The menu hangs to the left of its anchor, and the sidebar is narrower
+ * than this — without the clamp the panel runs off the left edge of the window
+ * and the confirmation text gets cut in half.
+ */
+const MENU_SPACE = 288;
+
 interface Props {
   page: PageListItem;
   depth: number;
@@ -86,7 +94,9 @@ export function PageTreeRow({
     // Flip upward when there isn't room below for a menu of ~200px.
     const below = window.innerHeight - r.bottom > 220;
     setAnchor({
-      x: r.right,
+      // Right-aligned on the button, but never so far left that the panel
+      // leaves the window.
+      x: Math.min(Math.max(r.right, MENU_SPACE), window.innerWidth - 8),
       y: below ? r.bottom + 4 : r.top - 4,
       flipUp: !below,
     });
