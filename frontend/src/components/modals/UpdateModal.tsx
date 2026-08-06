@@ -34,7 +34,7 @@ export function UpdateModal({ info, onClose }: Props) {
     <div className="overlay" onClick={busy ? undefined : onClose}>
       <div className="card" onClick={(e) => e.stopPropagation()}>
         <h4>
-          <Icon name="download" size={15} /> Mise à jour disponible
+          <Icon name="download" size="md" /> Mise à jour disponible
         </h4>
         <p className="sub">
           WikiCollab {info.version} est disponible (vous utilisez la {info.currentVersion}).

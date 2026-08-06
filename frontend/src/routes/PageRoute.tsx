@@ -11,12 +11,12 @@ import { useAuth } from "../auth/AuthContext";
 import { useNetworkStatus } from "../hooks/useNetworkStatus";
 import { usePageSocket } from "../hooks/usePageSocket";
 import { useTransclusions } from "../hooks/useTransclusions";
-import { TopBar } from "../components/TopBar";
-import { PresenceBar } from "../components/PresenceBar";
+import { PageBar } from "../components/TopBar";
 import { SectionBlock } from "../components/editor/SectionBlock";
 import { TableOfContents } from "../components/editor/TableOfContents";
 import { HistoryModal } from "../components/history/HistoryModal";
 import { PageActions } from "../components/PageActions";
+import { ContextRail } from "../components/ContextRail";
 import { CommentsPanel } from "../components/CommentsPanel";
 import { MissingPageDialog } from "../components/MissingPageDialog";
 import { NewPageModal } from "../components/modals/NewPageModal";
@@ -139,6 +139,9 @@ export function PageRoute() {
       qc.setQueryData(["page", pageId], res.page);
       if (res.queued) pushToast("Enregistré en local — synchronisation au retour du réseau");
       void qc.invalidateQueries({ queryKey: ["versions", pageId] });
+      // A rename has to reach the page tree and the breadcrumb too, both of
+      // which read the workspace page list.
+      void qc.invalidateQueries({ queryKey: ["pages", ctx.current?.slug] });
     },
     onError: (err) =>
       pushToast(
@@ -247,7 +250,7 @@ export function PageRoute() {
     }
     return (
       <div className="center-fill" style={{ flexDirection: "column", gap: 10 }}>
-        <Icon name="wifiOff" size={22} />
+        <Icon name="wifiOff" size="lg" />
         {online ? "Page introuvable." : "Page indisponible hors-ligne (jamais ouverte sur cet appareil)."}
       </div>
     );
@@ -256,15 +259,14 @@ export function PageRoute() {
   const lockCount = Object.keys(sock.locks).length;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100%", minHeight: 0 }}>
-      <TopBar
-        workspaceName={ctx.current?.name ?? page.workspace}
-        pageTitle={page.title}
-        saved={!saveM.isPending}
+    <>
+      <PageBar
+        host={ctx.barSlot}
         saving={saveM.isPending}
+        online={online}
         present={sock.present}
+        lockCount={lockCount}
         commentCount={openCommentCount}
-        onOpenSearch={ctx.openSearch}
         onOpenHistory={() => setHistoryOpen(true)}
         onOpenComments={() => setCommentsOpen(true)}
       />
@@ -273,81 +275,75 @@ export function PageRoute() {
         <div className="toast-wrap">
           {toasts.map((t) => (
             <div key={t.id} className="toast">
-              <Icon name="link" size={14} style={{ color: "var(--accent)" }} />
+              <Icon name="link" size="sm" style={{ color: "var(--accent)" }} />
               <span>{t.text}</span>
             </div>
           ))}
         </div>
 
-        <div className="ed" onClick={onContentClick}>
-          <PageActions
-            page={page}
-            canWrite={ctx.canWrite}
-            isOwner={ctx.isOwner}
-            online={online}
-            pages={ctx.pages}
-            transclusions={transclusions}
-            onChangeStatus={(status) => saveM.mutate({ ...page, status })}
-            onMove={(parentId) => moveM.mutate(parentId)}
-            onDelete={() => deleteM.mutate()}
-            pushToast={pushToast}
-          />
-          <input
-            className="ed-title"
-            defaultValue={page.title}
-            key={page.id + page.title}
-            onBlur={(e) => saveTitle(e.target.value.trim())}
-          />
-
-          <TableOfContents sections={sections} />
-
-          {sections.map((s) => {
-            const lock = sock.locks[s.id];
-            const isMine = !!lock && lock.user_id === myId;
-            return (
-              <SectionBlock
-                key={s.id}
-                section={s}
-                lock={lock}
-                isMine={isMine || editingId === s.id}
-                editing={editingId === s.id}
-                draft={draft}
-                canEdit={canEdit && editingId === null}
-                pages={ctx.pages}
-                pageIndex={pageIndex}
-                currentPageId={pageId}
-                workspaceSlug={ctx.current?.slug}
-                searchQuery={searchQuery}
-                members={members}
-                transclusions={transclusions}
-                onStartEdit={() => startEdit(s.id, s.text)}
-                onChangeDraft={setDraft}
-                onSaveEdit={() => saveEdit(s.id)}
-                onCancelEdit={() => cancelEdit(s.id)}
+        <div className="doc-layout">
+          <div className="ed" onClick={onContentClick}>
+            <div className="ed-titlerow">
+              <input
+                className="ed-title"
+                defaultValue={page.title}
+                key={page.id + page.title}
+                aria-label="Titre de la page"
+                onBlur={(e) => saveTitle(e.target.value.trim())}
               />
-            );
-          })}
+              <PageActions
+                page={page}
+                canWrite={ctx.canWrite}
+                isOwner={ctx.isOwner}
+                online={online}
+                pages={ctx.pages}
+                transclusions={transclusions}
+                onChangeStatus={(status) => saveM.mutate({ ...page, status })}
+                onMove={(parentId) => moveM.mutate(parentId)}
+                onDelete={() => deleteM.mutate()}
+                pushToast={pushToast}
+              />
+            </div>
 
-          <div className="linked">
-            <span className="lbl">Lié à :</span>
-            {(backlinksQ.data ?? []).length === 0 && (
-              <span style={{ fontSize: 11.5, color: "var(--ink-3)" }}>aucune page liée</span>
-            )}
-            {(backlinksQ.data ?? []).map((p) => (
-              <button
-                key={p.id}
-                className="chip-link"
-                onClick={() => navigate(`/w/${ctx.current?.slug}/${p.id}`)}
-              >
-                <Icon name="link" size={11} />
-                {p.title}
-              </button>
-            ))}
+            {/* Narrow windows only — wide ones read it from the context rail. */}
+            <TableOfContents sections={sections} />
+
+            {sections.map((s) => {
+              const lock = sock.locks[s.id];
+              const isMine = !!lock && lock.user_id === myId;
+              return (
+                <SectionBlock
+                  key={s.id}
+                  section={s}
+                  lock={lock}
+                  isMine={isMine || editingId === s.id}
+                  editing={editingId === s.id}
+                  draft={draft}
+                  canEdit={canEdit && editingId === null}
+                  pages={ctx.pages}
+                  pageIndex={pageIndex}
+                  currentPageId={pageId}
+                  workspaceSlug={ctx.current?.slug}
+                  searchQuery={searchQuery}
+                  members={members}
+                  transclusions={transclusions}
+                  onStartEdit={() => startEdit(s.id, s.text)}
+                  onChangeDraft={setDraft}
+                  onSaveEdit={() => saveEdit(s.id)}
+                  onCancelEdit={() => cancelEdit(s.id)}
+                />
+              );
+            })}
           </div>
+
+          <ContextRail
+            page={page}
+            sections={sections}
+            backlinks={backlinksQ.data ?? []}
+            onOpenPage={(id) => navigate(`/w/${ctx.current?.slug}/${id}`)}
+          />
         </div>
       </div>
-
-      <PresenceBar present={sock.present} lockCount={lockCount} online={online} />
 
       {historyOpen && (
         <HistoryModal pageId={pageId} canRestore={online} onClose={() => setHistoryOpen(false)} />
@@ -376,6 +372,6 @@ export function PageRoute() {
           }}
         />
       )}
-    </div>
+    </>
   );
 }

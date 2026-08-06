@@ -8,7 +8,7 @@ export function ThemeToggle() {
   const icon = theme === "light" ? "sun" : theme === "dark" ? "moon" : "monitor";
   return (
     <button className="icon-btn" onClick={cycle} title={LABELS[theme]} aria-label={LABELS[theme]}>
-      <Icon name={icon} size={16} />
+      <Icon name={icon} size="md" />
     </button>
   );
 }

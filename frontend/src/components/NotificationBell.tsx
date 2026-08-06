@@ -137,7 +137,7 @@ export function NotificationBell() {
         title="Notifications"
         aria-label="Notifications"
       >
-        <Icon name="bell" size={16} />
+        <Icon name="bell" size="md" />
         {count > 0 && <span className="notif-badge">{count > 99 ? "99+" : count}</span>}
       </button>
 
@@ -168,7 +168,7 @@ export function NotificationBell() {
                 className={`notif-item${n.read_at ? "" : " unread"}`}
                 onClick={() => handleClick(n)}
               >
-                <Icon name={TYPE_ICONS[n.type] ?? "bell"} size={14} />
+                <Icon name={TYPE_ICONS[n.type] ?? "bell"} size="sm" />
                 <div className="notif-item-body">
                   <span className="notif-item-title">{n.title}</span>
                   {n.body && <span className="notif-item-text">{n.body}</span>}

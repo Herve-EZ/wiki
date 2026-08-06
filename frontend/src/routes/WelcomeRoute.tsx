@@ -56,7 +56,7 @@ export function WelcomeRoute() {
           className="btn btn-primary btn-block welcome-cta"
           onClick={() => setCreateOpen(true)}
         >
-          <Icon name="plus" size={14} /> Créer mon espace de travail
+          <Icon name="plus" size="sm" /> Créer mon espace de travail
         </button>
 
         {user?.is_system_admin && (
@@ -64,7 +64,7 @@ export function WelcomeRoute() {
             className="btn btn-ghost btn-block welcome-admin"
             onClick={() => navigate("/admin")}
           >
-            <Icon name="shield" size={14} /> Administration système
+            <Icon name="shield" size="sm" /> Administration système
           </button>
         )}
 
@@ -103,13 +103,13 @@ export function WelcomeRoute() {
 
         <div className="welcome-footer">
           <button className="link" onClick={() => navigate("/help")}>
-            <Icon name="help" size={12} /> Aide
+            <Icon name="help" size="xs" /> Aide
           </button>
           <button className="link" onClick={() => navigate("/settings")}>
-            <Icon name="settings" size={12} /> Paramètres
+            <Icon name="settings" size="xs" /> Paramètres
           </button>
           <button className="link" onClick={() => void logout()}>
-            <Icon name="logout" size={12} /> Se déconnecter
+            <Icon name="logout" size="xs" /> Se déconnecter
           </button>
         </div>
       </div>

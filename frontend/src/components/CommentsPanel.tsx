@@ -161,7 +161,7 @@ export function CommentsPanel({ pageId, sections, userId, canWrite, isOwner, onC
     <div className="cmt-drawer">
       <div className="cmt-drawer-head">
         <h4 style={{ margin: 0 }}>
-          <Icon name="mail" size={15} /> Commentaires
+          <Icon name="mail" size="md" /> Commentaires
         </h4>
         <label className="cmt-toggle">
           <input
@@ -172,7 +172,7 @@ export function CommentsPanel({ pageId, sections, userId, canWrite, isOwner, onC
           Afficher les résolus
         </label>
         <button className="icon-btn" title="Fermer" aria-label="Fermer" onClick={onClose}>
-          <Icon name="x" size={16} />
+          <Icon name="x" size="md" />
         </button>
       </div>
 
@@ -216,7 +216,7 @@ export function CommentsPanel({ pageId, sections, userId, canWrite, isOwner, onC
           disabled={!draft.trim() || createM.isPending}
           onClick={() => createM.mutate({ body: draft.trim(), section_id: sectionId })}
         >
-          <Icon name="check" size={13} /> Commenter
+          <Icon name="check" size="sm" /> Commenter
         </button>
       </div>
     </div>

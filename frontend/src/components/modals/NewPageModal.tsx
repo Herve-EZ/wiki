@@ -141,12 +141,12 @@ export function NewPageModal({
         />
         {imported ? (
           <div className="import-chip">
-            <Icon name="file" size={14} />
+            <Icon name="file" size="sm" />
             <span className="menu-item-label">
               {imported.name} · {imported.content.length.toLocaleString("fr-FR")} caractères
             </span>
             <button type="button" className="icon-btn" title="Retirer" onClick={() => setImported(null)}>
-              <Icon name="x" size={14} />
+              <Icon name="x" size="sm" />
             </button>
           </div>
         ) : (
@@ -180,7 +180,7 @@ export function NewPageModal({
             </div>
             {template && (
               <p className="template-hint">
-                <Icon name={template.icon} size={13} />
+                <Icon name={template.icon} size="sm" />
                 <span>{template.description || "Modèle de l'espace."}</span>
               </p>
             )}
@@ -190,7 +190,7 @@ export function NewPageModal({
               style={{ marginBottom: 12 }}
               onClick={() => fileRef.current?.click()}
             >
-              <Icon name="upload" size={14} /> Importer un fichier Markdown
+              <Icon name="upload" size="sm" /> Importer un fichier Markdown
             </button>
           </>
         )}
@@ -231,7 +231,7 @@ export function NewPageModal({
             style={{ marginLeft: "auto" }}
             disabled={m.isPending || !title.trim()}
           >
-            <Icon name="plus" size={13} />
+            <Icon name="plus" size="sm" />
             {m.isPending ? "Création…" : submitLabel}
           </button>
         </div>

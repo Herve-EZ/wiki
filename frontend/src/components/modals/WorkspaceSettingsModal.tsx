@@ -55,10 +55,10 @@ export function WorkspaceSettingsModal({ workspace, onClose, onDeleted, initialT
     <div className="overlay" onClick={onClose}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-head">
-          <Icon name="settings" size={16} style={{ marginRight: 8 }} />
+          <Icon name="settings" size="md" style={{ marginRight: 8 }} />
           Réglages · {workspace.name}
           <button className="icon-btn" style={{ marginLeft: "auto" }} onClick={onClose}>
-            <Icon name="x" size={16} />
+            <Icon name="x" size="md" />
           </button>
         </div>
 

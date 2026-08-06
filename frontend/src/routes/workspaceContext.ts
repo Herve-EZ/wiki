@@ -13,6 +13,8 @@ export interface WorkspaceCtx {
   markUpdated: (id: string) => void;
   openSearch: () => void;
   refetchPages: () => void;
+  /** Top-bar slot a route fills with its own controls (see `<PageBar>`). */
+  barSlot: HTMLElement | null;
 }
 
 export function useWorkspaceCtx(): WorkspaceCtx {

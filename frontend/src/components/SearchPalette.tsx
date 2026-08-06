@@ -98,7 +98,7 @@ export function SearchPalette({ workspace, onPick, onClose }: Props) {
               >
                 <div className="palette-item-content">
                   <div className="palette-item-title">
-                    <Icon name="file" size={14} />
+                    <Icon name="file" size="sm" />
                     <span>{highlightTitle(p.title, debounced)}</span>
                   </div>
                   {p.snippet && (

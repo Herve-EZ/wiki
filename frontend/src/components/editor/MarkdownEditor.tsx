@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Icon, type IconName } from "../Icon";
 import { PagePicker } from "./PagePicker";
 import { MentionPicker } from "./MentionPicker";
@@ -110,6 +110,16 @@ export function MarkdownEditor({
   const [slash, setSlash] = useState<SlashState>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
+
+  // Autofocus leaves the caret at offset 0, which puts the first insertion
+  // (a mention, a link) *before* the section's heading and breaks it. Start at
+  // the end of the text instead — where you would have clicked.
+  useEffect(() => {
+    if (!autoFocus) return;
+    const ta = ref.current;
+    if (!ta) return;
+    ta.setSelectionRange(ta.value.length, ta.value.length);
+  }, [autoFocus]);
 
   function focusAt(res: EditResult) {
     onChange(res.text);
@@ -321,7 +331,7 @@ export function MarkdownEditor({
             onMouseDown={(e) => e.preventDefault()}
             onClick={b.act}
           >
-            <Icon name={b.icon} size={15} />
+            <Icon name={b.icon} size="md" />
           </button>
         ))}
       </div>
@@ -364,7 +374,7 @@ export function MarkdownEditor({
               </>
             ) : (
               <>
-                <Icon name="alert" size={12} /> {uploadError}
+                <Icon name="alert" size="xs" /> {uploadError}
               </>
             )}
           </div>
@@ -375,7 +385,7 @@ export function MarkdownEditor({
             <div className="slash-hint">Insérer…</div>
             {slashMatches.map((c) => (
               <button key={c.key} type="button" className="slash-item" onClick={() => runSlash(c)}>
-                <Icon name={c.icon} size={14} />
+                <Icon name={c.icon} size="sm" />
                 <span>{c.label}</span>
               </button>
             ))}

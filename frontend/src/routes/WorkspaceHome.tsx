@@ -7,6 +7,7 @@ import {
   type SettingsTab,
 } from "../components/modals/WorkspaceSettingsModal";
 import { useWorkspaceCtx } from "./workspaceContext";
+import { timeAgo } from "../lib/dates";
 import type { Role } from "../lib/types";
 
 const ROLE_LABEL: Record<Role, string> = {
@@ -14,17 +15,6 @@ const ROLE_LABEL: Record<Role, string> = {
   editor: "Éditeur",
   viewer: "Lecteur",
 };
-
-function timeAgo(iso: string): string {
-  const diff = Date.now() - new Date(iso).getTime();
-  const min = Math.floor(diff / 60_000);
-  if (min < 1) return "à l'instant";
-  if (min < 60) return `il y a ${min} min`;
-  const h = Math.floor(min / 60);
-  if (h < 24) return `il y a ${h} h`;
-  const d = Math.floor(h / 24);
-  return d === 1 ? "hier" : `il y a ${d} j`;
-}
 
 /** Landing page of a workspace: quick actions (create page, invite, settings,
  * help) gated by role, plus the most recently updated pages. */
@@ -72,27 +62,27 @@ export function WorkspaceHome() {
         <div className="home-actions">
           {ctx.canWrite && (
             <button className="action-card" onClick={() => setNewPageOpen(true)}>
-              <Icon name="plus" size={18} />
+              <Icon name="plus" size="lg" />
               <b>Nouvelle page</b>
               <span>Rédigez une note, une doc, un compte-rendu…</span>
             </button>
           )}
           {ctx.isOwner && (
             <button className="action-card" onClick={() => setSettingsTab("members")}>
-              <Icon name="users" size={18} />
+              <Icon name="users" size="lg" />
               <b>Inviter des collaborateurs</b>
               <span>Envoyez une invitation par email avec un rôle.</span>
             </button>
           )}
           {ctx.isOwner && (
             <button className="action-card" onClick={() => setSettingsTab("general")}>
-              <Icon name="settings" size={18} />
+              <Icon name="settings" size="lg" />
               <b>Réglages de l'espace</b>
               <span>Nom, visibilité, 2FA requise, workflows, membres.</span>
             </button>
           )}
           <button className="action-card" onClick={() => navigate("/help")}>
-            <Icon name="help" size={18} />
+            <Icon name="help" size="lg" />
             <b>Aide</b>
             <span>Guide d'utilisation : rôles, pages, hors-ligne…</span>
           </button>
@@ -108,7 +98,7 @@ export function WorkspaceHome() {
                   className="page-card"
                   onClick={() => navigate(`/w/${ws.slug}/${p.id}`)}
                 >
-                  <Icon name="file" size={15} />
+                  <Icon name="file" size="md" />
                   <span className="row-title" style={{ flex: 1, textAlign: "left" }}>{p.title}</span>
                   <span className="muted" style={{ fontSize: 11 }}>{timeAgo(p.updated_at)}</span>
                 </button>
@@ -117,13 +107,13 @@ export function WorkspaceHome() {
           </>
         ) : (
           <div className="home-empty">
-            <Icon name="book" size={26} />
+            <Icon name="book" size="lg" />
             <p className="muted" style={{ margin: "8px 0 14px" }}>
               Cet espace ne contient encore aucune page.
             </p>
             {ctx.canWrite ? (
               <button className="btn btn-primary" onClick={() => setNewPageOpen(true)}>
-                <Icon name="plus" size={13} /> Créer la première page
+                <Icon name="plus" size="sm" /> Créer la première page
               </button>
             ) : (
               <span className="muted">Demandez à un éditeur ou au propriétaire d'en créer une.</span>

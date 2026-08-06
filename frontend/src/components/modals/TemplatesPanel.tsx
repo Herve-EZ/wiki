@@ -130,7 +130,7 @@ export function TemplatesPanel({ workspaceSlug }: Props) {
               saveM.mutate(draft);
             }}
           >
-            <Icon name="save" size={13} />
+            <Icon name="save" size="sm" />
             {saveM.isPending ? "Enregistrement…" : draft.id ? "Enregistrer" : "Créer le modèle"}
           </button>
         </div>
@@ -147,7 +147,7 @@ export function TemplatesPanel({ workspaceSlug }: Props) {
       </div>
       {(templatesQ.data ?? []).map((t) => (
         <div key={t.id} className="row-card">
-          <Icon name="template" size={15} style={{ color: "var(--accent)" }} />
+          <Icon name="template" size="md" style={{ color: "var(--accent)" }} />
           <div style={{ flex: 1, minWidth: 0 }}>
             <div className="row-title">{t.name}</div>
             <div className="muted" style={{ fontSize: 11.5 }}>
@@ -155,7 +155,7 @@ export function TemplatesPanel({ workspaceSlug }: Props) {
             </div>
           </div>
           <button className="icon-btn" title="Modifier" onClick={() => edit(t)}>
-            <Icon name="pencil" size={15} />
+            <Icon name="pencil" size="md" />
           </button>
           <button
             className="icon-btn"
@@ -166,7 +166,7 @@ export function TemplatesPanel({ workspaceSlug }: Props) {
               deleteM.mutate(t.id);
             }}
           >
-            <Icon name="trash" size={15} />
+            <Icon name="trash" size="md" />
           </button>
         </div>
       ))}
@@ -184,7 +184,7 @@ export function TemplatesPanel({ workspaceSlug }: Props) {
           setDraft(EMPTY_DRAFT);
         }}
       >
-        <Icon name="plus" size={13} /> Nouveau modèle
+        <Icon name="plus" size="sm" /> Nouveau modèle
       </button>
 
       <div className="row-title" style={{ marginTop: 20, marginBottom: 8 }}>
@@ -195,7 +195,7 @@ export function TemplatesPanel({ workspaceSlug }: Props) {
       </p>
       {BUILTIN_TEMPLATES.map((t) => (
         <div key={t.id} className="row-card">
-          <Icon name={t.icon} size={15} style={{ color: "var(--ink-3)" }} />
+          <Icon name={t.icon} size="md" style={{ color: "var(--ink-3)" }} />
           <div style={{ flex: 1, minWidth: 0 }}>
             <div className="row-title">{t.name}</div>
             <div className="muted" style={{ fontSize: 11.5 }}>

@@ -44,7 +44,7 @@ export function PagePicker({ pages, excludeId, onPick, onClose }: Props) {
           {results.length === 0 && <div className="palette-empty">Aucune page.</div>}
           {results.map((p) => (
             <button key={p.id} className="menu-item" onClick={() => onPick(p)}>
-              <Icon name="file" size={13} />
+              <Icon name="file" size="sm" />
               <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                 {p.title}
               </span>

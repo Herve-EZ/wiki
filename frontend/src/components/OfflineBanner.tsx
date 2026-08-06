@@ -15,7 +15,7 @@ export function OfflineBanner({ online, pending, conflicts, onRetry, onResolve }
 
   return (
     <div className="banner-offline">
-      <Icon name={online ? "alert" : "wifiOff"} size={14} />
+      <Icon name={online ? "alert" : "wifiOff"} size="sm" />
       {!online && "Mode dégradé — vos modifications sont enregistrées en local."}
       {online && conflicts > 0 &&
         `${conflicts} modification${conflicts > 1 ? "s" : ""} bloquée${conflicts > 1 ? "s" : ""} (page introuvable ou en conflit).`}

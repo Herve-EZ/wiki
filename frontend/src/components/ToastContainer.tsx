@@ -30,7 +30,7 @@ export function ToastContainer() {
     <div className="global-toast-wrap">
       {toasts.map((t) => (
         <div key={t.id} className="toast">
-          <Icon name={t.icon ?? "check"} size={14} style={{ color: "var(--accent)" }} />
+          <Icon name={t.icon ?? "check"} size="sm" style={{ color: "var(--accent)" }} />
           <span>{t.text}</span>
         </div>
       ))}

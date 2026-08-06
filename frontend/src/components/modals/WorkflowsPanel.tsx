@@ -73,7 +73,7 @@ export function WorkflowsPanel({ workspaceId, workspaceSlug }: Props) {
             </div>
           </div>
           <button className="icon-btn" title="Supprimer" onClick={() => deleteM.mutate(w.id)}>
-            <Icon name="x" size={15} />
+            <Icon name="x" size="md" />
           </button>
         </div>
       ))}
@@ -83,7 +83,7 @@ export function WorkflowsPanel({ workspaceId, workspaceSlug }: Props) {
 
       {!creating ? (
         <button className="btn btn-ghost" style={{ marginTop: 10 }} onClick={() => setCreating(true)}>
-          <Icon name="plus" size={13} /> Nouveau workflow
+          <Icon name="plus" size="sm" /> Nouveau workflow
         </button>
       ) : (
         <div className="row-card" style={{ flexDirection: "column", alignItems: "stretch", gap: 10 }}>
@@ -117,7 +117,7 @@ export function WorkflowsPanel({ workspaceId, workspaceSlug }: Props) {
                   title="Retirer"
                   onClick={() => setStages((prev) => prev.filter((_, j) => j !== i))}
                 >
-                  <Icon name="x" size={14} />
+                  <Icon name="x" size="sm" />
                 </button>
               </div>
             ))}

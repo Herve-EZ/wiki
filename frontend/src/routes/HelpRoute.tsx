@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { Icon, type IconName } from "../components/Icon";
+import { useScrollSpy } from "../hooks/useScrollSpy";
 
 const TOC: { id: string; label: string; icon: IconName }[] = [
   { id: "start", label: "Premiers pas", icon: "book" },
@@ -20,7 +21,7 @@ function Topic({ id, icon, title, children }: { id: string; icon: IconName; titl
   return (
     <section id={id} className="panel-card help-topic">
       <div className="panel-title">
-        <Icon name={icon} size={17} />
+        <Icon name={icon} size="md" />
         <h4 style={{ margin: 0 }}>{title}</h4>
       </div>
       <div className="panel-body help-body">{children}</div>
@@ -30,15 +31,16 @@ function Topic({ id, icon, title, children }: { id: string; icon: IconName; titl
 
 export function HelpRoute() {
   const navigate = useNavigate();
+  const activeId = useScrollSpy(TOC.map((t) => t.id));
 
   return (
     <div className="settings-page">
       <div className="help-hero">
         <button className="btn btn-ghost" onClick={() => navigate(-1)} style={{ alignSelf: "flex-start" }}>
-          <Icon name="chevronDown" size={14} style={{ transform: "rotate(90deg)" }} /> Retour
+          <Icon name="chevronDown" size="sm" style={{ transform: "rotate(90deg)" }} /> Retour
         </button>
         <div className="help-hero-main">
-          <span className="help-hero-badge"><Icon name="book" size={22} /></span>
+          <span className="help-hero-badge"><Icon name="book" size="lg" /></span>
           <div>
             <h2 style={{ margin: 0 }}>Bien démarrer avec WikiCollab</h2>
             <p className="muted" style={{ margin: "4px 0 0" }}>
@@ -49,11 +51,16 @@ export function HelpRoute() {
       </div>
 
       <div className="settings-shell">
-        <nav className="settings-nav help-toc">
+        <nav className="settings-nav help-toc" aria-label="Sommaire de l'aide">
           <div className="sb-label" style={{ padding: "2px 8px 6px" }}>Sommaire</div>
           {TOC.map((t) => (
-            <button key={t.id} className="settings-nav-item" onClick={() => scrollTo(t.id)}>
-              <Icon name={t.icon} size={15} />
+            <button
+              key={t.id}
+              className={`settings-nav-item${t.id === activeId ? " active" : ""}`}
+              aria-current={t.id === activeId ? "location" : undefined}
+              onClick={() => scrollTo(t.id)}
+            >
+              <Icon name={t.icon} size="md" />
               <span style={{ flex: 1 }}>{t.label}</span>
             </button>
           ))}
@@ -63,7 +70,7 @@ export function HelpRoute() {
           <Topic id="start" icon="book" title="Premiers pas">
             <ol>
               <li><b>Créez un espace de travail</b> : menu des espaces (en haut de la barre latérale) → <i>Nouvel espace</i>. Vous en devenez automatiquement propriétaire.</li>
-              <li><b>Créez une page</b> : bouton <i>Nouvelle page</i> sur l'accueil de l'espace, ou le <Icon name="plus" size={11} /> à côté du nom de l'espace.</li>
+              <li><b>Créez une page</b> : bouton <i>Nouvelle page</i> sur l'accueil de l'espace, ou le <Icon name="plus" size="xs" /> à côté du nom de l'espace.</li>
               <li><b>Invitez vos collaborateurs</b> : accueil de l'espace → <i>Inviter des collaborateurs</i>, ou <i>Réglages de l'espace → Membres</i>.</li>
             </ol>
           </Topic>

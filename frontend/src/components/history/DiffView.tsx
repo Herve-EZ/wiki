@@ -65,7 +65,7 @@ export function DiffView({ diff, fromN, toN, onRestore, restoring, canRestore }:
       {canRestore && (
         <div className="diff-foot">
           <button className="btn btn-primary" onClick={onRestore} disabled={restoring}>
-            <Icon name="refresh" size={13} />
+            <Icon name="refresh" size="sm" />
             {restoring ? "Restauration…" : `Restaurer la v${fromN}`}
           </button>
           <span className="diff-note">

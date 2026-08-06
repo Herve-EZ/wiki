@@ -32,7 +32,7 @@ function FollowButton({ pageId, online }: { pageId: string; online: boolean }) {
       disabled={toggleM.isPending}
       title={subscribed ? "Ne plus suivre" : "Suivre cette page"}
     >
-      <Icon name="bell" size={13} />
+      <Icon name="bell" size="sm" />
       {subscribed ? "Suivi" : "Suivre"}
     </button>
   );
@@ -43,6 +43,12 @@ const STATUS_LABEL: Record<PageStatus, string> = {
   published: "Publié",
   archived: "Archivé",
 };
+
+const STATUSES: PageStatus[] = ["draft", "published", "archived"];
+
+/** What the ⋯ menu is showing: its root, the move target list, or the
+ * confirmation for a deletion. */
+type MenuView = "root" | "move" | "delete";
 
 interface Props {
   page: Page;
@@ -58,8 +64,14 @@ interface Props {
   pushToast: (t: string) => void;
 }
 
-/** Header controls for a page: publication status, workflow stage and deletion.
- * Publishing/archiving and deleting are owner-only (also enforced server-side). */
+/**
+ * The controls that sit on the page's title row. Everything that isn't used on
+ * every visit — export, move, delete — lives behind a single ⋯ menu, and the
+ * destructive action is last, separated, and confirmed by name. The row used to
+ * be six controls wide, above the title, with a permanent red button.
+ *
+ * Publishing/archiving and deleting are owner-only (enforced server-side too).
+ */
 export function PageActions({
   page,
   canWrite,
@@ -73,9 +85,8 @@ export function PageActions({
   pushToast,
 }: Props) {
   const qc = useQueryClient();
-  const [confirmDelete, setConfirmDelete] = useState(false);
-  const [exportOpen, setExportOpen] = useState(false);
-  const [moveOpen, setMoveOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [view, setView] = useState<MenuView>("root");
 
   // Valid parents: any page that is not this page or one of its descendants.
   const blocked = descendantIds(pages, page.id);
@@ -88,19 +99,31 @@ export function PageActions({
     ? expandTransclusions(page.content_md, transclusions)
     : page.content_md;
 
-  // Native menu (desktop): Fichier → Exporter la page… opens the export menu.
+  function openMenu() {
+    setView("root");
+    setMenuOpen(true);
+  }
+  function closeMenu() {
+    setMenuOpen(false);
+    setView("root");
+  }
+
+  // Native menu (desktop): Fichier → Exporter la page… opens the menu.
   useEffect(() => {
-    const onExport = () => setExportOpen(true);
+    const onExport = () => {
+      setView("root");
+      setMenuOpen(true);
+    };
     window.addEventListener("menu:export-page", onExport);
     return () => window.removeEventListener("menu:export-page", onExport);
   }, []);
 
   function doPdf() {
-    setExportOpen(false);
+    closeMenu();
     exportPdf(page.title, exportMd);
   }
   async function doDocx() {
-    setExportOpen(false);
+    closeMenu();
     try {
       const data = await markdownToDocx(exportMd);
       await saveBinaryFile(`${baseName}.docx`, data, [{ name: "Word", extensions: ["docx"] }]);
@@ -109,7 +132,7 @@ export function PageActions({
     }
   }
   async function doMd() {
-    setExportOpen(false);
+    closeMenu();
     try {
       await exportMarkdown(`${baseName}.md`, exportMd);
     } catch {
@@ -136,26 +159,9 @@ export function PageActions({
 
   return (
     <div className="page-actions">
-      {canWrite ? (
-        <select
-          className="input status-select"
-          value={page.status}
-          onChange={(e) => onChangeStatus(e.target.value as PageStatus)}
-          title="Statut de la page"
-        >
-          <option value="draft">Brouillon</option>
-          <option value="published" disabled={!isOwner}>Publié</option>
-          <option value="archived" disabled={!isOwner}>Archivé</option>
-        </select>
-      ) : (
-        <span className="ed-status">
-          <Icon name="check" size={11} /> {STATUS_LABEL[page.status]}
-        </span>
-      )}
-
       {workflow && (
         <span className="wf-badge" title={`Workflow : ${workflow.workflow_name}`}>
-          <Icon name="refresh" size={11} />
+          <Icon name="refresh" size="xs" />
           {workflow.current_stage_name ?? "—"}
           {canWrite && (
             <button
@@ -172,83 +178,140 @@ export function PageActions({
 
       <FollowButton pageId={page.id} online={online} />
 
-      <span className="page-actions-right">
-        <div className="export-menu">
-          <button className="btn btn-ghost" onClick={() => setExportOpen((o) => !o)}>
-            <Icon name="download" size={13} /> Exporter
-          </button>
-          {exportOpen && (
-            <>
-              <div className="menu-backdrop" onClick={() => setExportOpen(false)} />
-              <div className="menu-pop">
+      <div className="export-menu">
+        <button
+          className="icon-btn"
+          onClick={() => (menuOpen ? closeMenu() : openMenu())}
+          title="Actions de la page"
+          aria-label="Actions de la page"
+          aria-haspopup="menu"
+          aria-expanded={menuOpen}
+        >
+          <Icon name="more" size="md" />
+        </button>
+
+        {menuOpen && (
+          <>
+            <div className="menu-backdrop" onClick={closeMenu} />
+
+            {view === "root" && (
+              <div className="menu-pop" role="menu">
+                {canWrite && (
+                  <>
+                    <p className="menu-label">Statut</p>
+                    {STATUSES.map((s) => (
+                      <button
+                        key={s}
+                        className="menu-item"
+                        disabled={s !== "draft" && !isOwner}
+                        onClick={() => {
+                          closeMenu();
+                          if (s !== page.status) onChangeStatus(s);
+                        }}
+                      >
+                        <Icon
+                          name="check"
+                          size="sm"
+                          style={{ opacity: s === page.status ? 1 : 0 }}
+                        />
+                        {STATUS_LABEL[s]}
+                      </button>
+                    ))}
+                    <div className="ws-menu-sep" />
+                  </>
+                )}
+
+                <p className="menu-label">Exporter</p>
                 <button className="menu-item" onClick={doPdf}>
-                  <Icon name="file" size={13} /> PDF (impression)
+                  <Icon name="file" size="sm" /> PDF (impression)
                 </button>
                 <button className="menu-item" onClick={() => void doDocx()}>
-                  <Icon name="file" size={13} /> Word (.docx)
+                  <Icon name="file" size="sm" /> Word (.docx)
                 </button>
                 <button className="menu-item" onClick={() => void doMd()}>
-                  <Icon name="download" size={13} /> Markdown (.md)
+                  <Icon name="download" size="sm" /> Markdown (.md)
                 </button>
-              </div>
-            </>
-          )}
-        </div>
 
-        {canWrite && online && (
-          <div className="export-menu">
-            <button className="btn btn-ghost" onClick={() => setMoveOpen((o) => !o)} title="Déplacer dans l'arborescence">
-              <Icon name="file" size={13} /> Déplacer
-            </button>
-            {moveOpen && (
-              <>
-                <div className="menu-backdrop" onClick={() => setMoveOpen(false)} />
-                <div className="menu-pop menu-pop-scroll">
+                {canWrite && online && (
+                  <>
+                    <div className="ws-menu-sep" />
+                    <button className="menu-item" onClick={() => setView("move")}>
+                      <Icon name="filePlus" size="sm" />
+                      <span className="menu-item-label">Déplacer dans l'arborescence</span>
+                      <Icon name="chevronRight" size="sm" style={{ color: "var(--ink-3)" }} />
+                    </button>
+                  </>
+                )}
+
+                {isOwner && (
+                  <>
+                    <div className="ws-menu-sep" />
+                    <button className="menu-item danger" onClick={() => setView("delete")}>
+                      <Icon name="trash" size="sm" /> Supprimer la page…
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
+
+            {view === "move" && (
+              <div className="menu-pop menu-pop-scroll" role="menu">
+                <button className="menu-item" onClick={() => setView("root")}>
+                  <Icon name="chevronLeft" size="sm" /> Déplacer vers…
+                </button>
+                <div className="ws-menu-sep" />
+                <button
+                  className="menu-item"
+                  disabled={!page.parent}
+                  onClick={() => {
+                    closeMenu();
+                    onMove(null);
+                  }}
+                >
+                  <Icon name="home" size="sm" /> Racine (aucun parent)
+                </button>
+                {moveTargets.map((p) => (
                   <button
+                    key={p.id}
                     className="menu-item"
-                    disabled={!page.parent}
+                    disabled={p.id === page.parent}
                     onClick={() => {
-                      setMoveOpen(false);
-                      onMove(null);
+                      closeMenu();
+                      onMove(p.id);
                     }}
                   >
-                    <Icon name="home" size={13} /> Racine (aucun parent)
+                    <Icon name="file" size="sm" />
+                    <span className="menu-item-label">{p.title}</span>
                   </button>
-                  {moveTargets.map((p) => (
-                    <button
-                      key={p.id}
-                      className="menu-item"
-                      disabled={p.id === page.parent}
-                      onClick={() => {
-                        setMoveOpen(false);
-                        onMove(p.id);
-                      }}
-                    >
-                      <Icon name="file" size={13} /> {p.title}
-                    </button>
-                  ))}
-                </div>
-              </>
+                ))}
+              </div>
             )}
-          </div>
-        )}
 
-        {isOwner &&
-          (!confirmDelete ? (
-            <button className="btn btn-danger" onClick={() => setConfirmDelete(true)}>
-              <Icon name="x" size={13} /> Supprimer
-            </button>
-          ) : (
-            <span style={{ display: "inline-flex", gap: 6 }}>
-              <button className="btn btn-ghost" onClick={() => setConfirmDelete(false)}>
-                Annuler
-              </button>
-              <button className="btn btn-danger" onClick={onDelete}>
-                Confirmer
-              </button>
-            </span>
-          ))}
-      </span>
+            {view === "delete" && (
+              <div className="menu-pop menu-confirm" role="dialog" aria-label="Confirmer la suppression">
+                <p className="menu-confirm-text">
+                  Supprimer <b>« {page.title} »</b> ? La page part à la corbeille de
+                  l'espace, d'où un propriétaire peut la restaurer.
+                </p>
+                <div className="menu-confirm-actions">
+                  <button className="btn btn-ghost" onClick={() => setView("root")}>
+                    Annuler
+                  </button>
+                  <button
+                    className="btn btn-danger"
+                    onClick={() => {
+                      closeMenu();
+                      onDelete();
+                    }}
+                  >
+                    <Icon name="trash" size="sm" /> Supprimer
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 }

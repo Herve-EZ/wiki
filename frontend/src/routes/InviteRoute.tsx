@@ -68,7 +68,7 @@ export function InviteRoute() {
               className="btn btn-ghost btn-block"
               onClick={() => navigate("/", { replace: true })}
             >
-              <Icon name="home" size={14} /> Retour à l'accueil
+              <Icon name="home" size="sm" /> Retour à l'accueil
             </button>
           </>
         )}
@@ -86,7 +86,7 @@ export function InviteRoute() {
             {invQ.data.status !== "pending" ? (
               <>
                 <p className="mfa-note">
-                  <Icon name="alert" size={12} /> Cette invitation n'est plus
+                  <Icon name="alert" size="xs" /> Cette invitation n'est plus
                   active ({STATUS_LABEL[invQ.data.status] ?? invQ.data.status}).
                 </p>
                 <button
@@ -94,20 +94,20 @@ export function InviteRoute() {
                   style={{ marginTop: 10 }}
                   onClick={() => navigate("/", { replace: true })}
                 >
-                  <Icon name="home" size={14} /> Retour à l'accueil
+                  <Icon name="home" size="sm" /> Retour à l'accueil
                 </button>
               </>
             ) : invQ.data.is_expired ? (
               <>
                 <p className="mfa-note">
-                  <Icon name="alert" size={12} /> Cette invitation a expiré.
+                  <Icon name="alert" size="xs" /> Cette invitation a expiré.
                 </p>
                 <button
                   className="btn btn-ghost btn-block"
                   style={{ marginTop: 10 }}
                   onClick={() => navigate("/", { replace: true })}
                 >
-                  <Icon name="home" size={14} /> Retour à l'accueil
+                  <Icon name="home" size="sm" /> Retour à l'accueil
                 </button>
               </>
             ) : status === "authenticated" ? (

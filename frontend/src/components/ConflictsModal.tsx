@@ -66,7 +66,7 @@ export function ConflictsModal({ onClose, onChanged }: Props) {
         <div className="modal-head">
           <span>Modifications bloquées</span>
           <button className="icon-btn" style={{ marginLeft: "auto" }} onClick={onClose}>
-            <Icon name="x" size={16} />
+            <Icon name="x" size="md" />
           </button>
         </div>
         <div className="modal-body">

@@ -61,7 +61,7 @@ export function AboutModal({ view, onClose, onCheckUpdates }: Props) {
               className="link"
               onClick={() => void openExternal("https://github.com/Herve-EZ/Wiki")}
             >
-              <Icon name="link" size={12} /> Code source sur GitHub
+              <Icon name="link" size="xs" /> Code source sur GitHub
             </button>
           </div>
         )}
@@ -75,7 +75,7 @@ export function AboutModal({ view, onClose, onCheckUpdates }: Props) {
                 onCheckUpdates();
               }}
             >
-              <Icon name="refresh" size={13} /> Rechercher des mises à jour
+              <Icon name="refresh" size="sm" /> Rechercher des mises à jour
             </button>
           )}
           <button className="btn btn-primary" style={{ marginLeft: "auto" }} onClick={onClose}>

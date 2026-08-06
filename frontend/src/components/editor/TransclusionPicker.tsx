@@ -66,9 +66,9 @@ export function TransclusionPicker({ pages, excludeId, onPick, onClose }: Props)
               {results.length === 0 && <div className="palette-empty">Aucune page.</div>}
               {results.map((p) => (
                 <button key={p.id} className="menu-item" onClick={() => setPicked(p)}>
-                  <Icon name="file" size={13} />
+                  <Icon name="file" size="sm" />
                   <span className="menu-item-label">{p.title}</span>
-                  <Icon name="chevronRight" size={13} style={{ opacity: 0.5 }} />
+                  <Icon name="chevronRight" size="sm" style={{ opacity: 0.5 }} />
                 </button>
               ))}
             </div>
@@ -81,13 +81,13 @@ export function TransclusionPicker({ pages, excludeId, onPick, onClose }: Props)
                 title="Changer de page"
                 onClick={() => setPicked(null)}
               >
-                <Icon name="chevronDown" size={14} style={{ transform: "rotate(90deg)" }} />
+                <Icon name="chevronDown" size="sm" style={{ transform: "rotate(90deg)" }} />
               </button>
               <span className="picker-head-title">{picked.title}</span>
             </div>
             <div className="link-picker-list">
               <button className="menu-item" onClick={() => onPick(picked, "")}>
-                <Icon name="file" size={13} />
+                <Icon name="file" size="sm" />
                 <span className="menu-item-label">Toute la page</span>
               </button>
               {bodyQ.isLoading && <div className="palette-empty">Chargement des sections…</div>}
@@ -104,7 +104,7 @@ export function TransclusionPicker({ pages, excludeId, onPick, onClose }: Props)
                   style={{ paddingLeft: 10 + (s.level - 1) * 12 }}
                   onClick={() => onPick(picked, s.id)}
                 >
-                  <Icon name="heading" size={13} />
+                  <Icon name="heading" size="sm" />
                   <span className="menu-item-label">{s.headingText}</span>
                 </button>
               ))}

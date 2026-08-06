@@ -221,7 +221,7 @@ export function LoginRoute() {
           )}
 
           <div className="auth-foot">
-            <Icon name="lock" size={11} />
+            <Icon name="lock" size="xs" />
             Connexion sécurisée · {config.site_name}
           </div>
         </form>
@@ -263,7 +263,7 @@ export function LoginRoute() {
             </button>
           </div>
           <div className="mfa-note">
-            <Icon name="clock" size={12} />
+            <Icon name="clock" size="xs" />
             Jeton de vérification à usage unique, valable 5 minutes.
           </div>
         </form>

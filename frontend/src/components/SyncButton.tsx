@@ -32,7 +32,7 @@ export function SyncButton({ online, pending, conflicts, syncing, onSync }: Prop
     >
       <Icon
         name={!online && !syncing ? "wifiOff" : "refresh"}
-        size={14}
+        size="sm"
         className={syncing ? "ic spin" : "ic"}
       />
       <span className="label">{label}</span>

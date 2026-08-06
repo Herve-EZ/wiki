@@ -10,6 +10,7 @@ import {
   BookOpen,
   Check,
   ChevronDown,
+  ChevronLeft,
   ChevronRight,
   CircleAlert,
   CircleHelp,
@@ -33,9 +34,11 @@ import {
   Lock,
   LogOut,
   Mail,
+  Menu,
   MessageSquare,
   Monitor,
   Moon,
+  MoreHorizontal,
   Pencil,
   Plus,
   Quote,
@@ -85,6 +88,7 @@ const ICONS = {
   check: Check,
   checkSquare: SquareCheckBig,
   chevronDown: ChevronDown,
+  chevronLeft: ChevronLeft,
   chevronRight: ChevronRight,
   clock: Clock,
   code: Code,
@@ -108,8 +112,10 @@ const ICONS = {
   lock: Lock,
   logout: LogOut,
   mail: Mail,
+  menu: Menu,
   monitor: Monitor,
   moon: Moon,
+  more: MoreHorizontal,
   pencil: Pencil,
   plus: Plus,
   quote: Quote,
@@ -137,14 +143,32 @@ const ICONS = {
 
 export type IconName = keyof typeof ICONS;
 
+/**
+ * The icon scale, mirrored by `--ic-*` in index.css. Four steps, matched to the
+ * app's UI type sizes:
+ *
+ * - `xs` (12) inside badges and chips, where the label itself is ~11px
+ * - `sm` (14) buttons and toolbars — the workhorse
+ * - `md` (16) navigation, page tree, section headers (the default)
+ * - `lg` (20) empty states and modal headers
+ *
+ * A raw number is still accepted for the rare case that needs one, but new code
+ * should stay on the scale — seven ad-hoc sizes is how the rhythm drifts from
+ * one component to the next.
+ */
+const SIZES = { xs: 12, sm: 14, md: 16, lg: 20 } as const;
+
+export type IconSize = keyof typeof SIZES;
+
 interface Props {
   name: IconName;
-  size?: number;
+  size?: IconSize | number;
   className?: string;
   style?: CSSProperties;
 }
 
-export function Icon({ name, size = 14, className = "ic", style }: Props) {
+export function Icon({ name, size = "md", className = "ic", style }: Props) {
   const Glyph = ICONS[name];
-  return <Glyph className={className} size={size} style={style} aria-hidden="true" />;
+  const px = typeof size === "number" ? size : SIZES[size];
+  return <Glyph className={className} size={px} style={style} aria-hidden="true" />;
 }

@@ -37,7 +37,7 @@ export function SettingsRoute() {
     <div className="settings-page">
       <div className="settings-head">
         <button className="btn btn-ghost" onClick={() => navigate(-1)}>
-          <Icon name="chevronDown" size={14} style={{ transform: "rotate(90deg)" }} /> Retour
+          <Icon name="chevronDown" size="sm" style={{ transform: "rotate(90deg)" }} /> Retour
         </button>
         <h3 style={{ margin: 0 }}>Paramètres</h3>
       </div>
@@ -59,7 +59,7 @@ export function SettingsRoute() {
               className={`settings-nav-item${tab === n.id ? " active" : ""}`}
               onClick={() => setTab(n.id)}
             >
-              <Icon name={n.icon} size={15} />
+              <Icon name={n.icon} size="md" />
               <span style={{ flex: 1 }}>{n.label}</span>
               {n.id === "invitations" && inviteCount > 0 && (
                 <span className="sync-badge">{inviteCount}</span>
@@ -68,7 +68,7 @@ export function SettingsRoute() {
           ))}
           <div className="settings-nav-sep" />
           <button className="settings-nav-item" onClick={() => navigate("/help")}>
-            <Icon name="help" size={15} />
+            <Icon name="help" size="md" />
             <span style={{ flex: 1 }}>Aide</span>
           </button>
         </nav>
@@ -89,7 +89,7 @@ function Panel({ title, subtitle, icon, children }: { title: string; subtitle?: 
   return (
     <section className="panel-card">
       <div className="panel-title">
-        <Icon name={icon} size={17} />
+        <Icon name={icon} size="md" />
         <div>
           <h4 style={{ margin: 0 }}>{title}</h4>
           {subtitle && <p className="muted" style={{ margin: "2px 0 0" }}>{subtitle}</p>}
@@ -179,7 +179,7 @@ function ProfileSection({ onChanged }: { onChanged: () => void }) {
               onChange={pickFile}
             />
             <button type="button" className="btn btn-ghost" onClick={() => fileInput.current?.click()}>
-              <Icon name="user" size={13} /> Choisir une image…
+              <Icon name="user" size="sm" /> Choisir une image…
             </button>
             <span className="muted" style={{ fontSize: 11.5 }}>
               {file ? file.name : "JPG, PNG ou GIF — 5 Mo max."}
@@ -241,7 +241,7 @@ function SecuritySection({ mfaEnabled, onChanged }: { mfaEnabled: boolean; onCha
             </span>
           </div>
           <span className={`status-pill ${mfaEnabled ? "ok" : "off"}`}>
-            <Icon name={mfaEnabled ? "check" : "x"} size={11} /> {mfaEnabled ? "Activée" : "Inactive"}
+            <Icon name={mfaEnabled ? "check" : "x"} size="xs" /> {mfaEnabled ? "Activée" : "Inactive"}
           </span>
         </div>
 
@@ -269,7 +269,7 @@ function SecuritySection({ mfaEnabled, onChanged }: { mfaEnabled: boolean; onCha
           </>
         ) : stage === "idle" ? (
           <button className="btn btn-primary" style={{ marginTop: 12 }} disabled={setupM.isPending} onClick={() => { setError(""); setupM.mutate(); }}>
-            <Icon name="lock" size={13} /> Activer la 2FA
+            <Icon name="lock" size="sm" /> Activer la 2FA
           </button>
         ) : (
           <div className="mfa-setup">
@@ -396,7 +396,7 @@ function SyncSection() {
       <div className="sync-stats">
         <div className="stat-chip">
           <span className={`status-pill ${online ? "ok" : "off"}`}>
-            <Icon name={online ? "wifi" : "wifiOff"} size={12} /> {online ? "En ligne" : "Hors-ligne"}
+            <Icon name={online ? "wifi" : "wifiOff"} size="xs" /> {online ? "En ligne" : "Hors-ligne"}
           </span>
         </div>
         <div className="stat-chip"><b>{pending}</b><span className="muted">en attente</span></div>
@@ -405,7 +405,7 @@ function SyncSection() {
       </div>
 
       <button className="btn btn-primary" disabled={syncing} onClick={() => void sync()} style={{ marginTop: 4 }}>
-        <Icon name="refresh" size={13} className={syncing ? "ic spin" : "ic"} />
+        <Icon name="refresh" size="sm" className={syncing ? "ic spin" : "ic"} />
         {syncing ? "Synchronisation…" : "Synchroniser maintenant"}
       </button>
       <p className="muted" style={{ fontSize: 12, marginTop: 8 }}>
@@ -424,7 +424,7 @@ function SyncSection() {
         </div>
       ) : (
         <p className="muted" style={{ fontSize: 12, marginTop: 16 }}>
-          <Icon name="alert" size={12} /> Le mode hors-ligne complet (cache local) est disponible dans l'application de bureau.
+          <Icon name="alert" size="xs" /> Le mode hors-ligne complet (cache local) est disponible dans l'application de bureau.
         </p>
       )}
     </Panel>
@@ -453,7 +453,7 @@ function InvitationsSection() {
     <Panel title="Invitations en attente" subtitle="Rejoignez un espace après acceptation" icon="mail">
       {invites.length === 0 && (
         <div className="home-empty" style={{ padding: "24px 0" }}>
-          <Icon name="mail" size={24} />
+          <Icon name="mail" size="lg" />
           <p className="muted" style={{ marginTop: 8 }}>Aucune invitation en attente.</p>
         </div>
       )}

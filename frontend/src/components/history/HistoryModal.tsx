@@ -68,7 +68,7 @@ export function HistoryModal({ pageId, canRestore, onClose }: Props) {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="modal-head">
-          <Icon name="history" size={17} style={{ marginRight: 8 }} />
+          <Icon name="history" size="md" style={{ marginRight: 8 }} />
           Historique des versions
           <button
             className="icon-btn"
@@ -76,7 +76,7 @@ export function HistoryModal({ pageId, canRestore, onClose }: Props) {
             onClick={onClose}
             aria-label="Fermer"
           >
-            <Icon name="x" size={16} />
+            <Icon name="x" size="md" />
           </button>
         </div>
         <div className="hist">

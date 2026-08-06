@@ -86,7 +86,7 @@ export function TableEditor({ initial, onInsert, onClose }: Props) {
     <div className="overlay" onClick={onClose}>
       <div className="card table-editor" onClick={(e) => e.stopPropagation()}>
         <div className="panel-title" style={{ marginBottom: 12 }}>
-          <Icon name="table" size={17} />
+          <Icon name="table" size="md" />
           <h4 style={{ margin: 0 }}>{initial ? "Modifier le tableau" : "Insérer un tableau"}</h4>
         </div>
 
@@ -108,7 +108,7 @@ export function TableEditor({ initial, onInsert, onClose }: Props) {
                         title={`Alignement : ${ALIGN_LABEL[model.align[c]]}`}
                         onClick={() => cycleAlign(c)}
                       >
-                        <Icon name={ALIGN_ICON[model.align[c]]} size={13} />
+                        <Icon name={ALIGN_ICON[model.align[c]]} size="sm" />
                       </button>
                       <input
                         className="te-input te-header-input"
@@ -123,14 +123,14 @@ export function TableEditor({ initial, onInsert, onClose }: Props) {
                         disabled={cols <= 1}
                         onClick={() => removeColumn(c)}
                       >
-                        <Icon name="x" size={12} />
+                        <Icon name="x" size="xs" />
                       </button>
                     </div>
                   </th>
                 ))}
                 <th className="te-add-col">
                   <button type="button" className="te-addbtn" title="Ajouter une colonne" onClick={addColumn}>
-                    <Icon name="plus" size={13} />
+                    <Icon name="plus" size="sm" />
                   </button>
                 </th>
               </tr>
@@ -155,7 +155,7 @@ export function TableEditor({ initial, onInsert, onClose }: Props) {
                       disabled={model.rows.length <= 1}
                       onClick={() => removeRow(r)}
                     >
-                      <Icon name="x" size={12} />
+                      <Icon name="x" size="xs" />
                     </button>
                   </td>
                 </tr>
@@ -166,7 +166,7 @@ export function TableEditor({ initial, onInsert, onClose }: Props) {
 
         <div style={{ display: "flex", gap: 8, marginTop: 14, alignItems: "center" }}>
           <button type="button" className="btn btn-ghost" onClick={addRow}>
-            <Icon name="plus" size={13} /> Ajouter une ligne
+            <Icon name="plus" size="sm" /> Ajouter une ligne
           </button>
           <div style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
             <button type="button" className="btn btn-ghost" onClick={onClose}>
@@ -177,7 +177,7 @@ export function TableEditor({ initial, onInsert, onClose }: Props) {
               className="btn btn-primary"
               onClick={() => onInsert(generateTable(model))}
             >
-              <Icon name="check" size={13} /> {initial ? "Mettre à jour" : "Insérer"}
+              <Icon name="check" size="sm" /> {initial ? "Mettre à jour" : "Insérer"}
             </button>
           </div>
         </div>

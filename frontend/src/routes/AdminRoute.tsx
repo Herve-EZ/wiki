@@ -20,7 +20,7 @@ function Panel({ title, subtitle, icon, children }: { title: string; subtitle?: 
   return (
     <section className="panel-card">
       <div className="panel-title">
-        <Icon name={icon} size={17} />
+        <Icon name={icon} size="md" />
         <div>
           <h4 style={{ margin: 0 }}>{title}</h4>
           {subtitle && <p className="muted" style={{ margin: "2px 0 0" }}>{subtitle}</p>}
@@ -52,7 +52,7 @@ export function AdminRoute() {
     <div className="settings-page">
       <div className="settings-head">
         <button className="btn btn-ghost" onClick={() => navigate(-1)}>
-          <Icon name="chevronDown" size={14} style={{ transform: "rotate(90deg)" }} /> Retour
+          <Icon name="chevronDown" size="sm" style={{ transform: "rotate(90deg)" }} /> Retour
         </button>
         <h3 style={{ margin: 0 }}>Administration système</h3>
       </div>
@@ -65,7 +65,7 @@ export function AdminRoute() {
               className={`settings-nav-item${tab === n.id ? " active" : ""}`}
               onClick={() => setTab(n.id)}
             >
-              <Icon name={n.icon} size={15} />
+              <Icon name={n.icon} size="md" />
               <span style={{ flex: 1 }}>{n.label}</span>
             </button>
           ))}
@@ -248,9 +248,9 @@ function AuthSection() {
                 <b>{p.label}</b>
                 <span>
                   {p.configured ? (
-                    <span className="cfg-badge ok"><Icon name="check" size={10} /> Configuré</span>
+                    <span className="cfg-badge ok"><Icon name="check" size="xs" /> Configuré</span>
                   ) : (
-                    <span className="cfg-badge missing"><Icon name="alert" size={10} /> Identifiants manquants</span>
+                    <span className="cfg-badge missing"><Icon name="alert" size="xs" /> Identifiants manquants</span>
                   )}
                 </span>
               </div>
@@ -263,7 +263,7 @@ function AuthSection() {
           );
         })}
         <p className="muted" style={{ fontSize: 12, marginTop: 12 }}>
-          <Icon name="alert" size={12} /> Les identifiants (client ID / secret) se configurent
+          <Icon name="alert" size="xs" /> Les identifiants (client ID / secret) se configurent
           côté serveur via l'administration Django (SocialApp). Tant qu'ils sont absents, le
           bouton reste masqué sur la page de connexion même s'il est activé ici.
         </p>
@@ -407,7 +407,7 @@ function EmailSection() {
             Mot de passe
             {cfg.email_password_set && !pw && (
               <span className="cfg-badge ok" style={{ marginLeft: 8 }}>
-                <Icon name="check" size={10} /> Configuré
+                <Icon name="check" size="xs" /> Configuré
               </span>
             )}
           </label>

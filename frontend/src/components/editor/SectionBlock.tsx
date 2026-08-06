@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useMemo, useRef } from "react";
 import { Icon } from "../Icon";
 import { MarkdownEditor } from "./MarkdownEditor";
 import { useMermaid } from "../../hooks/useMermaid";
@@ -30,6 +30,9 @@ interface Props {
   onCancelEdit: () => void;
 }
 
+/** Stable identity so the mention set isn't rebuilt on every render. */
+const NO_MEMBERS: Member[] = [];
+
 function escapeRegExp(s: string) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
@@ -59,7 +62,7 @@ export function SectionBlock({
   currentPageId,
   workspaceSlug,
   searchQuery,
-  members = [],
+  members = NO_MEMBERS,
   transclusions,
   onStartEdit,
   onChangeDraft,
@@ -70,9 +73,21 @@ export function SectionBlock({
   const lockedByOther = lock && !isMine;
   const cls = editing || isMine ? "section locked-mine" : lockedByOther ? "section locked-theirs" : "section";
 
+  // Names the renderer will highlight — the same set the server matches when
+  // it decides who gets a "you were mentioned" notification.
+  const mentions = useMemo(() => {
+    const set = new Set<string>();
+    for (const m of members) {
+      if (m.display_name) set.add(m.display_name.toLowerCase());
+      set.add(m.email.toLowerCase());
+    }
+    return set;
+  }, [members]);
+
   const rawHtml = renderMarkdown(preprocessWikilinks(section.text, pageIndex), {
     transclusions,
     pageIndex,
+    mentions,
   });
   const html = searchQuery ? highlightHtml(rawHtml, searchQuery) : rawHtml;
   useMermaid(bodyRef, editing ? "" : html);
@@ -81,13 +96,13 @@ export function SectionBlock({
     <div className={cls} id={`sec-${section.id}`}>
       {lockedByOther && (
         <span className="lock-tag theirs">
-          <Icon name="lock" size={11} />
+          <Icon name="lock" size="xs" />
           {lock?.display_name} édite cette section
         </span>
       )}
       {(editing || isMine) && (
         <span className="lock-tag mine">
-          <Icon name="lock" size={11} />
+          <Icon name="lock" size="xs" />
           Vous éditez cette section
         </span>
       )}
@@ -105,7 +120,7 @@ export function SectionBlock({
           />
           <div style={{ display: "flex", gap: 8, marginTop: 8, alignItems: "center" }}>
             <button className="btn btn-primary" onClick={onSaveEdit}>
-              <Icon name="check" size={13} /> Enregistrer
+              <Icon name="check" size="sm" /> Enregistrer
             </button>
             <button className="btn btn-ghost" onClick={onCancelEdit}>
               Annuler
@@ -119,7 +134,7 @@ export function SectionBlock({
       {!editing && canEdit && !lockedByOther && (
         <div className="section-actions">
           <button className="btn btn-ghost" onClick={onStartEdit}>
-            <Icon name="pencil" size={12} /> Éditer
+            <Icon name="pencil" size="xs" /> Éditer
           </button>
         </div>
       )}

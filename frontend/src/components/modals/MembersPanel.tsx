@@ -100,7 +100,7 @@ export function MembersPanel({ workspaceSlug }: Props) {
             title="Retirer"
             onClick={() => removeM.mutate(m.id)}
           >
-            <Icon name="x" size={15} />
+            <Icon name="x" size="md" />
           </button>
         </div>
       ))}

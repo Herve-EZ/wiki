@@ -12,6 +12,13 @@ export interface RenderEnv {
   pageIndex?: Map<string, PageRef>;
   /** Nesting depth — a transcluded body may not itself transclude. */
   transcludeDepth?: number;
+  /**
+   * Lower-cased display names and emails of the workspace's members. Only a
+   * mention that resolves against this set is highlighted, so what looks like
+   * a mention is exactly what the server will notify (see
+   * `backend/pages/services.py` → `_process_mentions`).
+   */
+  mentions?: Set<string>;
 }
 
 // Allow our internal `wiki:` scheme (page links) through the link validator.
@@ -49,6 +56,93 @@ function taskListPlugin(mdi: MarkdownIt) {
     }
     return false;
   });
+}
+
+/**
+ * A mention candidate: `@` followed by one word, or two words separated by a
+ * single space. Deliberately the same shape as `MENTION_RE` in
+ * `backend/pages/services.py`, so the highlight and the notification agree on
+ * what a mention is.
+ */
+const MENTION_RE =
+  /(?<!\w)@([\p{L}\p{N}][\p{L}\p{N}._@+-]*(?:[  ][\p{L}\p{N}][\p{L}\p{N}._@+-]*)?)/gu;
+
+/**
+ * Highlight `@Someone` when it resolves to a workspace member.
+ *
+ * Runs as a core rule over the already-parsed inline tokens rather than as an
+ * inline rule: markdown-it's tokenizer doesn't treat `@` as special, so a rule
+ * registered on that character would never fire mid-sentence. Only `text`
+ * tokens are visited, which keeps mentions inside code spans and fences alone.
+ */
+function mentionPlugin(mdi: MarkdownIt) {
+  mdi.core.ruler.push("mentions", (state) => {
+    const known = (state.env as RenderEnv | undefined)?.mentions;
+    if (!known || known.size === 0) return false;
+
+    for (const block of state.tokens) {
+      if (block.type !== "inline" || !block.children) continue;
+
+      const out: NonNullable<typeof block.children> = [];
+      let touched = false;
+
+      for (const child of block.children) {
+        if (child.type !== "text" || !child.content.includes("@")) {
+          out.push(child);
+          continue;
+        }
+
+        const text = child.content;
+        let cursor = 0;
+        let found = false;
+        MENTION_RE.lastIndex = 0;
+
+        for (let m = MENTION_RE.exec(text); m !== null; m = MENTION_RE.exec(text)) {
+          const candidate = m[1];
+          // Try "Firstname Lastname" first, then fall back to one word — the
+          // second word may simply be the next word of the sentence.
+          let name: string | null = null;
+          if (known.has(candidate.toLowerCase())) {
+            name = candidate;
+          } else {
+            const first = candidate.split(/[  ]/)[0];
+            if (known.has(first.toLowerCase())) name = first;
+          }
+          if (!name) continue;
+
+          if (m.index > cursor) {
+            const before = new state.Token("text", "", 0);
+            before.content = text.slice(cursor, m.index);
+            out.push(before);
+          }
+          const token = new state.Token("mention", "", 0);
+          token.content = name;
+          out.push(token);
+
+          cursor = m.index + 1 + name.length;
+          MENTION_RE.lastIndex = cursor;
+          found = true;
+        }
+
+        if (!found) {
+          out.push(child);
+          continue;
+        }
+        if (cursor < text.length) {
+          const rest = new state.Token("text", "", 0);
+          rest.content = text.slice(cursor);
+          out.push(rest);
+        }
+        touched = true;
+      }
+
+      if (touched) block.children = out;
+    }
+    return false;
+  });
+
+  mdi.renderer.rules.mention = (tokens, idx) =>
+    `<span class="mention">@${escapeHtml(tokens[idx].content)}</span>`;
 }
 
 /** Add stable ids to headings so they can be linked/anchored. */
@@ -166,6 +260,7 @@ function transclusionPlugin(mdi: MarkdownIt) {
 md.use(taskListPlugin);
 md.use(headingAnchorPlugin);
 md.use(transclusionPlugin);
+md.use(mentionPlugin);
 
 // Render ```mermaid fences as a container the useMermaid hook turns into a
 // diagram after mount (mermaid itself is lazy-loaded, so it stays out of the

@@ -71,7 +71,7 @@ export function MissingPageDialog({ pageId, workspaceId, workspaceSlug }: Props)
         </p>
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           <button className="btn btn-primary btn-block" disabled={busy || !canRecreate} onClick={() => void recreate()}>
-            <Icon name="plus" size={13} />
+            <Icon name="plus" size="sm" />
             Recréer la page {canRecreate ? "" : "(copie locale indisponible)"}
           </button>
           <button className="btn btn-danger btn-block" disabled={busy} onClick={() => void forget()}>

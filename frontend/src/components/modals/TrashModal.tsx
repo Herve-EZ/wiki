@@ -41,7 +41,7 @@ export function TrashModal({ workspaceSlug, onClose }: Props) {
     <div className="overlay" onClick={onClose}>
       <div className="card" style={{ width: "min(560px, 94vw)" }} onClick={(e) => e.stopPropagation()}>
         <div className="panel-title" style={{ marginBottom: 4 }}>
-          <Icon name="trash" size={16} />
+          <Icon name="trash" size="md" />
           <h4 style={{ margin: 0 }}>Corbeille</h4>
         </div>
         <p className="sub" style={{ marginTop: 0 }}>
@@ -57,7 +57,7 @@ export function TrashModal({ workspaceSlug, onClose }: Props) {
         <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 8 }}>
           {items.map((p) => (
             <div key={p.id} className="row-card">
-              <Icon name="file" size={15} style={{ color: "var(--ink-3)" }} />
+              <Icon name="file" size="md" style={{ color: "var(--ink-3)" }} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div className="row-title" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                   {p.title}
@@ -84,10 +84,10 @@ export function TrashModal({ workspaceSlug, onClose }: Props) {
                     disabled={restoreM.isPending}
                     onClick={() => restoreM.mutate(p.id)}
                   >
-                    <Icon name="refresh" size={13} /> Restaurer
+                    <Icon name="refresh" size="sm" /> Restaurer
                   </button>
                   <button className="btn btn-danger" onClick={() => setConfirmPurge(p.id)}>
-                    <Icon name="x" size={13} /> Supprimer
+                    <Icon name="x" size="sm" /> Supprimer
                   </button>
                 </>
               )}

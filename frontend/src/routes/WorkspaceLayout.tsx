@@ -4,7 +4,9 @@ import { useQuery } from "@tanstack/react-query";
 import { api } from "../lib/api";
 import { useAuth } from "../auth/AuthContext";
 import { useSync } from "../hooks/useSync";
+import { useMediaQuery } from "../hooks/useMediaQuery";
 import { Sidebar } from "../components/Sidebar";
+import { TopBar } from "../components/TopBar";
 import { SearchPalette } from "../components/SearchPalette";
 import { OfflineBanner } from "../components/OfflineBanner";
 import { ConflictsModal } from "../components/ConflictsModal";
@@ -12,6 +14,8 @@ import { ToastContainer } from "../components/ToastContainer";
 import { NewPageModal } from "../components/modals/NewPageModal";
 import type { Role } from "../lib/types";
 import type { WorkspaceCtx } from "./workspaceContext";
+
+const NAV_KEY = "wikicollab.sidebar.open";
 
 export function WorkspaceLayout() {
   const { workspace: slug = "" } = useParams();
@@ -24,6 +28,41 @@ export function WorkspaceLayout() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [conflictsOpen, setConflictsOpen] = useState(false);
   const [menuNewPage, setMenuNewPage] = useState(false);
+  // Ref callback rather than an id lookup: the slot is a real React value, so
+  // routes portal into it as soon as it exists.
+  const [barSlot, setBarSlot] = useState<HTMLDivElement | null>(null);
+
+  // Navigation: an icon rail when collapsed on a wide screen, an off-canvas
+  // drawer below 1024px. One boolean, two presentations.
+  const narrow = useMediaQuery("(max-width: 1023px)");
+  const [navOpen, setNavOpen] = useState(() => localStorage.getItem(NAV_KEY) !== "0");
+  const toggleNav = useCallback(() => {
+    setNavOpen((open) => {
+      // Only the desktop preference is worth remembering; the drawer always
+      // starts closed on a small screen.
+      if (!window.matchMedia("(max-width: 1023px)").matches) {
+        localStorage.setItem(NAV_KEY, open ? "0" : "1");
+      }
+      return !open;
+    });
+  }, []);
+
+  // The drawer covers the content, so it must not survive a navigation.
+  useEffect(() => {
+    if (narrow) setNavOpen(false);
+  }, [narrow, location.pathname]);
+
+  // Ctrl/Cmd + \ — the shortcut every editor uses for this.
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if ((e.ctrlKey || e.metaKey) && e.key === "\\") {
+        e.preventDefault();
+        toggleNav();
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [toggleNav]);
 
   // Auto-sync + reload when the connection comes back after being offline.
   const wasOnline = useRef(online);
@@ -100,7 +139,10 @@ export function WorkspaceLayout() {
     markUpdated,
     openSearch: () => setSearchOpen(true),
     refetchPages: () => void pagesQ.refetch(),
+    barSlot,
   };
+
+  const currentPage = (pagesQ.data ?? []).find((p) => p.id === currentPageId);
 
   return (
     <div className="app">
@@ -127,10 +169,28 @@ export function WorkspaceLayout() {
           pending={pending}
           conflicts={conflicts}
           syncing={syncing}
+          navOpen={navOpen}
+          narrow={narrow}
+          onToggleNav={toggleNav}
           onSync={() => void sync()}
           onLogout={() => void logout()}
         />
-        <div style={{ display: "flex", flexDirection: "column", flex: 1, minWidth: 0 }}>
+        {narrow && navOpen && (
+          <button
+            className="nav-scrim"
+            aria-label="Fermer la navigation"
+            onClick={toggleNav}
+          />
+        )}
+        <div className="app-col">
+          <TopBar
+            workspaceName={current?.name ?? "WikiCollab"}
+            workspaceSlug={current?.slug}
+            pageTitle={currentPage?.title}
+            onOpenSearch={() => setSearchOpen(true)}
+            onToggleNav={toggleNav}
+            slotRef={setBarSlot}
+          />
           <Outlet context={ctx} />
         </div>
       </div>
