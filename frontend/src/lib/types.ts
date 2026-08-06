@@ -177,6 +177,18 @@ export interface PageListItem {
   updated_at: string;
 }
 
+/** A reusable Markdown skeleton owned by a workspace (see lib/templates.ts). */
+export interface PageTemplate {
+  id: string;
+  workspace: string;
+  name: string;
+  description: string;
+  content_md: string;
+  created_by_display?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export interface Comment {
   id: string;
   page: string;

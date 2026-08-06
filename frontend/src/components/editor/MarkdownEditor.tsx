@@ -1,8 +1,9 @@
 import { useRef, useState } from "react";
-import { Icon } from "../Icon";
+import { Icon, type IconName } from "../Icon";
 import { PagePicker } from "./PagePicker";
 import { MentionPicker } from "./MentionPicker";
 import { TableEditor } from "./TableEditor";
+import { TransclusionPicker } from "./TransclusionPicker";
 import {
   type EditResult,
   insertBlock,
@@ -11,6 +12,7 @@ import {
   wrapInline,
 } from "../../lib/editorActions";
 import { parseTableAt } from "../../lib/tables";
+import { transcludeToken } from "../../lib/transclude";
 import { api, attachmentUrl } from "../../lib/api";
 import { addPendingUpload } from "../../lib/db";
 import { isOnline } from "../../lib/network";
@@ -62,11 +64,11 @@ type SlashState = { query: string; slashPos: number } | null;
 interface Command {
   key: string;
   label: string;
-  icon: string;
+  icon: IconName;
   /** Pure transform for direct-insert commands. */
   run?: (text: string, start: number, end: number) => EditResult;
   /** Popover commands set a mode instead of transforming inline. */
-  opens?: "link" | "mention" | "table";
+  opens?: "link" | "mention" | "table" | "transclude";
 }
 
 const CODE_BLOCK = "```\n\n```";
@@ -82,6 +84,7 @@ const COMMANDS: Command[] = [
   { key: "table", label: "Tableau", icon: "table", opens: "table" },
   { key: "diagram", label: "Diagramme (Mermaid)", icon: "diagram", run: (t, s, e) => insertBlock(t, s, e, MERMAID_BLOCK) },
   { key: "link", label: "Lien vers une page", icon: "link", opens: "link" },
+  { key: "transclude", label: "Inclure une section", icon: "transclude", opens: "transclude" },
   { key: "mention", label: "Mention", icon: "at", opens: "mention" },
 ];
 
@@ -100,6 +103,7 @@ export function MarkdownEditor({
   const ref = useRef<HTMLTextAreaElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const [linkOpen, setLinkOpen] = useState(false);
+  const [transcludeOpen, setTranscludeOpen] = useState(false);
   const [mentionOpen, setMentionOpen] = useState(false);
   const [tableOpen, setTableOpen] = useState(false);
   const [tableInitial, setTableInitial] = useState<ReturnType<typeof parseTableAt> | null>(null);
@@ -136,6 +140,16 @@ export function MarkdownEditor({
     const token = selected ? `[[${page.slug}|${selected}]]` : `[[${page.title}]]`;
     focusAt(insertInline(value, start, end, token));
     setLinkOpen(false);
+  }
+
+  // ---- Block include (transclusion) ----
+  function insertTransclusion(page: PageRef, section: string) {
+    const ta = ref.current;
+    const start = ta ? ta.selectionStart : value.length;
+    const end = ta ? ta.selectionEnd : value.length;
+    // Slug rather than title: it survives the source page being renamed.
+    focusAt(insertBlock(value, start, end, transcludeToken(page.slug, section)));
+    setTranscludeOpen(false);
   }
 
   // ---- Mention ----
@@ -229,6 +243,7 @@ export function MarkdownEditor({
 
   function runCommand(cmd: Command) {
     if (cmd.opens === "link") setLinkOpen(true);
+    else if (cmd.opens === "transclude") setTranscludeOpen(true);
     else if (cmd.opens === "mention") setMentionOpen(true);
     else if (cmd.opens === "table") openTable();
     else if (cmd.run) apply(cmd.run);
@@ -270,7 +285,7 @@ export function MarkdownEditor({
     ? COMMANDS.filter((c) => !slash.query || c.label.toLowerCase().includes(slash.query))
     : [];
 
-  const toolbar: { title: string; icon: string; act: () => void }[] = [
+  const toolbar: { title: string; icon: IconName; act: () => void }[] = [
     { title: "Gras", icon: "bold", act: () => wrap("**") },
     { title: "Italique", icon: "italic", act: () => wrap("*") },
     { title: "Barré", icon: "strike", act: () => wrap("~~") },
@@ -282,6 +297,7 @@ export function MarkdownEditor({
     { title: "Tableau", icon: "table", act: openTable },
     { title: "Diagramme (Mermaid)", icon: "diagram", act: () => apply((t, s, e) => insertBlock(t, s, e, MERMAID_BLOCK)) },
     { title: "Insérer un lien vers une page", icon: "link", act: () => setLinkOpen(true) },
+    { title: "Inclure une section d'une autre page", icon: "transclude", act: () => setTranscludeOpen(true) },
     { title: "Mentionner un membre", icon: "at", act: () => setMentionOpen(true) },
   ];
   if (workspaceSlug) {
@@ -373,6 +389,16 @@ export function MarkdownEditor({
               excludeId={currentPageId}
               onPick={insertLink}
               onClose={() => setLinkOpen(false)}
+            />
+          </div>
+        )}
+        {transcludeOpen && (
+          <div className="editor-popover">
+            <TransclusionPicker
+              pages={pages}
+              excludeId={currentPageId}
+              onPick={insertTransclusion}
+              onClose={() => setTranscludeOpen(false)}
             />
           </div>
         )}

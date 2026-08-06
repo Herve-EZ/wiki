@@ -4,9 +4,10 @@ import { ApiError, api } from "../../lib/api";
 import type { Workspace, WorkspacePermission } from "../../lib/types";
 import { Icon } from "../Icon";
 import { MembersPanel } from "./MembersPanel";
+import { TemplatesPanel } from "./TemplatesPanel";
 import { WorkflowsPanel } from "./WorkflowsPanel";
 
-export type SettingsTab = "general" | "members" | "workflows";
+export type SettingsTab = "general" | "members" | "templates" | "workflows";
 
 interface Props {
   workspace: Workspace;
@@ -68,6 +69,9 @@ export function WorkspaceSettingsModal({ workspace, onClose, onDeleted, initialT
           <button className={`tab${tab === "members" ? " active" : ""}`} onClick={() => setTab("members")}>
             Membres
           </button>
+          <button className={`tab${tab === "templates" ? " active" : ""}`} onClick={() => setTab("templates")}>
+            Modèles
+          </button>
           <button className={`tab${tab === "workflows" ? " active" : ""}`} onClick={() => setTab("workflows")}>
             Workflows
           </button>
@@ -128,6 +132,7 @@ export function WorkspaceSettingsModal({ workspace, onClose, onDeleted, initialT
           )}
 
           {tab === "members" && <MembersPanel workspaceSlug={workspace.slug} />}
+          {tab === "templates" && <TemplatesPanel workspaceSlug={workspace.slug} />}
           {tab === "workflows" && (
             <WorkflowsPanel workspaceId={workspace.id} workspaceSlug={workspace.slug} />
           )}

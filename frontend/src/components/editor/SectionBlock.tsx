@@ -6,6 +6,7 @@ import { renderMarkdown } from "../../lib/markdown";
 import { preprocessWikilinks, type PageRef } from "../../lib/wikilinks";
 import type { Section } from "../../lib/sections";
 import type { SectionLock } from "../../hooks/usePageSocket";
+import type { TranscludeMap } from "../../lib/transclude";
 import type { Member } from "../../lib/types";
 
 interface Props {
@@ -21,6 +22,8 @@ interface Props {
   workspaceSlug?: string;
   searchQuery?: string;
   members?: Member[];
+  /** Resolved `![[…]]` includes for the whole page (see useTransclusions). */
+  transclusions?: TranscludeMap;
   onStartEdit: () => void;
   onChangeDraft: (value: string) => void;
   onSaveEdit: () => void;
@@ -57,6 +60,7 @@ export function SectionBlock({
   workspaceSlug,
   searchQuery,
   members = [],
+  transclusions,
   onStartEdit,
   onChangeDraft,
   onSaveEdit,
@@ -66,7 +70,10 @@ export function SectionBlock({
   const lockedByOther = lock && !isMine;
   const cls = editing || isMine ? "section locked-mine" : lockedByOther ? "section locked-theirs" : "section";
 
-  const rawHtml = renderMarkdown(preprocessWikilinks(section.text, pageIndex));
+  const rawHtml = renderMarkdown(preprocessWikilinks(section.text, pageIndex), {
+    transclusions,
+    pageIndex,
+  });
   const html = searchQuery ? highlightHtml(rawHtml, searchQuery) : rawHtml;
   useMermaid(bodyRef, editing ? "" : html);
 
@@ -112,7 +119,7 @@ export function SectionBlock({
       {!editing && canEdit && !lockedByOther && (
         <div className="section-actions">
           <button className="btn btn-ghost" onClick={onStartEdit}>
-            <Icon name="settings" size={12} /> Éditer
+            <Icon name="pencil" size={12} /> Éditer
           </button>
         </div>
       )}

@@ -17,6 +17,7 @@ import type {
   MyInvitation,
   Page,
   PageListItem,
+  PageTemplate,
   PageVersion,
   PageVersionDetail,
   PageWorkflow,
@@ -361,6 +362,28 @@ export const api = {
       { method: "POST" },
     ),
   backlinks: (id: string) => requestList<PageListItem>(`/api/pages/${id}/backlinks/`),
+
+  // ---- page templates ----
+  listTemplates: (slug: string) =>
+    requestList<PageTemplate>(`/api/workspaces/${slug}/templates/`),
+  createTemplate: (
+    slug: string,
+    body: { name: string; description?: string; content_md: string },
+  ) =>
+    request<PageTemplate>(`/api/workspaces/${slug}/templates/`, {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+  updateTemplate: (
+    id: string,
+    patch: Partial<Pick<PageTemplate, "name" | "description" | "content_md">>,
+  ) =>
+    request<PageTemplate>(`/api/templates/${id}/`, {
+      method: "PATCH",
+      body: JSON.stringify(patch),
+    }),
+  deleteTemplate: (id: string) =>
+    request<void>(`/api/templates/${id}/`, { method: "DELETE" }),
 
   // ---- comments ----
   listComments: (pageId: string) =>

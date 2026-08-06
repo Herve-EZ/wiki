@@ -6,7 +6,7 @@ from rest_framework.test import APIClient
 from workspaces.models import Workspace, WorkspaceMember
 
 from . import services
-from .models import Page, PageLink
+from .models import Page, PageLink, PageTemplate
 
 User = get_user_model()
 
@@ -375,3 +375,105 @@ def test_page_history_is_recorded(page, author):
     services.save_page(page, author, title="Guide Docker v2")
     assert page.history.count() >= 2
     assert page.history.first().title == "Guide Docker v2"
+
+
+# ---------------------------------------------------------------- templates
+
+
+@pytest.fixture
+def template(workspace, author):
+    return PageTemplate.objects.create(
+        workspace=workspace,
+        name="Runbook",
+        description="Procédure d'exploitation",
+        content_md="## Symptômes\n\n## Diagnostic\n",
+        created_by=author,
+    )
+
+
+def test_owner_can_create_template(client, workspace):
+    r = client.post(
+        f"/api/workspaces/{workspace.slug}/templates/",
+        {"name": "ADR", "description": "Décision", "content_md": "## Contexte\n"},
+        format="json",
+    )
+    assert r.status_code == 201
+    assert r.data["name"] == "ADR"
+    # Workspace and author come from the request, never the body.
+    assert r.data["workspace"] == workspace.pk
+    tpl = PageTemplate.objects.get(pk=r.data["id"])
+    assert tpl.workspace == workspace
+    assert tpl.created_by.email == "author@x.com"
+
+
+def test_editor_can_read_but_not_create_template(editor_client, workspace, template):
+    r = editor_client.get(f"/api/workspaces/{workspace.slug}/templates/")
+    assert r.status_code == 200
+    assert [t["name"] for t in r.data] == ["Runbook"]
+
+    r = editor_client.post(
+        f"/api/workspaces/{workspace.slug}/templates/",
+        {"name": "Post-mortem", "content_md": "## Impact\n"},
+        format="json",
+    )
+    assert r.status_code == 403
+    assert PageTemplate.objects.count() == 1
+
+
+def test_editor_can_read_template_detail_but_not_change_it(editor_client, template):
+    r = editor_client.get(f"/api/templates/{template.pk}/")
+    assert r.status_code == 200
+    assert r.data["content_md"] == "## Symptômes\n\n## Diagnostic\n"
+
+    r = editor_client.patch(
+        f"/api/templates/{template.pk}/", {"name": "Piraté"}, format="json"
+    )
+    assert r.status_code == 403
+    template.refresh_from_db()
+    assert template.name == "Runbook"
+
+
+def test_owner_can_update_and_delete_template(client, template):
+    r = client.patch(
+        f"/api/templates/{template.pk}/",
+        {"content_md": "## Symptômes\n\n## Résolution\n"},
+        format="json",
+    )
+    assert r.status_code == 200
+    template.refresh_from_db()
+    assert "Résolution" in template.content_md
+
+    r = client.delete(f"/api/templates/{template.pk}/")
+    assert r.status_code == 204
+    assert not PageTemplate.objects.filter(pk=template.pk).exists()
+
+
+def test_duplicate_template_name_in_workspace_is_rejected(client, workspace, template):
+    r = client.post(
+        f"/api/workspaces/{workspace.slug}/templates/",
+        {"name": "runbook", "content_md": ""},
+        format="json",
+    )
+    assert r.status_code == 400
+    assert "name" in r.data
+
+
+def test_blank_template_name_is_rejected(client, workspace):
+    r = client.post(
+        f"/api/workspaces/{workspace.slug}/templates/",
+        {"name": "   ", "content_md": "x"},
+        format="json",
+    )
+    assert r.status_code == 400
+
+
+def test_template_of_other_workspace_is_invisible(template, author):
+    outsider = User.objects.create_user(email="out@x.com", password="testpass123")
+    other = Workspace.objects.create(slug="other", name="Other", created_by=outsider)
+    WorkspaceMember.objects.create(
+        workspace=other, user=outsider, role=WorkspaceMember.Role.OWNER
+    )
+    c = APIClient()
+    c.force_authenticate(outsider)
+    r = c.get(f"/api/templates/{template.pk}/")
+    assert r.status_code == 404

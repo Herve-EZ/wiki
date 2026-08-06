@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Icon } from "../Icon";
+import { Icon, type IconName } from "../Icon";
 import {
   type Align,
   type TableModel,
@@ -15,7 +15,7 @@ interface Props {
 }
 
 const ALIGN_CYCLE: Align[] = ["none", "left", "center", "right"];
-const ALIGN_ICON: Record<Align, string> = {
+const ALIGN_ICON: Record<Align, IconName> = {
   none: "alignLeft",
   left: "alignLeft",
   center: "alignCenter",

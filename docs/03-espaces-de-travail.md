@@ -88,8 +88,8 @@ L'invité peut accepter de deux manières :
 ## Réglages de l'espace
 
 **Réglages de l'espace → Général** (propriétaire uniquement). La fenêtre est
-intitulée *Réglages · [nom de l'espace]* et comporte trois onglets :
-**Général**, **Membres**, **Workflows**.
+intitulée *Réglages · [nom de l'espace]* et comporte quatre onglets :
+**Général**, **Membres**, **Modèles**, **Workflows**.
 
 Onglet **Général** :
 
@@ -119,7 +119,8 @@ créez-en un nouveau avec **« Nouvel espace »**.
 
 ## Voir aussi
 
-- [Workflows de validation](08-workflows.md) — le troisième onglet des réglages.
+- [Modèles de page](04-rediger-des-pages.md#modèles-de-page) — le troisième onglet des réglages.
+- [Workflows de validation](08-workflows.md) — le quatrième onglet des réglages.
 - [Compte & sécurité](02-compte-et-securite.md) — activer la 2FA exigée par un espace.
 
 [← Compte & sécurité](02-compte-et-securite.md) · [Retour au sommaire](README.md) · [Rédiger des pages →](04-rediger-des-pages.md)

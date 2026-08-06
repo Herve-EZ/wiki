@@ -17,13 +17,57 @@ bouton **+** à côté de **« Pages »** dans la barre latérale.
 
 La fenêtre **« Nouvelle page »** s'ouvre :
 
-1. **Titre** de la page (obligatoire).
-2. **Slug** — généré automatiquement à partir du titre, modifiable.
-3. (Optionnel) **« Importer un fichier Markdown »** — importez un `.md`, `.markdown`
+1. (Optionnel) **« Partir d'un modèle »** — voir [Modèles de page](#modèles-de-page).
+2. **Titre** de la page (obligatoire).
+3. **Slug** — généré automatiquement à partir du titre, modifiable.
+4. (Optionnel) **« Importer un fichier Markdown »** — importez un `.md`, `.markdown`
    ou `.txt`.
-4. Cliquez sur **« Créer »** (ou **« Importer »**).
+5. Cliquez sur **« Créer »** (ou **« Créer depuis le modèle »** / **« Importer »**).
 
 > En cas de slug déjà pris : *Un slug identique existe déjà dans cet espace.*
+
+---
+
+## Modèles de page
+
+Un **modèle** est une structure Markdown réutilisable : plus besoin de recréer le
+même squelette à chaque compte-rendu ou chaque incident.
+
+Dans **« Nouvelle page »**, la liste **« Partir d'un modèle »** propose deux familles.
+
+### Modèles intégrés
+
+Disponibles dans tous les espaces, sans configuration :
+
+| Modèle | À quoi il sert |
+|---|---|
+| **Runbook** | Procédure d'exploitation : symptômes, prérequis, diagnostic, résolution, escalade. |
+| **ADR** | Décision d'architecture : contexte, décision, options envisagées, conséquences. |
+| **Post-mortem** | Analyse d'incident sans blâme : impact, chronologie, cause racine, actions. |
+| **Onboarding** | Parcours d'intégration : jour 1, semaine 1, interlocuteurs, rituels. |
+
+### Modèles de l'espace
+
+Le **propriétaire** crée les modèles propres à l'équipe dans
+**Réglages de l'espace → Modèles** : **« Nouveau modèle »**, un nom, une description
+et le contenu Markdown. Les membres peuvent s'en servir, mais seul le propriétaire
+les modifie ou les supprime.
+
+### Variables
+
+Trois variables sont remplacées **au moment de la création** de la page :
+
+| Variable | Remplacée par |
+|---|---|
+| `{{titre}}` | le titre que vous venez de saisir |
+| `{{date}}` | la date du jour (par exemple *06 août 2026*) |
+| `{{auteur}}` | votre nom affiché |
+
+Le modèle enregistré conserve ses variables : elles ne sont substituées que dans la
+page créée.
+
+> Un fichier importé a la priorité sur un modèle : choisir un fichier désélectionne
+> le modèle.
 
 ---
 
@@ -61,13 +105,14 @@ Au-dessus de la zone d'édition, des boutons appliquent la mise en forme à la s
 | **Tableau** | Ouvre l'éditeur de tableau visuel |
 | **Diagramme** | Insère un squelette Mermaid |
 | **Lien** / **Mention** | Insère un wikilien ou une mention @ |
+| **Inclure une section d'une autre page** | Insère une [inclusion de bloc](#inclure-une-section-dune-autre-page-transclusion) |
 | **Image / pièce jointe** | Envoie un fichier et l'insère |
 
 ### Le menu `/` (commandes rapides)
 
 Tapez **`/`** en début de ligne : un menu s'ouvre pour insérer un élément (titre,
-liste, tâche, citation, bloc de code, tableau, diagramme, lien, mention). Filtrez en
-tapant (ex. `/tab` → Tableau), validez d'un clic.
+liste, tâche, citation, bloc de code, tableau, diagramme, lien, inclusion de section,
+mention). Filtrez en tapant (ex. `/tab` → Tableau), validez d'un clic.
 
 ---
 
@@ -161,6 +206,59 @@ cliquez sur une entrée pour aller à la section.
 Insérez-en un via **« Lier une page »**. En lecture, cliquer sur un lien vers une page
 inexistante propose de la **créer** (si vous avez les droits). En bas de page, la ligne
 **« Lié à : »** liste les **backlinks**.
+
+---
+
+## Inclure une section d'une autre page (transclusion)
+
+Plutôt que de **dupliquer** un passage utile à plusieurs pages (prérequis d'accès,
+convention de nommage, procédure de secours), écrivez-le **une fois** et incluez-le
+là où il sert. La page incluse reste la seule source : quand elle change, toutes les
+pages qui l'incluent affichent la nouvelle version.
+
+| Vous écrivez | Résultat |
+|---|---|
+| `![[slug-de-la-page]]` | inclut **toute** la page |
+| `![[slug-de-la-page#titre-de-section]]` | inclut **une section** |
+
+Notez le `!` initial — c'est ce qui distingue une **inclusion** d'un simple
+[wikilien](#lier-des-pages-entre-elles-wikiliens).
+
+### L'insérer sans retenir la syntaxe
+
+Le bouton **« Inclure une section d'une autre page »** de la barre d'outils (ou
+`/inclure`) ouvre un sélecteur en deux temps :
+
+1. choisissez la **page** source ;
+2. choisissez **« Toute la page »** ou l'une de ses **sections**.
+
+La référence est écrite avec le **slug** de la page : renommer la page source ne
+casse pas l'inclusion.
+
+### En lecture
+
+Le contenu inclus apparaît dans un **cadre** dont l'en-tête rappelle son origine :
+cliquez dessus pour ouvrir la page source. Les tableaux, listes de tâches et
+diagrammes Mermaid du bloc inclus sont rendus normalement.
+
+Si la référence ne peut pas être résolue, le cadre l'explique plutôt que de rester
+vide :
+
+| Message | Cause |
+|---|---|
+| *Aucune page « … » dans cet espace.* | slug ou titre erroné |
+| *« … » n'a pas de section « … ».* | le titre de la section source a été renommé |
+| *Une page ne peut pas s'inclure elle-même.* | référence circulaire |
+| *Inclusion imbriquée — non développée ici.* | le bloc inclus contient lui-même une inclusion |
+
+> **Une seule profondeur.** Un bloc inclus n'inclut pas à son tour : la chaîne
+> s'arrête là, volontairement, pour rester lisible et éviter les boucles.
+
+À l'**[export](11-export.md)** (PDF, Word, Markdown), les inclusions sont remplacées
+par leur contenu : le document produit est autonome.
+
+Une page incluse reste **modifiable uniquement depuis sa page d'origine** — le cadre
+est un reflet, pas une zone d'édition.
 
 ---
 

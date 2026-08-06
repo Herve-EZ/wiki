@@ -4,19 +4,19 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../lib/api";
 import { useAuth } from "../auth/AuthContext";
 import { BrandLogo } from "../components/BrandLogo";
-import { Icon } from "../components/Icon";
+import { Icon, type IconName } from "../components/Icon";
 import type { AdminSiteConfig } from "../lib/types";
 
 type Tab = "branding" | "auth" | "email" | "admins";
 
-const NAV: { id: Tab; label: string; icon: string }[] = [
+const NAV: { id: Tab; label: string; icon: IconName }[] = [
   { id: "branding", label: "Marque & apparence", icon: "settings" },
   { id: "auth", label: "Authentification", icon: "lock" },
   { id: "email", label: "E-mail / SMTP", icon: "mail" },
   { id: "admins", label: "Administrateurs", icon: "shield" },
 ];
 
-function Panel({ title, subtitle, icon, children }: { title: string; subtitle?: string; icon: string; children: React.ReactNode }) {
+function Panel({ title, subtitle, icon, children }: { title: string; subtitle?: string; icon: IconName; children: React.ReactNode }) {
   return (
     <section className="panel-card">
       <div className="panel-title">

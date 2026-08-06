@@ -128,6 +128,38 @@ class Comment(UUIDModel, TimeStampedModel):
         return f"comment on {self.page} by {self.author_id}"
 
 
+class PageTemplate(BaseModel):
+    """A reusable Markdown skeleton (runbook, ADR, post-mortem…) a workspace can
+    start new pages from.
+
+    Deliberately *not* linked to the pages created from it: a template is a
+    starting point that the client copies, so editing one never rewrites history
+    on pages already written from it.
+    """
+
+    workspace = models.ForeignKey(
+        Workspace, on_delete=models.CASCADE, related_name="page_templates"
+    )
+    name = models.CharField(max_length=150)
+    description = models.CharField(max_length=300, blank=True)
+    content_md = models.TextField(blank=True)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True,
+        related_name="page_templates",
+    )
+
+    class Meta:
+        ordering = ["name"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["workspace", "name"], name="unique_template_name_per_workspace"
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.workspace.slug}/{self.name}"
+
+
 class Attachment(UUIDModel, TimeStampedModel):
     """A file (image or document) uploaded into a workspace and embedded in a
     page via Markdown. Served by an unguessable-UUID capability URL so plain

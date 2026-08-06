@@ -1,22 +1,22 @@
 import { useCallback, useState } from "react";
-import { Icon } from "./Icon";
+import { Icon, type IconName } from "./Icon";
 
 interface Toast {
   id: number;
   text: string;
-  icon?: string;
+  icon?: IconName;
 }
 
-let _push: ((text: string, icon?: string) => void) | null = null;
+let _push: ((text: string, icon?: IconName) => void) | null = null;
 
-export function pushGlobalToast(text: string, icon?: string) {
+export function pushGlobalToast(text: string, icon?: IconName) {
   _push?.(text, icon);
 }
 
 export function ToastContainer() {
   const [toasts, setToasts] = useState<Toast[]>([]);
 
-  const push = useCallback((text: string, icon?: string) => {
+  const push = useCallback((text: string, icon?: IconName) => {
     const id = Date.now() + Math.floor(performance.now());
     setToasts((t) => [...t, { id, text, icon }]);
     setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 5000);

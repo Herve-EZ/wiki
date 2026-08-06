@@ -24,7 +24,7 @@ Trois axes directeurs :
 timeline
     title Trajectoire WikiCollab
     v0.8 (livré) : Éditeur riche + tableaux : Mermaid + sommaire : Images & pièces jointes : Arborescence + corbeille : Commentaires + notifications
-    v0.9 : Étiquettes & favoris (F9) : Modèles de page (F10) : Partage par lien public (F13)
+    v0.9 : Modèles de page (F10, livré) : Transclusion de blocs (livré) : Refonte visuelle (livré) : Étiquettes & favoris (F9) : Partage par lien public (F13)
     v0.10 : Recherche globale (F12) : API perso & webhooks (F14)
     v1.0 : Coédition temps réel CRDT (F6) : Stabilisation & perf
 ```
@@ -40,14 +40,23 @@ Mermaid, sommaire automatique, listes de tâches, images & pièces jointes (uplo
 différé hors-ligne), arborescence de pages, corbeille, commentaires en ligne avec
 notifications.
 
-### 🎯 v0.9 — Organisation & partage
+### 🎯 v0.9 — Organisation & partage (en cours)
 
 Rendre les grands espaces navigables et ouvrir la lecture vers l'extérieur.
+
+Déjà livré dans cette version :
+
+| Réf | Fonctionnalité | État |
+|---|---|---|
+| [F10](f10-modeles-de-page.md) | Modèles de page (4 modèles intégrés + modèles d'espace) | ✅ livré |
+| [F16](f16-transclusion.md) | Transclusion de blocs (`![[page#section]]`) | ✅ livré |
+| — | Refonte visuelle du design system + icônes lucide | ✅ livré |
+
+Reste à faire :
 
 | Réf | Fonctionnalité | Effort | Dépend de |
 |---|---|---|---|
 | [F9](f09-etiquettes-et-favoris.md) | Étiquettes (tags) & favoris/épingles | M | — |
-| [F10](f10-modeles-de-page.md) | Modèles de page (templates) | M | éditeur v0.8 |
 | [F13](f13-partage-public.md) | Partage par lien public (lecture seule) | M | statut « Publié », rendu Markdown |
 
 **Objectif de version** : classer, retrouver vite, et partager une page publiée
@@ -90,7 +99,7 @@ quadrantChart
     quadrant-3 À planifier
     quadrant-4 À questionner
     Étiquettes/favoris: [0.35, 0.7]
-    Modèles de page: [0.4, 0.6]
+    Transclusion de blocs: [0.3, 0.68]
     Partage public: [0.45, 0.72]
     Recherche globale: [0.5, 0.75]
     API & webhooks: [0.55, 0.55]

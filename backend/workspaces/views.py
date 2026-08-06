@@ -177,6 +177,28 @@ class WorkspaceViewSet(viewsets.ModelViewSet):
         qs = workspace.pages.filter(deleted_at__isnull=True).order_by("title")
         return Response(PageListSerializer(qs, many=True).data)
 
+    @action(detail=True, methods=["get", "post"])
+    def templates(self, request, slug=None):
+        """Page templates of this workspace.
+
+        Members read them (they need one to start a page); only the owner creates.
+        """
+        from pages.serializers import PageTemplateSerializer
+
+        workspace = self.get_object()
+        if request.method == "GET":
+            qs = workspace.page_templates.select_related("created_by")
+            return Response(PageTemplateSerializer(qs, many=True).data)
+
+        if not is_owner(request.user, workspace):
+            raise PermissionDenied("Only the workspace owner can manage templates.")
+        s = PageTemplateSerializer(
+            data=request.data, context={"workspace": workspace}
+        )
+        s.is_valid(raise_exception=True)
+        s.save(workspace=workspace, created_by=request.user)
+        return Response(s.data, status=status.HTTP_201_CREATED)
+
     @action(detail=True, methods=["get"])
     def trash(self, request, slug=None):
         """Soft-deleted pages, most-recently-trashed first (owner-only)."""

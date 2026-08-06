@@ -1,10 +1,10 @@
 from django.db.models import Q
 from django.http import FileResponse, Http404
 from django.utils import timezone
-from rest_framework import status, viewsets
+from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import SAFE_METHODS, AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -12,12 +12,13 @@ from workspaces.models import Workspace
 from workspaces.permissions import WorkspaceAccess, can_read, can_write, is_owner
 
 from . import services
-from .models import Attachment, Comment, Page, PageVersion
+from .models import Attachment, Comment, Page, PageTemplate, PageVersion
 from .search import search_pages_with_snippets
 from .serializers import (
     CommentSerializer,
     PageListSerializer,
     PageSerializer,
+    PageTemplateSerializer,
     PageVersionDetailSerializer,
     PageVersionSerializer,
 )
@@ -177,6 +178,36 @@ class PageViewSet(viewsets.ModelViewSet):
             links_out__to_page=page, deleted_at__isnull=True
         ).select_related("workspace")
         return Response(PageListSerializer(pages, many=True).data)
+
+
+class PageTemplateViewSet(
+    mixins.RetrieveModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.DestroyModelMixin,
+    viewsets.GenericViewSet,
+):
+    """Detail routes for a page template. Listing and creation are workspace-scoped
+    and live on WorkspaceViewSet (`/api/workspaces/{slug}/templates/`).
+
+    Any member may read a template (they need it to start a page from it); only
+    the owner may change or delete one.
+    """
+
+    serializer_class = PageTemplateSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return PageTemplate.objects.filter(
+            workspace__in=_accessible_workspaces(self.request.user)
+        ).select_related("workspace", "created_by")
+
+    def get_object(self):
+        template = super().get_object()
+        if self.request.method not in SAFE_METHODS and not is_owner(
+            self.request.user, template.workspace
+        ):
+            raise PermissionDenied("Only the workspace owner can manage templates.")
+        return template
 
 
 class CommentViewSet(viewsets.ModelViewSet):

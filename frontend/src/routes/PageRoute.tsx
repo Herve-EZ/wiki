@@ -10,6 +10,7 @@ import { joinSections, splitSections } from "../lib/sections";
 import { useAuth } from "../auth/AuthContext";
 import { useNetworkStatus } from "../hooks/useNetworkStatus";
 import { usePageSocket } from "../hooks/usePageSocket";
+import { useTransclusions } from "../hooks/useTransclusions";
 import { TopBar } from "../components/TopBar";
 import { PresenceBar } from "../components/PresenceBar";
 import { SectionBlock } from "../components/editor/SectionBlock";
@@ -177,6 +178,9 @@ export function PageRoute() {
   });
 
   const sections = useMemo(() => splitSections(content), [content]);
+  // `![[Page#section]]` includes are resolved once for the whole page, then read
+  // by each section's renderer.
+  const transclusions = useTransclusions(content, pageIndex, pageId);
   const myId = user?.id ?? "";
   const canEdit = ctx.canWrite && !!page; // server enforces; UI gates by role
 
@@ -282,6 +286,7 @@ export function PageRoute() {
             isOwner={ctx.isOwner}
             online={online}
             pages={ctx.pages}
+            transclusions={transclusions}
             onChangeStatus={(status) => saveM.mutate({ ...page, status })}
             onMove={(parentId) => moveM.mutate(parentId)}
             onDelete={() => deleteM.mutate()}
@@ -314,6 +319,7 @@ export function PageRoute() {
                 workspaceSlug={ctx.current?.slug}
                 searchQuery={searchQuery}
                 members={members}
+                transclusions={transclusions}
                 onStartEdit={() => startEdit(s.id, s.text)}
                 onChangeDraft={setDraft}
                 onSaveEdit={() => saveEdit(s.id)}

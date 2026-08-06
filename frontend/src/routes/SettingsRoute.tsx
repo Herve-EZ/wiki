@@ -7,7 +7,7 @@ import { useAuth } from "../auth/AuthContext";
 import { useSync } from "../hooks/useSync";
 import { useForcedOffline } from "../hooks/useForcedOffline";
 import { Avatar } from "../components/Avatar";
-import { Icon } from "../components/Icon";
+import { Icon, type IconName } from "../components/Icon";
 import type { Role } from "../lib/types";
 
 const ROLE_LABEL: Record<Role, string> = {
@@ -18,7 +18,7 @@ const ROLE_LABEL: Record<Role, string> = {
 
 type Tab = "profile" | "security" | "notifications" | "sync" | "invitations";
 
-const NAV: { id: Tab; label: string; icon: string }[] = [
+const NAV: { id: Tab; label: string; icon: IconName }[] = [
   { id: "profile", label: "Profil", icon: "user" },
   { id: "security", label: "Sécurité & 2FA", icon: "shield" },
   { id: "notifications", label: "Notifications", icon: "bell" },
@@ -85,7 +85,7 @@ export function SettingsRoute() {
   );
 }
 
-function Panel({ title, subtitle, icon, children }: { title: string; subtitle?: string; icon: string; children: React.ReactNode }) {
+function Panel({ title, subtitle, icon, children }: { title: string; subtitle?: string; icon: IconName; children: React.ReactNode }) {
   return (
     <section className="panel-card">
       <div className="panel-title">

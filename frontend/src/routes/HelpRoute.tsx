@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
-import { Icon } from "../components/Icon";
+import { Icon, type IconName } from "../components/Icon";
 
-const TOC: { id: string; label: string; icon: string }[] = [
+const TOC: { id: string; label: string; icon: IconName }[] = [
   { id: "start", label: "Premiers pas", icon: "book" },
   { id: "roles", label: "Rôles & permissions", icon: "users" },
   { id: "invite", label: "Inviter", icon: "mail" },
@@ -16,7 +16,7 @@ function scrollTo(id: string) {
   document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
-function Topic({ id, icon, title, children }: { id: string; icon: string; title: string; children: React.ReactNode }) {
+function Topic({ id, icon, title, children }: { id: string; icon: IconName; title: string; children: React.ReactNode }) {
   return (
     <section id={id} className="panel-card help-topic">
       <div className="panel-title">

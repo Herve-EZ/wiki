@@ -4,10 +4,10 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../lib/api";
 import { notify as osNotify } from "../lib/native";
 import { pushGlobalToast } from "./ToastContainer";
-import { Icon } from "./Icon";
+import { Icon, type IconName } from "./Icon";
 import type { AppNotification } from "../lib/types";
 
-const TYPE_ICONS: Record<string, string> = {
+const TYPE_ICONS: Record<string, IconName> = {
   invitation: "mail",
   mention: "at",
   page_updated: "file",

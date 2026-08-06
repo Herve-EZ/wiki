@@ -55,6 +55,15 @@ sauvegarder, versionner ailleurs ou réimporter.
 
 ---
 
+## Contenu inclus depuis d'autres pages
+
+Quel que soit le format, les
+[inclusions de blocs](04-rediger-des-pages.md#inclure-une-section-dune-autre-page-transclusion)
+(`![[page#section]]`) sont **remplacées par leur contenu** : le fichier produit est
+autonome et lisible en dehors du wiki.
+
+---
+
 ## Où le fichier est-il enregistré ?
 
 - **Application de bureau** : une **boîte de dialogue « Enregistrer »** native vous

@@ -24,7 +24,8 @@ Voir [`PLAN_TECHNIQUE.md`](./PLAN_TECHNIQUE.md) pour le plan d'implémentation c
   invitations (`POST /workspaces/{slug}/members`), seuls les owners modifient le workspace
 - **Pages** (Phase 2) : CRUD, **versioning immuable** (`PageVersion` à chaque save),
   **diff** ligne à ligne (difflib), **restore**, **backlinks**, détection de liens
-  (`[[wikilinks]]` + mentions de titres), **recherche full-text** PostgreSQL
+  (`[[wikilinks]]` + mentions de titres), **recherche full-text** PostgreSQL,
+  **modèles de page** (`PageTemplate` par workspace ; lecture membres, écriture owner)
 - **Temps réel** (Phases 3–4) : présence (join/leave/sync + heartbeat 30 s),
   **verrous de section** (TTL 5 min, refus si pris, libérés à la déconnexion),
   `notify.update` vers les pages liées — persistance **avant** diffusion

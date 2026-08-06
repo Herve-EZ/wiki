@@ -11,6 +11,8 @@ export interface Section {
 }
 
 const HEADING = /^(#{1,3})\s+(.*)$/;
+/** Opening/closing line of a fenced code block (``` or ~~~, 3+ markers). */
+const FENCE = /^\s{0,3}(`{3,}|~{3,})/;
 
 function slugify(text: string): string {
   return text
@@ -26,8 +28,20 @@ export function splitSections(md: string): Section[] {
   const raw: { headingText: string; level: number; lines: string[] }[] = [];
   let current: { headingText: string; level: number; lines: string[] } | null = null;
 
+  // Marker of the fence we are inside, or null. A `#` line inside a code block
+  // is a shell comment, not a heading — splitting there would invent a phantom
+  // section (and a phantom TOC entry, lock target and include anchor).
+  let fence: string | null = null;
+
   for (const line of lines) {
-    const m = HEADING.exec(line);
+    const f = FENCE.exec(line);
+    if (f) {
+      if (fence == null) fence = f[1][0];
+      // A closing fence must use the same marker character as the opening one.
+      else if (f[1][0] === fence) fence = null;
+    }
+
+    const m = fence == null ? HEADING.exec(line) : null;
     if (m) {
       if (current) raw.push(current);
       current = { headingText: m[2].trim(), level: m[1].length, lines: [line] };

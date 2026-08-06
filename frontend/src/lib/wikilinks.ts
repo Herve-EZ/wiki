@@ -11,7 +11,9 @@ export interface PageRef {
   slug: string;
 }
 
-const WIKILINK_RE = /\[\[([^[\]|]+)(?:\|([^[\]]*))?\]\]/g;
+// The leading `(?<!!)` leaves `![[…]]` alone: that is a block transclusion
+// (lib/transclude.ts), handled by the renderer rather than turned into a link.
+const WIKILINK_RE = /(?<!!)\[\[([^[\]|]+)(?:\|([^[\]]*))?\]\]/g;
 
 export function buildPageIndex(pages: PageRef[]): Map<string, PageRef> {
   const index = new Map<string, PageRef>();

@@ -1,6 +1,8 @@
 # F10 — Modèles de page (templates)
 
-[← Roadmap](ROADMAP.md) · **Cible : v0.9** · **Effort : M**
+[← Roadmap](ROADMAP.md) · **Livré en v0.9** · **Effort : M**
+
+> ✅ Implémenté. Voir le [guide utilisateur](../04-rediger-des-pages.md#modèles-de-page).
 
 ---
 
@@ -54,13 +56,21 @@ structure Markdown réutilisable (titres, sections, tableaux, checklists).
 ## Dépendances
 Éditeur v0.8 (`MarkdownEditor`) pour l'édition des modèles. Onglets `WorkspaceSettingsModal` (existants).
 
-## Risques & décisions ouvertes
-- **Variables** : périmètre (juste date/auteur/titre) ou moteur plus riche ? Proposé : minimal.
-- Modèles **globaux** (instance) en plus des modèles d'espace ? Hors périmètre v0.9.
+## Décisions prises à l'implémentation
+- **Variables** : périmètre minimal retenu (`{{titre}}`, `{{date}}`, `{{auteur}}`),
+  substituées côté client à l'instanciation. Le modèle stocké garde ses variables.
+- **Modèles intégrés** : en plus des modèles d'espace, quatre modèles sont livrés
+  en dur côté front (`lib/templates.ts`) — runbook, ADR, post-mortem, onboarding.
+  Ils sont disponibles dans tous les espaces sans configuration, y compris
+  hors-ligne (les modèles d'espace, eux, nécessitent le réseau).
+- **Édition du contenu** : `<textarea>` monospace dans l'onglet Réglages plutôt que
+  `MarkdownEditor` — un modèle contient des variables et des structures vides, la
+  barre d'outils et le menu `/` n'y apportent rien.
+- Modèles **globaux** (instance) : hors périmètre, toujours.
 
 ## Critères d'acceptation
-- [ ] Le propriétaire crée un modèle avec du contenu Markdown.
-- [ ] Créer une page « depuis un modèle » pré-remplit le contenu.
-- [ ] Les variables `{{date}}`/`{{titre}}`/`{{auteur}}` (si retenues) sont substituées.
-- [ ] Écriture des modèles réservée au propriétaire (vérifié serveur).
-- [ ] Tests backend : CRUD + permissions.
+- [x] Le propriétaire crée un modèle avec du contenu Markdown.
+- [x] Créer une page « depuis un modèle » pré-remplit le contenu.
+- [x] Les variables `{{date}}`/`{{titre}}`/`{{auteur}}` sont substituées.
+- [x] Écriture des modèles réservée au propriétaire (vérifié serveur).
+- [x] Tests backend : CRUD + permissions (`pages/tests.py`, 7 tests).

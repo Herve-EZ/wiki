@@ -21,17 +21,22 @@
   --surface-2: #f2f1f7;
   --border: #e6e4ee;
   --border-soft: #eeedf4;
-  --ink: #1b1830;
-  --ink-2: #5d5972;
-  --ink-3: #8b87a0;
+  --ink: #16132a;
+  --ink-2: #55506b;
+  --ink-3: #86829c;
   --on-accent: #ffffff;
+  --shadow-sm: 0 1px 2px rgba(27, 24, 48, 0.06);
   --shadow: 0 1px 2px rgba(27, 24, 48, 0.05), 0 8px 28px rgba(27, 24, 48, 0.07);
+  --shadow-lg: 0 2px 4px rgba(27, 24, 48, 0.06), 0 18px 48px rgba(27, 24, 48, 0.13);
+  /* Focus ring — drawn as a halo so it never shifts layout. */
+  --ring: 0 0 0 3px rgba(83, 74, 183, 0.28);
 
   --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: ui-monospace, "Cascadia Code", "Segoe UI Mono", Consolas, monospace;
-  --r-sm: 6px;
-  --r-md: 8px;
-  --r-lg: 12px;
+  --r-sm: 7px;
+  --r-md: 10px;
+  --r-lg: 14px;
+  --r-pill: 999px;
   color-scheme: light dark;
 }
 
@@ -56,10 +61,13 @@
     --border: #2e2a4a;
     --border-soft: #262242;
     --ink: #eceaf6;
-    --ink-2: #a9a5c0;
-    --ink-3: #757190;
+    --ink-2: #b0abc6;
+    --ink-3: #7b779a;
     --on-accent: #121020;
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
     --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 10px 32px rgba(0, 0, 0, 0.45);
+    --shadow-lg: 0 2px 6px rgba(0, 0, 0, 0.5), 0 22px 56px rgba(0, 0, 0, 0.55);
+    --ring: 0 0 0 3px rgba(139, 132, 232, 0.36);
   }
 }
 
@@ -83,10 +91,13 @@
   --border: #2e2a4a;
   --border-soft: #262242;
   --ink: #eceaf6;
-  --ink-2: #a9a5c0;
-  --ink-3: #757190;
+  --ink-2: #b0abc6;
+  --ink-3: #7b779a;
   --on-accent: #121020;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
   --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 10px 32px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 2px 6px rgba(0, 0, 0, 0.5), 0 22px 56px rgba(0, 0, 0, 0.55);
+  --ring: 0 0 0 3px rgba(139, 132, 232, 0.36);
 }
 
 :root[data-theme="light"] {
@@ -108,11 +119,14 @@
   --surface-2: #f2f1f7;
   --border: #e6e4ee;
   --border-soft: #eeedf4;
-  --ink: #1b1830;
-  --ink-2: #5d5972;
-  --ink-3: #8b87a0;
+  --ink: #16132a;
+  --ink-2: #55506b;
+  --ink-3: #86829c;
   --on-accent: #ffffff;
+  --shadow-sm: 0 1px 2px rgba(27, 24, 48, 0.06);
   --shadow: 0 1px 2px rgba(27, 24, 48, 0.05), 0 8px 28px rgba(27, 24, 48, 0.07);
+  --shadow-lg: 0 2px 4px rgba(27, 24, 48, 0.06), 0 18px 48px rgba(27, 24, 48, 0.13);
+  --ring: 0 0 0 3px rgba(83, 74, 183, 0.28);
 }
 
 /* ============================ Base ============================ */
@@ -135,13 +149,45 @@ body {
 button {
   font-family: inherit;
 }
+/* Every icon is a lucide glyph (components/Icon.tsx); the design system owns
+   its weight and colour so a 12px icon reads as well as a 20px one. */
 svg.ic {
   stroke: currentColor;
-  stroke-width: 1.6;
+  stroke-width: 1.75;
   fill: none;
   stroke-linecap: round;
   stroke-linejoin: round;
   flex: none;
+}
+
+/* Keyboard focus is visible everywhere, and only for keyboard users. Drawn as a
+   halo (box-shadow) so nothing reflows when it appears. */
+:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+}
+::selection {
+  background: var(--accent-wash);
+  color: var(--accent-on-wash);
+}
+/* Discreet scrollbars that pick up the theme instead of the OS default. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border: 3px solid transparent;
+  background-clip: content-box;
+  border-radius: var(--r-pill);
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--ink-3);
+  background-clip: content-box;
 }
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -160,10 +206,16 @@ svg.ic {
   font-size: 12.5px;
   font-weight: 600;
   border-radius: var(--r-sm);
-  padding: 6px 12px;
+  padding: 6.5px 13px;
   border: 1px solid transparent;
   cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+  white-space: nowrap;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease,
+    box-shadow 0.15s ease, transform 0.08s ease;
+}
+/* Press feedback: a 1px dip reads as "the click landed". */
+.btn:active:not(:disabled) {
+  transform: translateY(1px);
 }
 .btn:disabled {
   opacity: 0.5;
@@ -172,23 +224,29 @@ svg.ic {
 .btn-primary {
   background: var(--accent);
   color: var(--on-accent);
+  box-shadow: var(--shadow-sm);
 }
 .btn-primary:hover:not(:disabled) {
   background: var(--accent-strong);
 }
 .btn-ghost {
-  background: transparent;
+  background: var(--surface);
   color: var(--ink-2);
   border-color: var(--border);
 }
 .btn-ghost:hover:not(:disabled) {
   background: var(--surface-2);
+  border-color: var(--ink-3);
   color: var(--ink);
 }
 .btn-danger {
-  background: transparent;
+  background: var(--surface);
   color: var(--danger);
   border-color: var(--border);
+}
+.btn-danger:hover:not(:disabled) {
+  background: var(--diff-del-wash);
+  border-color: var(--danger);
 }
 .btn-block {
   width: 100%;
@@ -207,10 +265,15 @@ svg.ic {
   background: transparent;
   color: var(--ink-2);
   cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
 }
-.icon-btn:hover {
+.icon-btn:hover:not(:disabled) {
   background: var(--surface-2);
   color: var(--ink);
+}
+.icon-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
 }
 
 /* ============================ App shell ============================ */
@@ -709,48 +772,116 @@ svg.ic {
 .ed-title:focus {
   outline: none;
 }
+/* ---- Reading mode ----
+   Long-form defaults: a slightly larger base, generous leading, and a heading
+   scale where each level is clearly a step down from the last. */
 .md-body {
-  font-size: 13.5px;
-  line-height: 1.7;
+  font-size: 14.5px;
+  line-height: 1.72;
   color: var(--ink-2);
+  overflow-wrap: break-word;
 }
 .md-body h1,
 .md-body h2,
-.md-body h3 {
+.md-body h3,
+.md-body h4 {
   color: var(--ink);
+  letter-spacing: -0.011em;
+  /* Keeps a heading from being left stranded at the bottom of the viewport. */
+  scroll-margin-top: 16px;
+}
+.md-body h1 {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 26px 0 10px;
 }
 .md-body h2 {
-  font-size: 17px;
+  font-size: 18px;
   font-weight: 650;
-  margin: 20px 0 8px;
+  margin: 26px 0 9px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid var(--border-soft);
 }
 .md-body h3 {
-  font-size: 15px;
+  font-size: 15.5px;
+  font-weight: 650;
+  margin: 20px 0 7px;
+}
+.md-body h4 {
+  font-size: 14px;
   font-weight: 650;
   margin: 16px 0 6px;
 }
+/* No leading gap when a heading opens a section block. */
+.md-body > :first-child {
+  margin-top: 0;
+}
 .md-body p {
-  margin: 0 0 10px;
+  margin: 0 0 11px;
+}
+.md-body strong {
+  color: var(--ink);
+  font-weight: 650;
 }
 .md-body code {
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 0.875em;
   background: var(--surface-2);
-  border-radius: 4px;
+  border: 1px solid var(--border-soft);
+  border-radius: 5px;
   padding: 1px 5px;
+  color: var(--ink);
 }
 .md-body pre {
   background: var(--surface-2);
+  border: 1px solid var(--border-soft);
   border-radius: var(--r-md);
-  padding: 12px;
+  padding: 13px 14px;
+  margin: 0 0 12px;
   overflow-x: auto;
+  font-size: 12.5px;
+  line-height: 1.6;
+}
+/* Inside a block, the frame is the code — drop the inline chip treatment. */
+.md-body pre code {
+  background: none;
+  border: 0;
+  padding: 0;
+  font-size: inherit;
 }
 .md-body ul,
 .md-body ol {
   padding-left: 22px;
+  margin: 0 0 11px;
+}
+.md-body li + li {
+  margin-top: 3px;
+}
+.md-body li > ul,
+.md-body li > ol {
+  margin: 3px 0 0;
+}
+.md-body blockquote {
+  margin: 0 0 12px;
+  padding: 2px 0 2px 14px;
+  border-left: 3px solid var(--border);
+  color: var(--ink-3);
+}
+.md-body blockquote > :last-child {
+  margin-bottom: 0;
+}
+.md-body hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 22px 0;
 }
 .md-body a {
   color: var(--accent-on-wash);
+  text-decoration-color: color-mix(in srgb, var(--accent) 45%, transparent);
+  text-underline-offset: 2px;
+}
+.md-body a:hover {
+  text-decoration-color: currentColor;
 }
 
 .section {
@@ -1014,6 +1145,9 @@ svg.ic {
 .md-table-wrap {
   overflow-x: auto;
   margin: 0 0 12px;
+  /* The rounded frame lives on the wrapper so the scroll edge stays clean. */
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
 }
 .md-body table {
   border-collapse: collapse;
@@ -1023,13 +1157,27 @@ svg.ic {
 .md-body th,
 .md-body td {
   border: 1px solid var(--border);
-  padding: 6px 10px;
+  padding: 7px 11px;
   text-align: left;
+}
+/* Outer edges come from the wrapper — avoids a doubled 2px border. */
+.md-body tr > *:first-child {
+  border-left: 0;
+}
+.md-body tr > *:last-child {
+  border-right: 0;
+}
+.md-body thead tr:first-child > * {
+  border-top: 0;
+}
+.md-body tbody tr:last-child > * {
+  border-bottom: 0;
 }
 .md-body th {
   background: var(--surface-2);
   font-weight: 650;
   color: var(--ink);
+  white-space: nowrap;
 }
 .md-body tbody tr:nth-child(even) {
   background: var(--border-soft);
@@ -1044,8 +1192,9 @@ svg.ic {
 }
 .md-body pre.mermaid {
   background: var(--surface-2);
+  border: 1px solid var(--border-soft);
   border-radius: var(--r-md);
-  padding: 12px;
+  padding: 16px 12px;
   margin: 0 0 12px;
   text-align: center;
   overflow-x: auto;
@@ -1061,6 +1210,63 @@ svg.ic {
   max-width: 100%;
   height: auto;
   border-radius: var(--r-sm);
+}
+
+/* ---- Block includes (`![[Page#section]]`) ---- */
+.transclusion {
+  position: relative;
+  margin: 0 0 14px;
+  padding: 10px 14px 2px;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+}
+.transclusion-src {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 8px;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--accent-on-wash);
+  text-decoration: none;
+  border-bottom: 0;
+}
+/* Little "included from" glyph, so the frame reads as a quote of another page. */
+.transclusion-src::before {
+  content: "↳";
+  opacity: 0.7;
+}
+a.transclusion-src:hover {
+  text-decoration: underline;
+}
+.transclusion-body > *:last-child {
+  margin-bottom: 10px;
+}
+/* Included headings shouldn't compete with the host page's own hierarchy. */
+.transclusion-body h1,
+.transclusion-body h2,
+.transclusion-body h3 {
+  font-size: 15px;
+  margin-top: 0;
+}
+.transclusion-note {
+  margin: 0 0 10px;
+  font-size: 12.5px;
+  color: var(--ink-3);
+}
+.transclusion-error {
+  border-left-color: var(--danger);
+  background: var(--diff-del-wash);
+}
+.transclusion-error .transclusion-src {
+  color: var(--danger);
+}
+.transclusion-loading,
+.transclusion-nested {
+  border-left-color: var(--border);
 }
 .md-upload-status {
   display: flex;
@@ -1490,7 +1696,7 @@ svg.ic {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--r-lg);
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow-lg);
   padding: 28px;
   width: 100%;
   max-width: 400px;
@@ -1526,11 +1732,25 @@ svg.ic {
   border: 1px solid var(--border);
   border-radius: var(--r-sm);
   padding: 8px 11px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
+.input:hover:not(:focus):not(:disabled) {
+  border-color: var(--ink-3);
+}
+/* `:focus`, not `:focus-visible` — a text field needs a visible caret target
+   even when it was reached with the mouse. */
 .input:focus {
-  outline: 2px solid var(--accent);
-  outline-offset: 1px;
-  border-color: transparent;
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: var(--ring);
+}
+.input::placeholder {
+  color: var(--ink-3);
+}
+.input:disabled {
+  background: var(--surface-2);
+  color: var(--ink-3);
+  cursor: default;
 }
 .div-or {
   display: flex;
@@ -1760,7 +1980,7 @@ mark.search-hit {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--r-lg);
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow-lg);
   overflow: hidden;
 }
 .modal-head {
@@ -1833,11 +2053,16 @@ mark.search-hit {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 9px 10px;
+  padding: 10px 11px;
   border: 1px solid var(--border);
   border-radius: var(--r-md);
   margin-bottom: 8px;
   background: var(--surface);
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.row-card:hover {
+  border-color: var(--ink-3);
+  background: var(--surface-2);
 }
 .row-title {
   font-size: 13px;
@@ -1863,8 +2088,13 @@ mark.search-hit {
   padding: 8px 12px;
   cursor: pointer;
 }
+.tab {
+  border-radius: var(--r-sm) var(--r-sm) 0 0;
+  transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+}
 .tab:hover {
   color: var(--ink);
+  background: var(--surface-2);
 }
 .tab.active {
   color: var(--accent-on-wash);
@@ -2333,8 +2563,9 @@ svg.ic.spin {
   color: var(--accent-on-wash);
 }
 
-/* Wiki links (internal page links) */
-.md-body a[href^="wiki:"] {
+/* Wiki links (internal page links). The `:not()` keeps a block include's
+   source header out of the inline chip treatment — it has its own style. */
+.md-body a[href^="wiki:"]:not(.transclusion-src) {
   color: var(--accent-on-wash);
   background: var(--accent-wash);
   border-radius: 4px;
@@ -2343,7 +2574,7 @@ svg.ic.spin {
   font-weight: 500;
   cursor: pointer;
 }
-.md-body a[href^="wiki:"]:hover {
+.md-body a[href^="wiki:"]:not(.transclusion-src):hover {
   background: var(--accent);
   color: var(--on-accent);
 }
@@ -2381,6 +2612,28 @@ svg.ic.spin {
   margin-top: 6px;
   max-height: 240px;
   overflow-y: auto;
+}
+/* Truncating label inside a picker row, so long page titles don't widen it. */
+.menu-item-label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* Second step of the include picker: which page we drilled into. */
+.picker-head {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border-soft);
+}
+.picker-head-title {
+  font-size: 12.5px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* Mention picker popover (editor) */
@@ -2454,6 +2707,31 @@ svg.ic.spin {
   border-radius: var(--r-md);
   font-size: 12.5px;
   font-weight: 600;
+}
+
+/* What the selected page template will produce (New page modal) */
+.template-hint {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  margin: -6px 0 12px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+.template-hint .ic {
+  margin-top: 2px;
+  color: var(--accent);
+}
+
+/* Markdown body of a template being edited (workspace settings) */
+.tpl-textarea {
+  min-height: 260px;
+  resize: vertical;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  line-height: 1.6;
+  tab-size: 2;
 }
 .status-select {
   width: auto;

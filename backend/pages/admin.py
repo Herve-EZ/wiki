@@ -1,7 +1,7 @@
 from django.contrib import admin
 from simple_history.admin import SimpleHistoryAdmin
 
-from .models import Page, PageLink, PageVersion
+from .models import Page, PageLink, PageTemplate, PageVersion
 
 
 @admin.register(Page)
@@ -20,3 +20,10 @@ class PageVersionAdmin(admin.ModelAdmin):
 @admin.register(PageLink)
 class PageLinkAdmin(admin.ModelAdmin):
     list_display = ("from_page", "to_page", "created_at")
+
+
+@admin.register(PageTemplate)
+class PageTemplateAdmin(SimpleHistoryAdmin):
+    list_display = ("name", "workspace", "created_by", "updated_at")
+    list_filter = ("workspace",)
+    search_fields = ("name", "description")

@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Attachment, Comment, Page, PageVersion
+from .models import Attachment, Comment, Page, PageTemplate, PageVersion
 
 
 class CommentSerializer(serializers.ModelSerializer):
@@ -29,6 +29,41 @@ class AttachmentSerializer(serializers.ModelSerializer):
 
     def get_url(self, obj) -> str:
         return f"/api/attachments/{obj.pk}/raw"
+
+
+class PageTemplateSerializer(serializers.ModelSerializer):
+    """Workspace-owned page skeleton. `workspace` is set from the URL, never the
+    body, so a template can't be filed into someone else's workspace."""
+
+    created_by_display = serializers.CharField(
+        source="created_by.display_name", read_only=True
+    )
+
+    class Meta:
+        model = PageTemplate
+        fields = [
+            "id", "workspace", "name", "description", "content_md",
+            "created_by", "created_by_display", "created_at", "updated_at",
+        ]
+        read_only_fields = ["id", "workspace", "created_by", "created_at", "updated_at"]
+
+    def validate_name(self, name):
+        name = name.strip()
+        if not name:
+            raise serializers.ValidationError("A template needs a name.")
+        # Unique per workspace — surface a clean 400 rather than an IntegrityError.
+        workspace = self.context.get("workspace") or getattr(
+            self.instance, "workspace", None
+        )
+        if workspace:
+            clash = PageTemplate.objects.filter(workspace=workspace, name__iexact=name)
+            if self.instance:
+                clash = clash.exclude(pk=self.instance.pk)
+            if clash.exists():
+                raise serializers.ValidationError(
+                    "A template with this name already exists in this workspace."
+                )
+        return name
 
 
 class PageListSerializer(serializers.ModelSerializer):

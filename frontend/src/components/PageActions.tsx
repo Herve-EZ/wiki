@@ -5,6 +5,7 @@ import { exportPdf } from "../lib/export/pdf";
 import { markdownToDocx } from "../lib/export/docx";
 import { exportMarkdown, saveBinaryFile } from "../lib/native";
 import { descendantIds } from "../lib/pageTree";
+import { expandTransclusions, type TranscludeMap } from "../lib/transclude";
 import type { Page, PageListItem, PageStatus } from "../lib/types";
 import { Icon } from "./Icon";
 
@@ -49,6 +50,8 @@ interface Props {
   isOwner: boolean;
   online: boolean;
   pages: PageListItem[];
+  /** Resolved `![[…]]` includes, expanded inline so exports stand alone. */
+  transclusions?: TranscludeMap;
   onChangeStatus: (status: PageStatus) => void;
   onMove: (parentId: string | null) => void;
   onDelete: () => void;
@@ -63,6 +66,7 @@ export function PageActions({
   isOwner,
   online,
   pages,
+  transclusions,
   onChangeStatus,
   onMove,
   onDelete,
@@ -78,6 +82,11 @@ export function PageActions({
   const moveTargets = pages.filter((p) => !blocked.has(p.id));
 
   const baseName = page.slug || "page";
+  // Exports carry the included content itself — a `![[…]]` reference would be
+  // meaningless in a PDF or a Word file.
+  const exportMd = transclusions
+    ? expandTransclusions(page.content_md, transclusions)
+    : page.content_md;
 
   // Native menu (desktop): Fichier → Exporter la page… opens the export menu.
   useEffect(() => {
@@ -88,12 +97,12 @@ export function PageActions({
 
   function doPdf() {
     setExportOpen(false);
-    exportPdf(page.title, page.content_md);
+    exportPdf(page.title, exportMd);
   }
   async function doDocx() {
     setExportOpen(false);
     try {
-      const data = await markdownToDocx(page.content_md);
+      const data = await markdownToDocx(exportMd);
       await saveBinaryFile(`${baseName}.docx`, data, [{ name: "Word", extensions: ["docx"] }]);
     } catch {
       pushToast("Échec de l'export Word.");
@@ -102,7 +111,7 @@ export function PageActions({
   async function doMd() {
     setExportOpen(false);
     try {
-      await exportMarkdown(`${baseName}.md`, page.content_md);
+      await exportMarkdown(`${baseName}.md`, exportMd);
     } catch {
       pushToast("Échec de l'export Markdown.");
     }
