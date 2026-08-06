@@ -55,6 +55,10 @@ Déjà livré dans cette version :
 | [F10](f10-modeles-de-page.md) | Modèles de page (4 modèles intégrés + modèles d'espace) | ✅ livré |
 | [F16](f16-transclusion.md) | Transclusion de blocs (`![[page#section]]`) | ✅ livré |
 | — | Refonte visuelle du design system + icônes lucide | ✅ livré |
+| — | **Refonte de la disposition** : barre haute unique, rail de contexte (sommaire collant), barre latérale repliable et redimensionnable, menu par ligne d'arborescence, points de rupture 1280/1024/700 | ✅ livré |
+| — | Typographie de lecture : corps en `--ink` à 16 px, mesure à 68 caractères, échelles de tokens (type, espacement, icônes) | ✅ livré |
+| — | **Mentions `@user` en surbrillance** dans le Markdown rendu, alignées sur la détection serveur | ✅ livré |
+| F17 | **Refonte du rendu Mermaid** (voir ci-dessous) | ⚠️ en partie |
 
 Reste à faire :
 
@@ -62,7 +66,7 @@ Reste à faire :
 |---|---|---|---|
 | [F9](f09-etiquettes-et-favoris.md) | Étiquettes (tags) & favoris/épingles | M | — |
 | [F13](f13-partage-public.md) | Partage par lien public (lecture seule) | M | statut « Publié », rendu Markdown |
-| F17 | **Refonte du rendu Mermaid** (voir ci-dessous) | M | `lib/markdown.ts`, `useMermaid` |
+| F17b | Mermaid : diagrammes dans l'export `.docx` (rastérisation SVG → PNG) | S | `lib/export/docx.ts`, `lib/mermaid.ts` |
 | F18 | Commentaires **ancrés sur un bloc** + mentions `@user` | L | commentaires & notifications existants |
 | F19 | **Mode suggestion** : proposer une modification validée par un owner | L | rôles/permissions existants, sections |
 | F20 | **Vue graphe** des liens entre pages (type Obsidian) | M | modèle `PageLink` existant |
@@ -73,29 +77,53 @@ une URL sans compte — et rendre la collaboration réellement conversationnelle
 
 #### F17 — Refonte du rendu Mermaid
 
-Le rendu actuel « passe » sur le cas nominal mais casse dès qu'on sort de la
-lecture d'une section. À corriger :
+Tout passe désormais par un module unique
+([lib/mermaid.ts](../../frontend/src/lib/mermaid.ts)) : source → SVG, avec cache
+et thème.
 
-- **Exports sans diagrammes** — l'export PDF passe par `renderMarkdown` ([pdf.ts:53](../../frontend/src/lib/export/pdf.ts#L53))
-  qui produit un `<pre class="mermaid">` jamais transformé ; le hook de rendu
-  n'est branché que sur [SectionBlock.tsx:78](../../frontend/src/components/editor/SectionBlock.tsx#L78).
-  Résultat : PDF et `.docx` sortent le code source du diagramme, pas l'image.
-  → extraire un rendu **SVG à la demande** réutilisable (export, partage public F13, aperçu).
-- **Partage public (F13)** — même cause : la page publique doit rendre les diagrammes.
-- **Changement de thème** — [useMermaid.ts:46](../../frontend/src/hooks/useMermaid.ts#L46) ne se
-  redéclenche que sur changement de `html`, donc un passage clair ↔ sombre laisse
-  un diagramme aux mauvaises couleurs jusqu'au prochain rendu.
-- **Erreurs de syntaxe** — l'échec est avalé ([useMermaid.ts:38-40](../../frontend/src/hooks/useMermaid.ts#L38-L40))
-  et laisse la boîte d'erreur brute de Mermaid : prévoir un **message clair + code
-  source replié**, sans casser la mise en page de la section.
-- **Confort de lecture** — diagrammes larges non scrollables, pas de zoom, pas de
-  copie/téléchargement du SVG, pas d'aperçu pendant l'édition.
-- **Coût de rendu** — re-rendu complet de tous les blocs à chaque sauvegarde de
-  section ; mémoriser par hash du source.
+**Cause racine du « ça ne passe pas » historique.** Le rendu se faisait dans un
+effet React qui cherchait les `<pre class="mermaid">` dans le DOM pour les
+remplacer — un effet **non idempotent**, qui consommait le nœud dont il avait
+besoin. L'application tourne en `StrictMode` ([main.tsx:11](../../frontend/src/main.tsx#L11)),
+qui exécute chaque effet deux fois en développement : la seconde passe ne
+trouvait plus rien et le diagramme restait à l'état de code source. L'impression
+fonctionnait parce que c'est un simple appel de fonction, sans effet.
+
+La correction ne rustine pas l'effet : elle le supprime. Les fences de premier
+niveau sont **découpées avant le rendu Markdown**
+([lib/mermaidBlocks.ts](../../frontend/src/lib/mermaidBlocks.ts)), donc un
+diagramme est un enfant React ordinaire — plus rien à chercher, plus rien à
+remplacer. Une fence imbriquée dans une liste reste dans son segment Markdown et
+s'affiche comme bloc de code : source visible plutôt que trou silencieux.
+
+Livré :
+
+- ✅ **Affichage dans le lecteur** — la cause racine ci-dessus est éliminée, pas
+  contournée.
+- ✅ **Export PDF** — les diagrammes sont rendus en SVG avant impression
+  (`inlineDiagrams`). Le PDF sortait jusqu'ici le code source du diagramme.
+- ✅ **Changement de thème** — redessin au basculement clair ↔ sombre, en
+  écoutant `data-theme` **et** la préférence système ([useIsDark](../../frontend/src/hooks/useIsDark.ts)).
+- ✅ **Erreurs de syntaxe** — message en français avec le numéro de ligne, et la
+  source repliée sous un `<details>`, au lieu de la boîte d'erreur brute de Mermaid.
+- ✅ **Confort de lecture** — cadre à défilement propre (plus de diagramme qui
+  déborde la colonne), zoom 50–300 %, téléchargement du SVG.
+- ✅ **Coût de rendu** — cache par source + thème : une sauvegarde de section ne
+  redessine plus tous les diagrammes de la page.
+
+Reste (suivi en **F17b**) :
+
+- **Export `.docx`** — Word n'accepte pas le SVG ; il faut rastériser en PNG
+  (`createImageBitmap` + canvas) puis l'injecter comme média, dans le parcours
+  d'images existant de [docx.ts](../../frontend/src/lib/export/docx.ts).
+- **Partage public** — la page publique de F13 devra appeler `inlineDiagrams`
+  côté client ; à faire avec F13, pas avant.
+- **Aperçu pendant l'édition** — le diagramme n'apparaît qu'à la sortie du mode
+  édition. À évaluer : l'intérêt réel dépend de l'usage.
 
 **Critère d'acceptation** : un même diagramme s'affiche correctement en lecture,
-en aperçu d'édition, sur la page publique, dans l'export PDF et dans le `.docx`,
-dans les deux thèmes, et une syntaxe invalide affiche un message actionnable.
+dans l'export PDF et (F17b) dans le `.docx`, dans les deux thèmes, et une syntaxe
+invalide affiche un message actionnable. Atteint sauf pour le `.docx`.
 
 ### 🎯 v0.9.1 — Intégration au workflow dev
 

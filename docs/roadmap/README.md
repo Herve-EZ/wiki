@@ -17,7 +17,7 @@ dépendances, risques et **critères d'acceptation**.
 |---|---|---|---|
 | F9 | [Étiquettes & favoris](f09-etiquettes-et-favoris.md) | v0.9 | M |
 | F13 | [Partage par lien public](f13-partage-public.md) | v0.9 | M |
-| F17 | Refonte du rendu Mermaid *(spec à rédiger — détail dans la [roadmap](ROADMAP.md))* | v0.9 | M |
+| F17b | Mermaid dans l'export `.docx` — reste de [F17](ROADMAP.md), livré pour la lecture et le PDF | v0.9 | S |
 | F18 | Commentaires ancrés sur blocs + mentions `@user` *(spec à rédiger)* | v0.9 | L |
 | F19 | Mode suggestion validé par un owner *(spec à rédiger)* | v0.9 | L |
 | F20 | Vue graphe des liens *(spec à rédiger)* | v0.9 | M |
@@ -46,6 +46,8 @@ dépendances, risques et **critères d'acceptation**.
 | F10 | [Modèles de page](f10-modeles-de-page.md) — 4 modèles intégrés (runbook, ADR, post-mortem, onboarding) + modèles gérés par l'espace |
 | F16 | [Transclusion de blocs](f16-transclusion.md) — `![[page#section]]` pour inclure une section sans la dupliquer |
 | — | Refonte visuelle du design system (tokens, focus, typographie de lecture) et passage des icônes à **lucide-react** |
+| — | **Refonte de la disposition** : barre haute unique, rail de contexte, barre latérale repliable, points de rupture — voir le détail dans la [roadmap](ROADMAP.md) |
+| F17 | **Rendu Mermaid** refondu (module unique, thème, erreurs lisibles, zoom, export PDF) — reste le `.docx` en F17b |
 
 ### Déjà livré (v0.8)
 

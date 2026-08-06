@@ -63,6 +63,8 @@ import {
   WifiOff,
   Workflow,
   X,
+  ZoomIn,
+  ZoomOut,
   type LucideIcon,
 } from "lucide-react";
 
@@ -139,6 +141,8 @@ const ICONS = {
   wifi: Wifi,
   wifiOff: WifiOff,
   x: X,
+  zoomIn: ZoomIn,
+  zoomOut: ZoomOut,
 } satisfies Record<string, LucideIcon>;
 
 export type IconName = keyof typeof ICONS;

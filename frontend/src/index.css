@@ -789,6 +789,10 @@ body.is-resizing {
   flex: none;
   margin-right: -4px;
 }
+.sb-row-menu {
+  position: relative;
+  flex: none;
+}
 .sb-row-add {
   flex: none;
   opacity: 0;
@@ -798,8 +802,25 @@ body.is-resizing {
    reveal the action too, and touch devices get it permanently. */
 .sb-tree-row:hover .sb-row-add,
 .sb-tree-row:focus-within .sb-row-add,
-.sb-tree-row.current .sb-row-add {
+.sb-tree-row.current .sb-row-add,
+.sb-row-add[aria-expanded="true"] {
   opacity: 1;
+}
+/* Renaming in place: the row's link is swapped for this input. */
+.sb-rename {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--accent);
+  border-radius: var(--r-sm);
+  padding: 6px 9px;
+}
+.sb-rename:focus {
+  outline: none;
+  box-shadow: var(--ring);
 }
 @media (hover: none) {
   .sb-row-add {
@@ -1231,8 +1252,14 @@ body.is-resizing {
   font-weight: 650;
   margin: var(--sp-4) 0 var(--sp-1);
 }
+/* Segments (Markdown between diagrams) take part in the body's own layout
+   rather than forming boxes of their own — see lib/mermaidBlocks.ts. */
+.md-seg {
+  display: contents;
+}
 /* No leading gap when a heading opens a section block. */
-.md-body > :first-child {
+.md-body > :first-child,
+.md-body > .md-seg:first-child > :first-child {
   margin-top: 0;
 }
 .md-body p {
@@ -1609,21 +1636,136 @@ body.is-resizing {
   margin-right: 6px;
   vertical-align: middle;
 }
+/* ---- Mermaid diagrams ----
+   Top-level fences are split out and rendered as `<MermaidFigure>`. This style
+   is the fallback for the cases that stay in the Markdown: a fence nested in a
+   list item, and exports that didn't go through `inlineDiagrams`. Showing the
+   source is deliberate — better a visible block than a silent hole. */
 .md-body pre.mermaid {
   background: var(--surface-2);
   border: 1px solid var(--border-soft);
   border-radius: var(--r-md);
   padding: 16px 12px;
-  margin: 0 0 12px;
+  margin: 0 0 var(--sp-3);
   text-align: center;
   overflow-x: auto;
   color: var(--ink-3);
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: var(--t-xs);
 }
-.md-body pre.mermaid svg {
+.mmd-mount {
+  margin: 0 0 var(--sp-3);
+}
+.mmd {
+  position: relative;
+  margin: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  overflow: hidden;
+}
+/* A wide graph scrolls inside its own frame instead of stretching the column. */
+.mmd-scroll {
+  overflow: auto;
+  max-height: 70vh;
+  padding: var(--sp-4);
+  display: flex;
+  justify-content: center;
+}
+.mmd-canvas svg {
   max-width: 100%;
   height: auto;
+  display: block;
+}
+.mmd-tools {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 2px;
+  padding: 4px 6px;
+  border-top: 1px solid var(--border-soft);
+  background: var(--surface);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+/* Discreet until you engage with the diagram, but never hover-only. */
+.mmd:hover .mmd-tools,
+.mmd:focus-within .mmd-tools {
+  opacity: 1;
+}
+@media (hover: none) {
+  .mmd-tools {
+    opacity: 1;
+  }
+}
+.mmd-tools .icon-btn {
+  width: 26px;
+  height: 26px;
+}
+.mmd-zoom-value {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-3);
+  background: transparent;
+  border: none;
+  border-radius: var(--r-sm);
+  padding: 3px 6px;
+  min-width: 52px;
+  cursor: pointer;
+}
+.mmd-zoom-value:hover {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+.mmd-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  padding: var(--sp-5);
+  font-size: var(--t-sm);
+  color: var(--ink-3);
+}
+/* A diagram that won't parse says so, and keeps its source one click away —
+   it used to leave Mermaid's own error box in the middle of the page. */
+.mmd-error {
+  border-color: color-mix(in srgb, var(--danger) 40%, var(--border));
+  background: var(--diff-del-wash);
+  padding: var(--sp-3) var(--sp-4);
+}
+.mmd-error-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  margin: 0;
+  font-size: var(--t-sm);
+  font-weight: 550;
+  color: var(--danger);
+  max-width: none;
+}
+.mmd-error-head > svg {
+  flex: none;
+  margin-top: 2px;
+}
+.mmd-error details {
+  margin-top: var(--sp-2);
+  font-size: var(--t-xs);
+}
+.mmd-error summary {
+  cursor: pointer;
+  color: var(--ink-2);
+}
+.mmd-error pre {
+  margin: var(--sp-2) 0 0;
+  padding: var(--sp-2) var(--sp-3);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: var(--t-xs);
+  color: var(--ink-2);
 }
 .md-body img {
   max-width: 100%;

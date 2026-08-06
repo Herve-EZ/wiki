@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Icon } from "./Icon";
 import { Avatar } from "./Avatar";
 import { NotificationBell } from "./NotificationBell";
+import { PageTreeRow } from "./PageTreeRow";
 import { NewPageModal } from "./modals/NewPageModal";
 import { NewWorkspaceModal } from "./modals/NewWorkspaceModal";
 import { TrashModal } from "./modals/TrashModal";
@@ -341,54 +342,25 @@ export function Sidebar({
             )}
           </div>
         )}
-        {visible.map((node) => {
-          const p = node.page;
-          const hasChildren = node.children.length > 0;
-          const isCollapsed = collapsed.has(p.id);
-          const isCurrent = p.id === currentPageId;
-          return (
-            <div key={p.id} className={`sb-tree-row${isCurrent ? " current" : ""}`}>
-              {/* Indent guides: one rule per level, so depth is readable. */}
-              {node.depth > 0 && (
-                <span className="sb-guides" aria-hidden="true">
-                  {Array.from({ length: node.depth }, (_, i) => (
-                    <span key={i} className="sb-guide" style={{ width: INDENT }} />
-                  ))}
-                </span>
-              )}
-              <button
-                className={`sb-twisty${hasChildren ? "" : " hidden"}`}
-                title={isCollapsed ? "Déplier" : "Replier"}
-                aria-label={isCollapsed ? "Déplier" : "Replier"}
-                aria-expanded={hasChildren ? !isCollapsed : undefined}
-                onClick={() => toggleCollapse(p.id)}
-              >
-                <Icon name="chevronDown" size="sm" className={`sb-caret${isCollapsed ? " closed" : ""}`} />
-              </button>
-              <Link
-                to={`/w/${current?.slug}/${p.id}`}
-                className={`sb-item sb-tree-item${isCurrent ? " active" : ""}`}
-                aria-current={isCurrent ? "page" : undefined}
-              >
-                {updatedPageIds.has(p.id) && (
-                  <span className="dot-maj" title="Mise à jour depuis votre dernière visite" />
-                )}
-                <Icon name="file" size="md" />
-                <span className="label">{p.title}</span>
-              </Link>
-              {current && canWrite && (
-                <button
-                  className="icon-btn sb-row-add"
-                  title={`Nouvelle sous-page dans « ${p.title} »`}
-                  aria-label={`Nouvelle sous-page dans ${p.title}`}
-                  onClick={() => setNewPage({ parentId: p.id, parentTitle: p.title })}
-                >
-                  <Icon name="plus" size="sm" />
-                </button>
-              )}
-            </div>
-          );
-        })}
+        {visible.map((node) => (
+          <PageTreeRow
+            key={node.page.id}
+            page={node.page}
+            depth={node.depth}
+            indent={INDENT}
+            hasChildren={node.children.length > 0}
+            isCollapsed={collapsed.has(node.page.id)}
+            isCurrent={node.page.id === currentPageId}
+            updated={updatedPageIds.has(node.page.id)}
+            workspaceSlug={current?.slug}
+            canWrite={canWrite}
+            isOwner={isOwner}
+            onToggleCollapse={() => toggleCollapse(node.page.id)}
+            onNewSubpage={() =>
+              setNewPage({ parentId: node.page.id, parentTitle: node.page.title })
+            }
+          />
+        ))}
       </div>
 
       {/* ---- Sync status (always visible) ---- */}

@@ -5,6 +5,7 @@
  * picks "Save as PDF".
  */
 import { renderMarkdown } from "../markdown";
+import { inlineDiagrams } from "../mermaid";
 
 function escapeHtml(s: string): string {
   return s
@@ -45,12 +46,22 @@ const PRINT_CSS = `
   .task-check { margin-right: 6px; }
   img { max-width: 100%; }
   hr { border: none; border-top: 1px solid #d9d6e6; margin: 18px 0; }
+  /* Diagrams are inlined as SVG; keep them inside the page box and unbroken. */
+  .mermaid-figure { margin: 0 0 12px; text-align: center; break-inside: avoid; }
+  .mermaid-figure svg { max-width: 100%; height: auto; }
+  .mermaid-failed { background: #fbeae7; border-color: #e7b7b0; }
 `;
 
-export function exportPdf(title: string, markdown: string): void {
+/**
+ * Diagrams are rendered to SVG before printing — this used to emit the raw
+ * Mermaid fence, so every exported PDF carried the source code of its diagrams
+ * instead of the drawings. Always renders in the light theme: paper is white.
+ */
+export async function exportPdf(title: string, markdown: string): Promise<void> {
+  const body = await inlineDiagrams(renderMarkdown(markdown), false);
   const html = `<!doctype html><html lang="fr"><head><meta charset="utf-8">
 <title>${escapeHtml(title)}</title><style>${PRINT_CSS}</style></head>
-<body><main class="doc">${renderMarkdown(markdown)}</main></body></html>`;
+<body><main class="doc">${body}</main></body></html>`;
 
   const iframe = document.createElement("iframe");
   iframe.setAttribute("aria-hidden", "true");

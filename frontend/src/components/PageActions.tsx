@@ -118,9 +118,13 @@ export function PageActions({
     return () => window.removeEventListener("menu:export-page", onExport);
   }, []);
 
-  function doPdf() {
+  async function doPdf() {
     closeMenu();
-    exportPdf(page.title, exportMd);
+    try {
+      await exportPdf(page.title, exportMd);
+    } catch {
+      pushToast("Échec de la préparation du PDF.");
+    }
   }
   async function doDocx() {
     closeMenu();
@@ -222,7 +226,7 @@ export function PageActions({
                 )}
 
                 <p className="menu-label">Exporter</p>
-                <button className="menu-item" onClick={doPdf}>
+                <button className="menu-item" onClick={() => void doPdf()}>
                   <Icon name="file" size="sm" /> PDF (impression)
                 </button>
                 <button className="menu-item" onClick={() => void doDocx()}>

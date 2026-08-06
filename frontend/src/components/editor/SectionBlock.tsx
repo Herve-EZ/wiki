@@ -1,7 +1,8 @@
-import { useMemo, useRef } from "react";
+import { useMemo } from "react";
 import { Icon } from "../Icon";
 import { MarkdownEditor } from "./MarkdownEditor";
-import { useMermaid } from "../../hooks/useMermaid";
+import { MermaidFigure } from "../MermaidFigure";
+import { splitDiagrams } from "../../lib/mermaidBlocks";
 import { renderMarkdown } from "../../lib/markdown";
 import { preprocessWikilinks, type PageRef } from "../../lib/wikilinks";
 import type { Section } from "../../lib/sections";
@@ -69,7 +70,6 @@ export function SectionBlock({
   onSaveEdit,
   onCancelEdit,
 }: Props) {
-  const bodyRef = useRef<HTMLDivElement>(null);
   const lockedByOther = lock && !isMine;
   const cls = editing || isMine ? "section locked-mine" : lockedByOther ? "section locked-theirs" : "section";
 
@@ -84,13 +84,18 @@ export function SectionBlock({
     return set;
   }, [members]);
 
-  const rawHtml = renderMarkdown(preprocessWikilinks(section.text, pageIndex), {
-    transclusions,
-    pageIndex,
-    mentions,
-  });
-  const html = searchQuery ? highlightHtml(rawHtml, searchQuery) : rawHtml;
-  useMermaid(bodyRef, editing ? "" : html);
+  // Diagrams are split out of the Markdown so each one is a React child, not
+  // something an effect has to find in the DOM and replace (see mermaidBlocks).
+  const segments = useMemo(() => splitDiagrams(section.text), [section.text]);
+
+  function renderSegment(text: string): string {
+    const raw = renderMarkdown(preprocessWikilinks(text, pageIndex), {
+      transclusions,
+      pageIndex,
+      mentions,
+    });
+    return searchQuery ? highlightHtml(raw, searchQuery) : raw;
+  }
 
   return (
     <div className={cls} id={`sec-${section.id}`}>
@@ -128,7 +133,19 @@ export function SectionBlock({
           </div>
         </>
       ) : (
-        <div className="md-body" ref={bodyRef} dangerouslySetInnerHTML={{ __html: html }} />
+        <div className="md-body">
+          {segments.map((seg, i) =>
+            seg.kind === "diagram" ? (
+              <MermaidFigure key={`d${i}`} source={seg.source} />
+            ) : (
+              <div
+                key={`m${i}`}
+                className="md-seg"
+                dangerouslySetInnerHTML={{ __html: renderSegment(seg.text) }}
+              />
+            ),
+          )}
+        </div>
       )}
 
       {!editing && canEdit && !lockedByOther && (
